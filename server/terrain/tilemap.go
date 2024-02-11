@@ -1,4 +1,4 @@
-package server
+package terrain
 
 import (
 	"fmt"
@@ -18,12 +18,29 @@ const (
 	TileOil
 )
 
-const ChunkSize = 16
+const ChunkSize = 32
 const ChunkTileCount = ChunkSize * ChunkSize
 
 type Tile struct {
-	kind  TileKind
-	value int
+	Kind  TileKind
+	Value int
+}
+
+func (tile Tile) Print() {
+	switch tile.Kind {
+	case TileGrass:
+		fmt.Print(" ")
+	case TileWater:
+		fmt.Print("~")
+	case TileStone:
+		fmt.Print("#")
+	case TileBush:
+		fmt.Print(".")
+	case TileTree:
+		fmt.Print("T")
+	case TileOil:
+		fmt.Print("O")
+	}
 }
 
 type TilemapChunk struct {
@@ -48,20 +65,8 @@ func (chunk *TilemapChunk) Print() {
 	for x := 0; x < ChunkSize; x++ {
 		for y := 0; y < ChunkSize; y++ {
 			point := geom.Point{X: x, Y: y}
-			switch kind := chunk.GetTile(point).kind; kind {
-			case TileGrass:
-				fmt.Print(" ")
-			case TileWater:
-				fmt.Print("~")
-			case TileStone:
-				fmt.Print("#")
-			case TileBush:
-				fmt.Print(".")
-			case TileTree:
-				fmt.Print("T")
-			case TileOil:
-				fmt.Print("O")
-			}
+			chunk.GetTile(point).Print()
+			chunk.GetTile(point).Print()
 		}
 		fmt.Println()
 	}

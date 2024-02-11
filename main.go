@@ -1,13 +1,15 @@
 package main
 
 import (
+	"time"
+
 	"creeps.heav.fr/geom"
-	"creeps.heav.fr/server"
+	"creeps.heav.fr/server/terrain"
 )
 
 func main() {
-	generator := server.NewChunkGenerator(5)
-	tilemap := server.NewTilemap(generator)
+	generator := terrain.NewChunkGenerator(time.Now().UnixMilli())
+	tilemap := terrain.NewTilemap(generator)
 	tilemap.GenerateChunk(geom.Point{X: 0, Y: 0})
 	tilemap.GetChunk(geom.Point{}).Print()
 }
