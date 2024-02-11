@@ -5,7 +5,8 @@ import (
 )
 
 type Point struct {
-    X, Y int
+    X int `json:"x"`
+    Y int `json:"y"`
 }
 
 func (a Point) Add(b Point) Point {
