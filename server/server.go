@@ -3,7 +3,19 @@ package server
 import (
 	"creeps.heav.fr/server/model"
 	"creeps.heav.fr/server/terrain"
+	. "creeps.heav.fr/geom"
 )
+
+type IUnit interface {
+    GetServer() *Server
+    GetId() Uid
+    // the id of the owner, note: can be the server by way of ServerUid
+    GetOwner() Uid
+    GetPosition() *Point
+    GetLastAction() *Action
+    SetLastAction(action *Action)
+    Tick()
+}
 
 type Server struct {
 	tilemap *terrain.Tilemap

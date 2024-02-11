@@ -8,6 +8,7 @@ import (
 	. "creeps.heav.fr/server"
 	. "creeps.heav.fr/server/model"
 	. "creeps.heav.fr/server/terrain"
+	"creeps.heav.fr/units"
 )
 
 func main() {
@@ -17,10 +18,10 @@ func main() {
 		TicksPerSeconds: 10,
 	}, &CostsResponse{})
 
-	raider := NewRaiderUnit(srv, Point{X: 15, Y: 15})
+	raider := units.NewRaiderUnit(srv, Point{X: 15, Y: 15})
 	fmt.Printf("raider.GetId(): %v\n", raider.GetId())
 
-	raider = NewRaiderUnit(srv, Point{X: 10, Y: 10})
+	raider = units.NewRaiderUnit(srv, Point{X: 10, Y: 10})
 	fmt.Printf("raider.GetId(): %v\n", raider.GetId())
 
 	srv.Start()
