@@ -24,8 +24,12 @@ func (unit *unit) GetId() Uid {
     return unit.id
 }
 
-func (unit *unit) GetPosition() *Point {
-    return &unit.position
+func (unit *unit) GetPosition() Point {
+    return unit.position
+}
+
+func (unit *unit) SetPosition(new_pos Point) {
+    unit.position = new_pos
 }
 
 func (unit *unit) GetLastAction() *Action {

@@ -11,7 +11,8 @@ type IUnit interface {
     GetId() Uid
     // the id of the owner, note: can be the server by way of ServerUid
     GetOwner() Uid
-    GetPosition() *Point
+    GetPosition() Point
+    SetPosition(newPos Point)
     GetLastAction() *Action
     SetLastAction(action *Action)
     Tick()

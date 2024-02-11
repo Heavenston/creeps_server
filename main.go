@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"creeps.heav.fr/geom"
 	. "creeps.heav.fr/geom"
 	. "creeps.heav.fr/server"
 	. "creeps.heav.fr/server/model"
@@ -20,9 +21,8 @@ func main() {
 
 	raider := units.NewRaiderUnit(srv, Point{X: 15, Y: 15})
 	fmt.Printf("raider.GetId(): %v\n", raider.GetId())
-
-	raider = units.NewRaiderUnit(srv, Point{X: 10, Y: 10})
-	fmt.Printf("raider.GetId(): %v\n", raider.GetId())
+	raider.SetPosition(geom.Point{X: 0, Y: 0})
+	srv.RegisterUnit(raider)
 
 	srv.Start()
 }
