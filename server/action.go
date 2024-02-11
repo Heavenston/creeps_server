@@ -27,4 +27,5 @@ const (
 type Action struct {
     OpCode ActionOpCode
     StartedAtTick int
+    ReportId Uid
 }

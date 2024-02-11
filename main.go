@@ -4,24 +4,23 @@ import (
 	"fmt"
 	"time"
 
-	"creeps.heav.fr/server"
-	"creeps.heav.fr/server/model"
-	"creeps.heav.fr/server/terrain"
+	. "creeps.heav.fr/geom"
+	. "creeps.heav.fr/server"
+	. "creeps.heav.fr/server/model"
+	. "creeps.heav.fr/server/terrain"
 )
 
 func main() {
-	generator := terrain.NewChunkGenerator(time.Now().UnixMilli())
-	tilemap := terrain.NewTilemap(generator)
-	srv := server.NewServer(&tilemap, &model.SetupResponse{
+	generator := NewChunkGenerator(time.Now().UnixMilli())
+	tilemap := NewTilemap(generator)
+	srv := NewServer(&tilemap, &SetupResponse{
 		TicksPerSeconds: 10,
-	}, &model.CostsResponse{})
+	}, &CostsResponse{})
 
-	raider := server.NewRaiderUnit()
-	srv.RegisterUnit(raider)
+	raider := NewRaiderUnit(srv, Point{X: 15, Y: 15})
 	fmt.Printf("raider.GetId(): %v\n", raider.GetId())
 
-	raider = server.NewRaiderUnit()
-	srv.RegisterUnit(raider)
+	raider = NewRaiderUnit(srv, Point{X: 10, Y: 10})
 	fmt.Printf("raider.GetId(): %v\n", raider.GetId())
 
 	srv.Start()

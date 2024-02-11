@@ -22,3 +22,17 @@ func FloorDivInt(a int, b int) int {
 func RemEuclidInt(a int, b int) int {
     return ((a % b) + b) % b;
 }
+
+func MinInt(a int, b int) int {
+    if a < b {
+        return a
+    }
+    return b
+}
+
+func MaxInt(a int, b int) int {
+    if a > b {
+        return a
+    }
+    return b
+}

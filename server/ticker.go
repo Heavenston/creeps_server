@@ -36,3 +36,11 @@ func (ticker *Ticker) Start() {
         ticker.tickNumber++;
     }
 }
+
+func (ticker *Ticker) GetTickNumber() int {
+    return ticker.tickNumber
+}
+
+func (ticker *Ticker) AddTickFunc(f TickFunc) {
+    ticker.tickFuncs = append(ticker.tickFuncs, f)
+}
