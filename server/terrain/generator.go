@@ -74,7 +74,7 @@ func (gen *ChunkGenerator) GenerateChunk(chunkPos geom.Point) *TilemapChunk {
 		for y := 0; y < ChunkSize; y++ {
 			point := geom.Point{X: x, Y: y}
 			tile := chunk.GetTile(point)
-			*tile = gen.sample(x, y)
+			*tile = gen.sample(x + chunkPos.X * ChunkSize, y + chunkPos.Y * ChunkSize)
 		}
 	}
 
