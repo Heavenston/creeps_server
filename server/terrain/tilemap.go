@@ -5,6 +5,7 @@ import (
 
 	"creeps.heav.fr/geom"
 	mathutils "creeps.heav.fr/math_utils"
+	"github.com/fatih/color"
 )
 
 type TileKind int
@@ -27,20 +28,29 @@ type Tile struct {
 }
 
 func (tile Tile) Print() {
+	color.Set(color.BgGreen)
 	switch tile.Kind {
 	case TileGrass:
-		fmt.Print(" ")
+		fmt.Print("  ")
 	case TileWater:
-		fmt.Print("~")
+		color.Set(color.BgHiBlue)
+		color.Set(color.FgBlue)
+		fmt.Print("~ ")
 	case TileStone:
-		fmt.Print("#")
+		color.Set(color.BgHiBlack)
+		color.Set(color.FgBlack)
+		fmt.Print("# ")
 	case TileBush:
-		fmt.Print(".")
+		color.Set(color.FgHiRed)
+		fmt.Print(". ")
 	case TileTree:
-		fmt.Print("T")
+		color.Set(color.FgHiGreen)
+		fmt.Print("T ")
 	case TileOil:
-		fmt.Print("O")
+		color.Set(color.FgBlack)
+		fmt.Print("■ ")
 	}
+	color.Unset()
 }
 
 type TilemapChunk struct {
@@ -65,7 +75,6 @@ func (chunk *TilemapChunk) Print() {
 	for x := 0; x < ChunkSize; x++ {
 		for y := 0; y < ChunkSize; y++ {
 			point := geom.Point{X: x, Y: y}
-			chunk.GetTile(point).Print()
 			chunk.GetTile(point).Print()
 		}
 		fmt.Println()

@@ -45,7 +45,7 @@ func NewChunkGenerator(seed int64) *ChunkGenerator {
 	g.newPath(1. / 6., 0.5, TileStone, 0)
 	g.newPath(1. / 1., 0.7, TileOil, 0)
 	g.newPath(1. / 2., 0.25, TileTree, 0)
-	g.newPath(1. / 2., 0.4, TileBush, 0)
+	g.newPath(1. / 1., 0.4, TileBush, 0)
 	
 	return g
 }
