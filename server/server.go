@@ -8,19 +8,19 @@ import (
 )
 
 type IUnit interface {
-    GetServer() *Server
-    GetId() Uid
+	GetServer() *Server
+	GetId() Uid
 	GetAlive() bool
 	SetAlive(new bool)
-    // the id of the owner, note: can be the server by way of ServerUid
-    GetOwner() Uid
-    GetPosition() Point
-    SetPosition(newPos Point)
-    GetLastAction() *Action
-    SetLastAction(action *Action)
+	// the id of the owner, note: can be the server by way of ServerUid
+	GetOwner() Uid
+	GetPosition() Point
+	SetPosition(newPos Point)
+	GetLastAction() *Action
+	SetLastAction(action *Action)
 	// Ran each tick after being registered by the server
 	// only if GetAlive returns true
-    Tick()
+	Tick()
 }
 
 type Server struct {
@@ -30,7 +30,7 @@ type Server struct {
 	setup *model.SetupResponse
 	costs *model.CostsResponse
 
-	units spatialmap.SpatialMap[IUnit]
+	units   spatialmap.SpatialMap[IUnit]
 	players map[Uid]*Player
 }
 
@@ -41,7 +41,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 	srv.players = make(map[Uid]*Player)
 	srv.ticker = NewTicker(setup.TicksPerSeconds)
 	srv.ticker.AddTickFunc(func() {
-		srv.tick()	
+		srv.tick()
 	})
 
 	srv.setup = setup

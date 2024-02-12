@@ -72,7 +72,7 @@ func (chunk *TilemapChunk) GetTile(subcoord geom.Point) *Tile {
 }
 
 func (chunk *TilemapChunk) Print() {
-	for y := ChunkSize-1; y > 0; y-- {
+	for y := ChunkSize - 1; y > 0; y-- {
 		for x := 0; x < ChunkSize; x++ {
 			point := geom.Point{X: x, Y: y}
 			chunk.GetTile(point).Print()
@@ -120,7 +120,7 @@ func (tilemap Tilemap) GenerateChunk(chunkPos geom.Point) *TilemapChunk {
 	if tilemap.GetChunk(chunkPos) != nil {
 		return nil
 	}
-	
+
 	tilemap.chunks[chunkPos] = tilemap.generator.GenerateChunk(chunkPos)
 	return tilemap.chunks[chunkPos]
 }
