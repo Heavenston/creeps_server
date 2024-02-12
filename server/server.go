@@ -138,8 +138,8 @@ func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
 	sum_x := 0.
 	sum_y := 0.
 
-	for dx := -1; dx <= 1; dx++ {
-		for dy := -1; dy <= 1; dy++ {
+	for dx := -2; dx <= 2; dx++ {
+		for dy := -2; dy <= 2; dy++ {
 			np := point.Plus(dx, dy)
 
 			tile := srv.tilemap.GetTile(np)

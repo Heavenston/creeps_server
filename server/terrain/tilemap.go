@@ -20,6 +20,9 @@ const (
 
 	TileTownHall
 	TileHousehold
+	TileRoad
+	TileSawMill
+	TileSmeltery
 )
 
 const ChunkSize = 32
@@ -32,6 +35,7 @@ type Tile struct {
 
 func (tile Tile) Print() {
 	color.Set(color.BgGreen)
+	color.Set(color.FgBlack)
 	switch tile.Kind {
 	case TileGrass:
 		fmt.Print("  ")
@@ -54,11 +58,15 @@ func (tile Tile) Print() {
 		fmt.Print("■ ")
 
 	case TileTownHall:
-		color.Set(color.FgBlack)
 		fmt.Print("TH")
 	case TileHousehold:
-		color.Set(color.FgBlack)
 		fmt.Print("HH")
+	case TileRoad:
+		fmt.Print("RO")
+	case TileSawMill:
+		fmt.Print("SM")
+	case TileSmeltery:
+		fmt.Print("SL")
 	}
 	color.Unset()
 }
