@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -31,9 +30,12 @@ func (ticker *Ticker) Start() {
 
 	for {
 		_ = <-time_ticker.C
-		fmt.Printf("tick %d\n", ticker.tickNumber)
 
 		ticker.tickNumber++
+
+		for _, tf := range ticker.tickFuncs {
+			go tf()
+		}
 	}
 }
 

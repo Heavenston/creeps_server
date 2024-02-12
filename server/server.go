@@ -189,7 +189,7 @@ func (srv *Server) FindSpawnPointNear(from Point) (Point, bool) {
 func (srv *Server) FindSpawnPoint() Point {
 	// TODO: Make an algorithm to maintain some player density
 
-	dist := 20
+	dist := 5
 
 	for dist < 1_000_000_000 {
 		for try := 0; try < 120; try++ {
