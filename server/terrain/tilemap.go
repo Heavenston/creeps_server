@@ -17,6 +17,9 @@ const (
 	TileBush
 	TileTree
 	TileOil
+
+	TileTownHall
+	TileHousehold
 )
 
 const ChunkSize = 32
@@ -49,6 +52,13 @@ func (tile Tile) Print() {
 	case TileOil:
 		color.Set(color.FgBlack)
 		fmt.Print("■ ")
+
+	case TileTownHall:
+		color.Set(color.FgBlack)
+		fmt.Print("TH")
+	case TileHousehold:
+		color.Set(color.FgBlack)
+		fmt.Print("HH")
 	}
 	color.Unset()
 }
@@ -144,7 +154,7 @@ func (t *Tilemap) PrintRegion(from Point, upto Point) {
 	max_x := mathutils.MaxInt(from.X, upto.X)
 	max_y := mathutils.MaxInt(from.Y, upto.Y)
 
-	for y := min_y; y < max_y; y++ {
+	for y := max_y-1; y > min_y; y-- {
 		for x := min_x; x < max_x; x++ {
 			t.GetTile(Point { X:x, Y:y }).Print()
 		}
