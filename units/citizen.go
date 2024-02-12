@@ -2,26 +2,25 @@ package units
 
 import (
 	. "creeps.heav.fr/server"
+	"creeps.heav.fr/uid"
 )
 
 type CitizenUnit struct {
 	unit
-	owner       Uid
+	owner       uid.Uid
 	lastEatenAt int
 }
 
-func NewCitizenUnit(server *Server, owner Uid) *CitizenUnit {
+func NewCitizenUnit(server *Server, owner uid.Uid) *CitizenUnit {
 	citizen := new(CitizenUnit)
 	citizen.unitInit(server)
 	citizen.lastEatenAt = server.Ticker().GetTickNumber()
 	citizen.owner = owner
 
-	server.RegisterUnit(citizen)
-
 	return citizen
 }
 
-func (citizen *CitizenUnit) GetOwner() Uid {
+func (citizen *CitizenUnit) GetOwner() uid.Uid {
 	return citizen.owner
 }
 

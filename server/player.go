@@ -1,37 +1,48 @@
 package server
 
 import (
+	"creeps.heav.fr/uid"
 	. "creeps.heav.fr/geom"
-	"creeps.heav.fr/server/model"
+	"creeps.heav.fr/api/model"
 )
 
 type Player struct {
-	id        Uid
+	id        uid.Uid
 	username  string
 	resources model.Resources
+	addr      string
 
 	townHalls []Point
 }
 
-func NewPlayer(username string) *Player {
+func NewPlayer(username string, addr string) *Player {
 	player := new(Player)
 
-	player.id = GenUid()
+	player.addr = addr
+	player.id = uid.GenUid()
 	player.username = username
 
 	return player
 }
 
-func (player *Player) GetId() Uid {
+func (player *Player) GetId() uid.Uid {
 	return player.id
+}
+
+func (player *Player) GetAddr() string {
+	return player.addr
 }
 
 func (player *Player) GetUsername() string {
 	return player.username
 }
 
-func (player *Player) GetResources() *model.Resources {
-	return &player.resources
+func (player *Player) GetResources() model.Resources {
+	return player.resources
+}
+
+func (player *Player) SetResources(resources model.Resources)  {
+	player.resources = resources
 }
 
 func (player *Player) GetTownHalls() []Point {

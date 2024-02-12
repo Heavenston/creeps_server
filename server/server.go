@@ -3,19 +3,20 @@ package server
 import (
 	"math/rand"
 
+	"creeps.heav.fr/api/model"
 	. "creeps.heav.fr/geom"
-	"creeps.heav.fr/server/model"
 	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/spatialmap"
+	"creeps.heav.fr/uid"
 )
 
 type IUnit interface {
 	GetServer() *Server
-	GetId() Uid
+	GetId() uid.Uid
 	GetAlive() bool
 	SetAlive(new bool)
 	// the id of the owner, note: can be the server by way of ServerUid
-	GetOwner() Uid
+	GetOwner() uid.Uid
 	GetPosition() Point
 	SetPosition(newPos Point)
 	GetLastAction() *Action
@@ -33,7 +34,9 @@ type Server struct {
 	costs *model.CostsResponse
 
 	units   spatialmap.SpatialMap[IUnit]
-	players map[Uid]*Player
+	players map[uid.Uid]*Player
+
+	defaultPlayerResources model.Resources
 
 	spawnRand rand.Rand
 }
@@ -42,7 +45,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 	srv := new(Server)
 	srv.tilemap = tilemap
 
-	srv.players = make(map[Uid]*Player)
+	srv.players = make(map[uid.Uid]*Player)
 	srv.ticker = NewTicker(setup.TicksPerSeconds)
 	srv.ticker.AddTickFunc(func() {
 		srv.tick()
@@ -52,7 +55,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 	srv.costs = costs
 
 	srv.spawnRand = *rand.New(rand.NewSource(256))
-	
+
 	return srv
 }
 
@@ -81,7 +84,7 @@ func (srv *Server) RegisterUnit(unit IUnit) {
 	srv.units.Add(unit)
 }
 
-func (srv *Server) RemoveUnit(id Uid) IUnit {
+func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
 	unit := srv.units.RemoveFirst(func(unit IUnit) bool {
 		return unit.GetId() == id
 	})
@@ -91,6 +94,7 @@ func (srv *Server) RemoveUnit(id Uid) IUnit {
 	return *unit
 }
 
+// You probably want to use gameplay.InitPlayer instead
 func (srv *Server) RegisterPlayer(player *Player) {
 	present := srv.players[player.id]
 	if present == player {
@@ -101,7 +105,7 @@ func (srv *Server) RegisterPlayer(player *Player) {
 	srv.players[player.id] = player
 }
 
-func (srv *Server) RemovePlayer(id Uid) *Player {
+func (srv *Server) RemovePlayer(id uid.Uid) *Player {
 	player := srv.players[id]
 	if player == nil {
 		return nil
@@ -110,7 +114,7 @@ func (srv *Server) RemovePlayer(id Uid) *Player {
 	return player
 }
 
-func (srv *Server) GetUnit(id Uid) IUnit {
+func (srv *Server) GetUnit(id uid.Uid) IUnit {
 	next := srv.units.Iter()
 	for ok, _, unit := next(); ok; ok, _, unit = next() {
 		if (*unit).GetId() == id {
@@ -130,6 +134,14 @@ func (srv *Server) GetCosts() *model.CostsResponse {
 
 func (srv *Server) Start() {
 	srv.ticker.Start()
+}
+
+func (srv *Server) SetDefaultPlayerResources(resources model.Resources) {
+	srv.defaultPlayerResources = resources
+}
+
+func (srv *Server) GetDefaultPlayerResources() model.Resources {
+	return srv.defaultPlayerResources
 }
 
 func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
@@ -193,7 +205,7 @@ func (srv *Server) FindSpawnPoint() Point {
 
 	for dist < 1_000_000_000 {
 		for try := 0; try < 120; try++ {
-			center := Point{ X: srv.spawnRand.Intn(dist*2)-dist, Y: srv.spawnRand.Intn(dist*2)-dist }
+			center := Point{X: srv.spawnRand.Intn(dist*2) - dist, Y: srv.spawnRand.Intn(dist*2) - dist}
 
 			point, found := srv.FindSpawnPointNear(center)
 			if found {

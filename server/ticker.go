@@ -29,13 +29,12 @@ func (ticker *Ticker) Start() {
 	defer time_ticker.Stop()
 
 	for {
-		_ = <-time_ticker.C
-
-		ticker.tickNumber++
-
 		for _, tf := range ticker.tickFuncs {
 			go tf()
 		}
+
+		_ = <-time_ticker.C
+		ticker.tickNumber++
 	}
 }
 

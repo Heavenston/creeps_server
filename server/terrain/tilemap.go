@@ -8,7 +8,7 @@ import (
 	"github.com/fatih/color"
 )
 
-type TileKind int
+type TileKind uint8
 
 const (
 	TileGrass TileKind = iota
@@ -30,7 +30,7 @@ const ChunkTileCount = ChunkSize * ChunkSize
 
 type Tile struct {
 	Kind  TileKind
-	Value int
+	Value uint8
 }
 
 func (tile Tile) Print() {
@@ -151,9 +151,14 @@ func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *TilemapChunk {
 // 	return t.chunks[p]
 // }
 
-func (t *Tilemap) GetTile(p Point) *Tile {
+func (t *Tilemap) GetTile(p Point) Tile {
 	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
-	return chunk.GetTile(Global2ChunkSubCoords(p))
+	return *chunk.GetTile(Global2ChunkSubCoords(p))
+}
+
+func (t *Tilemap) SetTile(p Point, newVal Tile) {
+	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
+	*chunk.GetTile(Global2ChunkSubCoords(p)) = newVal
 }
 
 func (t *Tilemap) PrintRegion(from Point, upto Point) {

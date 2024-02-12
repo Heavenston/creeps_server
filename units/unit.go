@@ -3,12 +3,13 @@ package units
 import (
 	. "creeps.heav.fr/geom"
 	. "creeps.heav.fr/server"
+	"creeps.heav.fr/uid"
 )
 
 // See server.go's IUnit interface to explain its functions
 type unit struct {
 	server     *Server
-	id         Uid
+	id         uid.Uid
 	alive      bool
 	position   Point
 	lastAction *Action
@@ -16,7 +17,7 @@ type unit struct {
 
 func (unit *unit) unitInit(server *Server) {
 	unit.server = server
-	unit.id = GenUid()
+	unit.id = uid.GenUid()
 	unit.alive = true
 }
 
@@ -24,7 +25,7 @@ func (unit *unit) GetServer() *Server {
 	return unit.server
 }
 
-func (unit *unit) GetId() Uid {
+func (unit *unit) GetId() uid.Uid {
 	return unit.id
 }
 

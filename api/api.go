@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	. "creeps.heav.fr/server"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 type ApiServer struct {
@@ -19,28 +22,35 @@ type ApiErrorResponse struct {
 }
 
 func (api *ApiServer) Start() {
-    http.Handle("/status", &statusHandle {
+    router := chi.NewRouter()
+    router.Use(middleware.RealIP)
+    router.Use(middleware.Logger)
+    router.Use(middleware.Recoverer)
+    router.Use(middleware.Timeout(60 * time.Second))
+
+    router.Handle("/status", &statusHandle {
         api: api,
     })
     
-    http.Handle("/statistics", &statisticsHandle {
+    router.Handle("/statistics", &statisticsHandle {
         api: api,
     })
     
-    http.Handle("/init", &initHandle {
+    router.Handle("/init/{username}", &initHandle {
         api: api,
     })
     
-    http.Handle("/command", &commandHandle {
+    router.Handle("/command/", &commandHandle {
         api: api,
     })
     
-    http.Handle("/report", &reportHandle {
+    router.Handle("/report/", &reportHandle {
         api: api,
     })
     
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(404)
+        fmt.Printf("not found: %s %s\n", r.Method, r.URL)
         marshalled, err := json.Marshal(ApiErrorResponse {
             ErrorCode: "notfound",
             Error: "Api endpoint does not exist",
@@ -53,5 +63,5 @@ func (api *ApiServer) Start() {
     	fmt.Fprintf(w, "%s", marshalled)
     })
     
-    http.ListenAndServe(api.Addr, nil)
+    http.ListenAndServe(api.Addr, router)
 }

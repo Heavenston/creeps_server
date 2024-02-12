@@ -1,0 +1,40 @@
+package gameplay
+
+import (
+	"creeps.heav.fr/server"
+	"creeps.heav.fr/server/terrain"
+	"creeps.heav.fr/units"
+	. "creeps.heav.fr/geom"
+)
+
+// Spawns the given player town hall and everything it needs
+func InitPlayer(
+	srv *server.Server,
+	player *server.Player,
+) (townhall Point, household Point, c1, c2 *units.CitizenUnit) {
+	spawnPoint := srv.FindSpawnPoint()
+	srv.RegisterPlayer(player)
+
+	townhall = spawnPoint
+	household = spawnPoint.Plus(0, 1)
+
+	srv.Tilemap().SetTile(townhall, terrain.Tile{
+		Kind:  terrain.TileTownHall,
+		Value: 0,
+	})
+	srv.Tilemap().SetTile(household, terrain.Tile{
+		Kind:  terrain.TileHousehold,
+		Value: 0,
+	})
+
+	player.AddTownHall(townhall)
+
+	c1 = units.NewCitizenUnit(srv, player.GetId())
+	c1.SetPosition(household)
+	srv.RegisterUnit(c1)
+	c2 = units.NewCitizenUnit(srv, player.GetId())
+	c1.SetPosition(household)
+	srv.RegisterUnit(c2)
+
+	return
+}

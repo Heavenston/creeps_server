@@ -1,5 +1,7 @@
 package server
 
+import "creeps.heav.fr/uid"
+
 type ActionOpCode string
 
 const (
@@ -27,5 +29,5 @@ const (
 type Action struct {
 	OpCode        ActionOpCode
 	StartedAtTick int
-	ReportId      Uid
+	ReportId      uid.Uid
 }

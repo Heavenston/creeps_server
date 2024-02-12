@@ -12,7 +12,7 @@ type patch struct {
 	thresh float64
 
 	kind             TileKind
-	defaultTileValue int
+	defaultTileValue uint8
 
 	noise simplex.Noise
 }
@@ -23,8 +23,8 @@ type ChunkGenerator struct {
 	patchs []patch
 }
 
-func (gen *ChunkGenerator) newPath(scale float64, thresh float64, kind TileKind, defaultTileValue int) {
-	var elm = patch{
+func (gen *ChunkGenerator) newPath(scale float64, thresh float64, kind TileKind, defaultTileValue uint8) {
+	var elm = patch {
 		scale:  scale,
 		thresh: thresh,
 
