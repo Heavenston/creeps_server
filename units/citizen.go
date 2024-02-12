@@ -25,5 +25,12 @@ func (citizen *CitizenUnit) GetOwner() Uid {
     return citizen.owner
 }
 
-func (raider *CitizenUnit) Tick() {
+func (citizen *CitizenUnit) Tick() {
+    server := citizen.server
+    ticker := server.Ticker()
+
+    feedInterval := server.GetSetup().CitizenFeedingRate
+
+    if ticker.GetTickNumber() - citizen.lastEatenAt > feedInterval {
+    }
 }

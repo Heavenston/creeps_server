@@ -19,6 +19,9 @@ func main() {
 		TicksPerSeconds: 10,
 	}, &CostsResponse{})
 
+	player := NewPlayer("heavenstone")
+	srv.RegisterPlayer(player)
+	
 	raider := units.NewRaiderUnit(srv, Point{X: 15, Y: 15})
 	fmt.Printf("raider.GetId(): %v\n", raider.GetId())
 	raider.SetPosition(geom.Point{X: 0, Y: 0})

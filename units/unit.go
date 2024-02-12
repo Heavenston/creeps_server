@@ -5,15 +5,19 @@ import (
     . "creeps.heav.fr/geom"
 )
 
+// See server.go's IUnit interface to explain its functions
 type unit struct {
     server *Server
     id Uid
+    alive bool
     position Point
     lastAction *Action
 }
 
 func (unit *unit) unitInit(server *Server) {
+    unit.server = server
     unit.id = GenUid()
+    unit.alive = true
 }
 
 func (unit *unit) GetServer() *Server {
@@ -22,6 +26,14 @@ func (unit *unit) GetServer() *Server {
 
 func (unit *unit) GetId() Uid {
     return unit.id
+}
+
+func (unit *unit) GetAlive() bool {
+    return unit.alive
+}
+
+func (unit *unit) SetAlive(new bool) {
+    unit.alive = new
 }
 
 func (unit *unit) GetPosition() Point {

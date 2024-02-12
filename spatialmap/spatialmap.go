@@ -3,40 +3,66 @@ package spatialmap
 import "creeps.heav.fr/geom"
 
 type Positioned interface {
+    comparable
     GetPosition() geom.Point
 }
 
-type SpatialMap struct {
-    objects []Positioned
+type SpatialMap[T Positioned] struct {
+    objects []T
 }
 
-func (m *SpatialMap) Add(p Positioned) {
+func (m *SpatialMap[T]) Add(p T) {
+    for _, o := range m.objects {
+        if o == p {
+            panic("cannot have duplicate objects")
+        }
+    }
     m.objects = append(m.objects, p)
 }
 
-func (m *SpatialMap) Remove(p Positioned) {
+func (m *SpatialMap[T]) RemoveFirst(predicate func(T) bool) *T {
     for i, o := range m.objects {
-        if o == p {
+        if predicate(o) {
             m.objects[i] = m.objects[len(m.objects)-1]
+            m.objects = m.objects[:len(m.objects)-1]
+            return &o
         }
-        m.objects = m.objects[:len(m.objects)-1]
     }
+    return nil
 }
 
-func (m *SpatialMap) GetAt(point geom.Point) (Positioned, bool) {
+func (m *SpatialMap[T]) Find(predicate func(T) bool) *T {
     for _, obj := range m.objects {
-        if obj.GetPosition() == point {
-            return obj, true
+        if predicate(obj) {
+            return &obj
         }
     }
-    return nil, false
+    return nil
 }
 
-func (m *SpatialMap) GetIn(from geom.Point, upto geom.Point) (Positioned, bool) {
+func (m *SpatialMap[T]) GetAt(point geom.Point) *T {
+    return m.Find(func(t T) bool {
+        return t.GetPosition() == point
+    })
+}
+
+func (m *SpatialMap[T]) GetIn(from geom.Point, upto geom.Point) (*T, bool) {
     for _, obj := range m.objects {
         if obj.GetPosition().IsWithing(from, upto) {
-            return obj, true
+            return &obj, true
         }
     }
     return nil, false
+}
+
+func (m *SpatialMap[T]) Iter() func() (bool, int, *T) {
+    var i int = 0
+    return (func () (bool, int, *T) {
+        if i == len(m.objects) {
+            return false, 0, nil
+        }
+        v := m.objects[i]
+        i += 1
+        return true, i-1, &v
+    })
 }
