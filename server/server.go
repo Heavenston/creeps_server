@@ -1,6 +1,9 @@
 package server
 
 import (
+	"math"
+	"math/rand"
+
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server/model"
 	"creeps.heav.fr/server/terrain"
@@ -32,6 +35,8 @@ type Server struct {
 
 	units   spatialmap.SpatialMap[IUnit]
 	players map[Uid]*Player
+
+	spawnRand rand.Rand
 }
 
 func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *model.CostsResponse) *Server {
@@ -46,6 +51,9 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 
 	srv.setup = setup
 	srv.costs = costs
+
+	srv.spawnRand = *rand.New(rand.NewSource(256))
+	
 	return srv
 }
 
@@ -123,4 +131,74 @@ func (srv *Server) GetCosts() *model.CostsResponse {
 
 func (srv *Server) Start() {
 	srv.ticker.Start()
+}
+
+func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
+	count := 0.
+	sum_x := 0.
+	sum_y := 0.
+
+	for dx := -2; dx <= 2; dx++ {
+		for dy := -2; dy <= 2; dy++ {
+			np := point.Plus(dx, dy)
+
+			if srv.tilemap.GetTile(np).Kind == terrain.TileGrass {
+				sum_x += float64(np.X)
+				sum_y += float64(np.X)
+			}
+
+			count += 1
+		}
+	}
+
+	return sum_x == count, sum_x / count, sum_y / count
+}
+
+// Returns a point safe for spawning near the given point and true
+// or 0,0 and false it none could be found
+func (srv *Server) FindSpawnPointNear(from Point) (Point, bool) {
+	visited := make(map[Point]bool)
+
+	for {
+		visited[from] = true
+
+		all, a_x, a_y := srv.emptyProportion(from)
+		if all {
+			return from, true
+		}
+
+		np := Point{X: int(a_x), Y: int(a_y)}
+		if visited[np] {
+			if a_x > a_y {
+				np.X++
+			} else {
+				np.Y++
+			}
+		}
+		if visited[np] {
+			return Point{}, false
+		}
+
+		from = np
+	}
+}
+
+// Returns a safe spawn point
+func (srv *Server) FindSpawnPoint() Point {
+	// TODO: Make an algorithm to maintain some player density
+
+	dist := 20
+
+	for dist < math.MaxInt / 2 {
+		center := Point{ X: srv.spawnRand.Intn(dist*2)-dist, Y: srv.spawnRand.Intn(dist*2)-dist }
+
+		point, found := srv.FindSpawnPointNear(center)
+		if found {
+			return point
+		}
+		
+		dist *= 2
+	}
+
+	panic("could not find spawn point")
 }

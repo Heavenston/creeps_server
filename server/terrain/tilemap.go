@@ -3,7 +3,7 @@ package terrain
 import (
 	"fmt"
 
-	"creeps.heav.fr/geom"
+	. "creeps.heav.fr/geom"
 	mathutils "creeps.heav.fr/math_utils"
 	"github.com/fatih/color"
 )
@@ -59,10 +59,10 @@ type TilemapChunk struct {
 
 type Tilemap struct {
 	generator *ChunkGenerator
-	chunks    map[geom.Point]*TilemapChunk
+	chunks    map[Point]*TilemapChunk
 }
 
-func (chunk *TilemapChunk) GetTile(subcoord geom.Point) *Tile {
+func (chunk *TilemapChunk) GetTile(subcoord Point) *Tile {
 	if subcoord.X < 0 || subcoord.X >= ChunkSize ||
 		subcoord.Y < 0 || subcoord.Y >= ChunkSize {
 		return nil
@@ -74,7 +74,7 @@ func (chunk *TilemapChunk) GetTile(subcoord geom.Point) *Tile {
 func (chunk *TilemapChunk) Print() {
 	for y := ChunkSize - 1; y > 0; y-- {
 		for x := 0; x < ChunkSize; x++ {
-			point := geom.Point{X: x, Y: y}
+			point := Point{X: x, Y: y}
 			chunk.GetTile(point).Print()
 		}
 		fmt.Println()
@@ -84,7 +84,7 @@ func (chunk *TilemapChunk) Print() {
 func NewTilemap(generator *ChunkGenerator) Tilemap {
 	return Tilemap{
 		generator: generator,
-		chunks:    make(map[geom.Point]*TilemapChunk),
+		chunks:    make(map[Point]*TilemapChunk),
 	}
 }
 
@@ -93,8 +93,8 @@ func NewTilemap(generator *ChunkGenerator) Tilemap {
 //
 // From {x = 5, y = 38} -> {x = 0, y = 3}
 // From {x = -1, y = 0} -> {x = -1, y = 0}
-func Global2ContainingChunkCoords(tile geom.Point) geom.Point {
-	return geom.Point{
+func Global2ContainingChunkCoords(tile Point) Point {
+	return Point{
 		X: mathutils.FloorDivInt(tile.X, ChunkSize),
 		Y: mathutils.FloorDivInt(tile.Y, ChunkSize),
 	}
@@ -105,27 +105,27 @@ func Global2ContainingChunkCoords(tile geom.Point) geom.Point {
 //
 // From {x = 5, y = 38} -> {x = 5, y = 5}
 // From {x = -1, y = 0} -> {x = 15, y = 0}
-func Global2ChunkSubCoords(tile geom.Point) geom.Point {
-	return geom.Point{
+func Global2ChunkSubCoords(tile Point) Point {
+	return Point{
 		X: mathutils.RemEuclidInt(tile.X, ChunkSize),
 		Y: mathutils.RemEuclidInt(tile.Y, ChunkSize),
 	}
 }
 
-func (tilemap Tilemap) GetChunk(chunkPos geom.Point) *TilemapChunk {
+func (tilemap *Tilemap) GetChunk(chunkPos Point) *TilemapChunk {
 	return tilemap.chunks[chunkPos]
 }
 
-func (tilemap Tilemap) GenerateChunk(chunkPos geom.Point) *TilemapChunk {
-	if tilemap.GetChunk(chunkPos) != nil {
-		return nil
+func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *TilemapChunk {
+	if chunk := tilemap.GetChunk(chunkPos); chunk != nil {
+		return chunk
 	}
 
 	tilemap.chunks[chunkPos] = tilemap.generator.GenerateChunk(chunkPos)
 	return tilemap.chunks[chunkPos]
 }
 
-// func (t Tilemap) GetOrCreateChunk(p geom.Point) tilemapChunk {
+// func (t Tilemap) GetOrCreateChunk(p Point) tilemapChunk {
 // 	_, ok := t.chunks[p]
 // 	if !ok {
 // 		t.chunks[p] = tilemapChunk{}
@@ -133,10 +133,21 @@ func (tilemap Tilemap) GenerateChunk(chunkPos geom.Point) *TilemapChunk {
 // 	return t.chunks[p]
 // }
 
-func (t Tilemap) GetTile(p geom.Point) *Tile {
-	chunk := t.GetChunk(Global2ContainingChunkCoords(p))
-	if chunk == nil {
-		return nil
-	}
+func (t *Tilemap) GetTile(p Point) *Tile {
+	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
 	return chunk.GetTile(Global2ChunkSubCoords(p))
+}
+
+func (t *Tilemap) PrintRegion(from Point, upto Point) {
+	min_x := mathutils.MinInt(from.X, upto.X)
+	min_y := mathutils.MinInt(from.Y, upto.Y)
+	max_x := mathutils.MaxInt(from.X, upto.X)
+	max_y := mathutils.MaxInt(from.Y, upto.Y)
+
+	for y := min_y; y < max_y; y++ {
+		for x := min_x; x < max_x; x++ {
+			t.GetTile(Point { X:x, Y:y }).Print()
+		}
+		fmt.Println()
+	}
 }

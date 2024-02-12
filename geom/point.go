@@ -16,10 +16,24 @@ func (a Point) Add(b Point) Point {
 	}
 }
 
+func (a Point) Plus(x int, y int) Point {
+	return Point{
+		X: a.X + x,
+		Y: a.Y + y,
+	}
+}
+
 func (a Point) Sub(b Point) Point {
 	return Point{
 		X: a.X - b.X,
 		Y: a.Y - b.Y,
+	}
+}
+
+func (a Point) Minus(x int, y int) Point {
+	return Point{
+		X: a.X - x,
+		Y: a.Y - y,
 	}
 }
 
