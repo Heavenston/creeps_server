@@ -1,5 +1,7 @@
 package mathutils
 
+import "fmt"
+
 func AbsInt(a int) int {
 	if a < 0 {
 		return -a
@@ -13,7 +15,10 @@ func FloorDivInt(a int, b int) int {
 	}
 
 	if a < 0 {
-		return FloorDivInt(-a, b) + 1
+		if -a < 0 {
+			panic(fmt.Sprintf("number too big: %d", -a))
+		}
+		return -FloorDivInt(-a, b) + 1
 	}
 
 	return a / b

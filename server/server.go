@@ -1,7 +1,6 @@
 package server
 
 import (
-	"math"
 	"math/rand"
 
 	. "creeps.heav.fr/geom"
@@ -135,23 +134,26 @@ func (srv *Server) Start() {
 
 func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
 	count := 0.
+	grass_count := 0
 	sum_x := 0.
 	sum_y := 0.
 
-	for dx := -2; dx <= 2; dx++ {
-		for dy := -2; dy <= 2; dy++ {
+	for dx := -1; dx <= 1; dx++ {
+		for dy := -1; dy <= 1; dy++ {
 			np := point.Plus(dx, dy)
 
-			if srv.tilemap.GetTile(np).Kind == terrain.TileGrass {
+			tile := srv.tilemap.GetTile(np)
+			if tile.Kind == terrain.TileGrass {
 				sum_x += float64(np.X)
 				sum_y += float64(np.X)
+				grass_count += 1
 			}
 
-			count += 1
+			count++
 		}
 	}
 
-	return sum_x == count, sum_x / count, sum_y / count
+	return int(count) == grass_count, sum_x / count, sum_y / count
 }
 
 // Returns a point safe for spawning near the given point and true
@@ -189,15 +191,16 @@ func (srv *Server) FindSpawnPoint() Point {
 
 	dist := 20
 
-	for dist < math.MaxInt / 2 {
-		center := Point{ X: srv.spawnRand.Intn(dist*2)-dist, Y: srv.spawnRand.Intn(dist*2)-dist }
+	for dist < 1_000_000_000 {
+		for try := 0; try < 120; try++ {
+			center := Point{ X: srv.spawnRand.Intn(dist*2)-dist, Y: srv.spawnRand.Intn(dist*2)-dist }
 
-		point, found := srv.FindSpawnPointNear(center)
-		if found {
-			return point
+			point, found := srv.FindSpawnPointNear(center)
+			if found {
+				return point
+			}
 		}
-		
-		dist *= 2
+		dist += dist / 2
 	}
 
 	panic("could not find spawn point")

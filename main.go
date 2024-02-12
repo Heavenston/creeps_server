@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	. "creeps.heav.fr/server"
@@ -23,8 +24,13 @@ func main() {
 	// raider.SetPosition(geom.Point{X: 0, Y: 0})
 	// srv.RegisterUnit(raider)
 
+	fmt.Println("looking for spawn point...")
 	spawn := srv.FindSpawnPoint()
-	srv.Tilemap().PrintRegion(spawn.Minus(10, 10), spawn.Plus(11, 11))
+	fmt.Printf("found on %v\n", spawn)
+	srv.Tilemap().PrintRegion(
+		spawn.Plus(-20,-20),
+		spawn.Plus( 21, 21),
+	)
 
-	srv.Start()
+	// srv.Start()
 }
