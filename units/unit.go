@@ -11,7 +11,7 @@ import (
 // See server.go's IUnit interface to explain its functions
 type unit struct {
 	// read-only (no lock)
-	server     *Server
+	server *Server
 	// read-only (no lock)
 	id         uid.Uid
 	alive      atomic.Bool
@@ -53,6 +53,26 @@ func (unit *unit) GetLastAction() *Action {
 	return unit.lastAction.Load()
 }
 
-func (unit *unit) SetLastAction(action *Action) {
-	unit.lastAction.Store(action)
+func (unit *unit) ModifyPosition(cb func (Point) Point) (Point, Point) {
+	return unit.position.Modify(cb)
+}
+
+func tick(this IUnit) {
+	action := this.GetLastAction()
+	if action == nil {
+		return
+	}
+
+	if action.Finised.Load() {
+		return
+	}
+
+	costs := action.OpCode.GetCost(this)
+	if this.GetServer().Ticker().GetTickNumber()-action.StartedAtTick < costs.Cast {
+		return
+	}
+
+	// action is finished
+
+	action.OpCode.ApplyOn(this)
 }

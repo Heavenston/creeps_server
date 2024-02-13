@@ -11,23 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// every unit operation must be thread-safe atomic
-type IUnit interface {
-	GetServer() *Server
-	GetId() uid.Uid
-	GetAlive() bool
-	SetAlive(new bool)
-	// the id of the owner, note: can be the server by way of ServerUid
-	GetOwner() uid.Uid
-	GetPosition() Point
-	SetPosition(newPos Point)
-	GetLastAction() *Action
-	SetLastAction(action *Action)
-	// Ran each tick after being registered by the server
-	// only if GetAlive returns true
-	Tick()
-}
-
 type Server struct {
 	tilemap *terrain.Tilemap
 	ticker  *Ticker

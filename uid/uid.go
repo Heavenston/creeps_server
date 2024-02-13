@@ -14,7 +14,7 @@ var alphabet string = "abcdefghijklmnopqstuvwxyzABCDEFGHIJKLMNOPQSTUVWXYZ"
 func GenUid() Uid {
 	result := strings.Builder{}
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		result.WriteByte(alphabet[rand.Intn(len(alphabet))])
 	}
 

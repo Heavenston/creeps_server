@@ -3,13 +3,14 @@ package units
 import (
 	"sync"
 
+	"creeps.heav.fr/api/model"
 	. "creeps.heav.fr/server"
 	"creeps.heav.fr/uid"
 )
 
 type CitizenUnit struct {
 	unit
-	lock        sync.RWMutex    
+	lock        sync.RWMutex
 	owner       uid.Uid
 	lastEatenAt int
 }
@@ -23,8 +24,16 @@ func NewCitizenUnit(server *Server, owner uid.Uid) *CitizenUnit {
 	return citizen
 }
 
+func (citizen *CitizenUnit) GetUpgradeCosts() *model.CostResponse {
+	return &citizen.GetServer().GetCosts().UpgradeCitizen
+}
+
 func (citizen *CitizenUnit) GetOwner() uid.Uid {
 	return citizen.owner
+}
+
+func (citizen *CitizenUnit) StartAction(action *Action) error {
+	return nil
 }
 
 func (citizen *CitizenUnit) Tick() {

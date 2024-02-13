@@ -28,6 +28,16 @@ func (p *AtomicPoint) Store(o Point) Point {
 	return prev
 }
 
+// atomic modification of the position, returns the pervious values and new value
+// respectively
+func (p *AtomicPoint) Modify(cb func(Point) Point) (Point, Point) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	prev := p.point
+	p.point = cb(p.point)
+	return prev, p.point
+}
+
 type Point struct {
 	X int `json:"x"`
 	Y int `json:"y"`
