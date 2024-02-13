@@ -69,12 +69,12 @@ func (gen *ChunkGenerator) sample(x int, y int) Tile {
 
 func (gen *ChunkGenerator) GenerateChunk(chunkPos geom.Point) *TilemapChunk {
 	chunk := new(TilemapChunk)
+	wcl := chunk.WLock()
 
 	for x := 0; x < ChunkSize; x++ {
 		for y := 0; y < ChunkSize; y++ {
 			point := geom.Point{X: x, Y: y}
-			tile := chunk.GetTile(point)
-			*tile = gen.sample(x+chunkPos.X*ChunkSize, y+chunkPos.Y*ChunkSize)
+			wcl.SetTile(point, gen.sample(x+chunkPos.X*ChunkSize, y+chunkPos.Y*ChunkSize))
 		}
 	}
 

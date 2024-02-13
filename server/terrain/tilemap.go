@@ -2,101 +2,19 @@ package terrain
 
 import (
 	"fmt"
+	"sync"
 
 	. "creeps.heav.fr/geom"
 	mathutils "creeps.heav.fr/math_utils"
-	"github.com/fatih/color"
 )
-
-type TileKind uint8
-
-const (
-	TileGrass TileKind = iota
-	TileWater
-	TileStone
-	TileBush
-	TileTree
-	TileOil
-
-	TileTownHall
-	TileHousehold
-	TileRoad
-	TileSawMill
-	TileSmeltery
-)
-
-const ChunkSize = 32
-const ChunkTileCount = ChunkSize * ChunkSize
-
-type Tile struct {
-	Kind  TileKind
-	Value uint8
-}
-
-func (tile Tile) Print() {
-	color.Set(color.BgGreen)
-	color.Set(color.FgBlack)
-	switch tile.Kind {
-	case TileGrass:
-		fmt.Print("  ")
-	case TileWater:
-		color.Set(color.BgHiBlue)
-		color.Set(color.FgBlue)
-		fmt.Print("~ ")
-	case TileStone:
-		color.Set(color.BgHiBlack)
-		color.Set(color.FgBlack)
-		fmt.Print("# ")
-	case TileBush:
-		color.Set(color.FgHiRed)
-		fmt.Print(". ")
-	case TileTree:
-		color.Set(color.FgHiGreen)
-		fmt.Print("T ")
-	case TileOil:
-		color.Set(color.FgBlack)
-		fmt.Print("■ ")
-
-	case TileTownHall:
-		fmt.Print("TH")
-	case TileHousehold:
-		fmt.Print("HH")
-	case TileRoad:
-		fmt.Print("RO")
-	case TileSawMill:
-		fmt.Print("SM")
-	case TileSmeltery:
-		fmt.Print("SL")
-	}
-	color.Unset()
-}
-
-type TilemapChunk struct {
-	tiles [ChunkTileCount]Tile
-}
 
 type Tilemap struct {
+	// guards chunks
+	chunkslock sync.RWMutex
+	// generator can only be accessed (for read or write) with write lock on
+	// chunkslock
 	generator *ChunkGenerator
 	chunks    map[Point]*TilemapChunk
-}
-
-func (chunk *TilemapChunk) GetTile(subcoord Point) *Tile {
-	if subcoord.X < 0 || subcoord.X >= ChunkSize ||
-		subcoord.Y < 0 || subcoord.Y >= ChunkSize {
-		return nil
-	}
-
-	return &chunk.tiles[subcoord.X+subcoord.Y*ChunkSize]
-}
-
-func (chunk *TilemapChunk) Print() {
-	for y := ChunkSize - 1; y > 0; y-- {
-		for x := 0; x < ChunkSize; x++ {
-			point := Point{X: x, Y: y}
-			chunk.GetTile(point).Print()
-		}
-		fmt.Println()
-	}
 }
 
 func NewTilemap(generator *ChunkGenerator) Tilemap {
@@ -106,39 +24,34 @@ func NewTilemap(generator *ChunkGenerator) Tilemap {
 	}
 }
 
-// Gets the position of the chunk containing the given global position
-// Ex with ChunkSize as 16:
-//
-// From {x = 5, y = 38} -> {x = 0, y = 3}
-// From {x = -1, y = 0} -> {x = -1, y = 0}
-func Global2ContainingChunkCoords(tile Point) Point {
-	return Point{
-		X: mathutils.FloorDivInt(tile.X, ChunkSize),
-		Y: mathutils.FloorDivInt(tile.Y, ChunkSize),
-	}
-}
-
-// Gets the position *in the chunk* of the given global tile position
-// Ex with ChunkSize as 16:
-//
-// From {x = 5, y = 38} -> {x = 5, y = 5}
-// From {x = -1, y = 0} -> {x = 15, y = 0}
-func Global2ChunkSubCoords(tile Point) Point {
-	return Point{
-		X: mathutils.RemEuclidInt(tile.X, ChunkSize),
-		Y: mathutils.RemEuclidInt(tile.Y, ChunkSize),
-	}
-}
-
+// Use GetTile and SetTile instead, this is mainly for serialization and internal use
+// if the chunk isn't generated this retuns nil
 func (tilemap *Tilemap) GetChunk(chunkPos Point) *TilemapChunk {
+	tilemap.chunkslock.RLock()
+	defer tilemap.chunkslock.RUnlock()
 	return tilemap.chunks[chunkPos]
 }
 
+// Retuns the already known chunk or generates it
 func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *TilemapChunk {
-	if chunk := tilemap.GetChunk(chunkPos); chunk != nil {
+	// first try to read already existing chunk
+	tilemap.chunkslock.RLock()
+	if chunk := tilemap.chunks[chunkPos]; chunk != nil {
+		tilemap.chunkslock.RUnlock()
+		return chunk
+	}
+	tilemap.chunkslock.RUnlock()
+	// no chunk = get write access
+	tilemap.chunkslock.Lock()
+	defer tilemap.chunkslock.Unlock()
+
+	// there may be a race condition where the chunk was generated between lock
+	// access so we must re-check for it
+	if chunk := tilemap.chunks[chunkPos]; chunk != nil {
 		return chunk
 	}
 
+	// Only now can we safely generate the chunk
 	tilemap.chunks[chunkPos] = tilemap.generator.GenerateChunk(chunkPos)
 	return tilemap.chunks[chunkPos]
 }
@@ -151,14 +64,17 @@ func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *TilemapChunk {
 // 	return t.chunks[p]
 // }
 
+// Gets read access on the chunk and returns the value of the chunk
 func (t *Tilemap) GetTile(p Point) Tile {
 	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
-	return *chunk.GetTile(Global2ChunkSubCoords(p))
+	return chunk.GetTile(Global2ChunkSubCoords(p))
 }
 
-func (t *Tilemap) SetTile(p Point, newVal Tile) {
+// Gets write access on the chunk, the sets the given tile to the given value
+// returning its previous value
+func (t *Tilemap) SetTile(p Point, newVal Tile) Tile {
 	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
-	*chunk.GetTile(Global2ChunkSubCoords(p)) = newVal
+	return chunk.SetTile(Global2ChunkSubCoords(p), newVal)
 }
 
 func (t *Tilemap) PrintRegion(from Point, upto Point) {

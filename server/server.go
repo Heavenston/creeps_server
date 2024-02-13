@@ -115,6 +115,19 @@ func (srv *Server) RemovePlayer(id uid.Uid) *Player {
 	return player
 }
 
+func (srv *Server) GetPlayerFromId(id uid.Uid) *Player {
+	return srv.players[id]
+}
+
+func (srv *Server) GetPlayerFromUsername(username string) *Player {
+	for _, player := range srv.players {
+		if player.GetUsername() == username {
+			return player
+		}
+	}
+	return nil
+}
+
 func (srv *Server) GetUnit(id uid.Uid) IUnit {
 	next := srv.units.Iter()
 	for ok, _, unit := next(); ok; ok, _, unit = next() {
