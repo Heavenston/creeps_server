@@ -70,6 +70,7 @@ func (gen *ChunkGenerator) sample(x int, y int) Tile {
 func (gen *ChunkGenerator) GenerateChunk(chunkPos geom.Point) *TilemapChunk {
 	chunk := new(TilemapChunk)
 	wcl := chunk.WLock()
+	defer wcl.UnLock()
 
 	for x := 0; x < ChunkSize; x++ {
 		for y := 0; y < ChunkSize; y++ {

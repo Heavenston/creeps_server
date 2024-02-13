@@ -25,35 +25,35 @@ func main() {
 	tilemap := NewTilemap(generator)
 	srv := NewServer(&tilemap, &model.SetupResponse{
 		CitizenFeedingRate: 20,
-		EnableGC: true,
-		GcTickRate: 120,
+		EnableGC: false,
+		GcTickRate: 50,
 		EnableEnemies: false,
-		EnemyTickRate: 0,
-		FoodGatherRate: 0,
-		MaxLoad: 50,
+		EnemyTickRate: 75,
+		MaxLoad: 25,
 		MaxMissesPerPlayer: 200,
 		MaxMissesPerUnit: 200,
-		ServerId: "id",
+		ServerId: "heavenstone_server",
 		TicksPerSeconds: 5,
 		TrackAchievements: false,
 		WorldDimension: Point{},
+		FoodGatherRate: 5,
 		OilGatherRate: 5,
 		RockGatherRate: 5,
 		WoodGatherRate: 5,
 	}, &model.CostsResponse{})
+	srv.SetDefaultPlayerResources(model.Resources{
+		Rock: 30,
+		Wood: 30,
+		Food: 30,
+		Oil: 0,
+		Copper: 0,
+		WoodPlank: 0,
+	})
 
 	api_server := &api.ApiServer {
 		Addr: "localhost:1664",
 		Server: srv,
 	}
-
-	// srv.Ticker().AddTickFunc(func () {
-	// 	fmt.Printf("\033[40A")
-	// 	srv.Tilemap().PrintRegion(
-	// 		Point{X:-20,Y:-20},
-	// 		Point{X: 21,Y: 21},
-	// 	)
-	// })
 
 	go api_server.Start()
 	srv.Start()

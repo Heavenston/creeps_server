@@ -49,8 +49,8 @@ func Global2ChunkSubCoords(tile Point) Point {
 }
 
 func (chunk *TilemapChunk) IsInBounds(subcoord Point) bool {
-    return subcoord.X < 0 || subcoord.X >= ChunkSize ||
-		subcoord.Y < 0 || subcoord.Y >= ChunkSize
+    return subcoord.X >= 0 && subcoord.X < ChunkSize ||
+		subcoord.Y >= 0 || subcoord.Y < ChunkSize
 }
 
 func (chunk *TilemapChunk) tileIndex(subcoord Point) int {

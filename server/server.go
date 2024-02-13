@@ -131,7 +131,7 @@ func (srv *Server) GetCosts() *model.CostsResponse {
 }
 
 func (srv *Server) Start() {
-	log.Info().Any("setup", srv.setup).Any("costs", srv.costs).Msg("Server starting")
+	log.Info().Msg("Server starting")
 	srv.ticker.Start()
 }
 
@@ -202,15 +202,18 @@ func (srv *Server) FindSpawnPoint() Point {
 
 	dist := 5
 
+	log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] Looking for spawn point...")
 	for dist < 1_000_000_000 {
 		for try := 0; try < 120; try++ {
 			center := Point{X: srv.spawnRand.Intn(dist*2) - dist, Y: srv.spawnRand.Intn(dist*2) - dist}
 
 			point, found := srv.FindSpawnPointNear(center)
 			if found {
+				log.Trace().Any("point", point).Msg("[SPAWN_POINT] Found")
 				return point
 			}
 		}
+		log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] not found, increasing dist")
 		dist += dist / 2
 	}
 
