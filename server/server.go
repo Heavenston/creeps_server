@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// every unit operation must be thread-safe atomic
 type IUnit interface {
 	GetServer() *Server
 	GetId() uid.Uid

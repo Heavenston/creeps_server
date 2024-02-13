@@ -1,12 +1,15 @@
 package units
 
 import (
+	"sync"
+
 	. "creeps.heav.fr/server"
 	"creeps.heav.fr/uid"
 )
 
 type CitizenUnit struct {
 	unit
+	lock        sync.RWMutex    
 	owner       uid.Uid
 	lastEatenAt int
 }
@@ -25,6 +28,9 @@ func (citizen *CitizenUnit) GetOwner() uid.Uid {
 }
 
 func (citizen *CitizenUnit) Tick() {
+	citizen.lock.Lock()
+	defer citizen.lock.Unlock()
+
 	server := citizen.server
 	ticker := server.Ticker()
 

@@ -1,8 +1,32 @@
 package geom
 
 import (
+	"sync"
+
 	mathutils "creeps.heav.fr/math_utils"
 )
+
+type AtomicPoint struct {
+	lock sync.RWMutex
+	point Point
+}
+
+func (p *AtomicPoint) Load() Point {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+
+	return p.point
+}
+
+// Stores the given point and returns the previous value
+func (p *AtomicPoint) Store(o Point) Point {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	prev := p.point
+	p.point = o
+	return prev
+}
 
 type Point struct {
 	X int `json:"x"`
