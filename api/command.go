@@ -1,8 +1,10 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type commandHandle struct {
@@ -13,5 +15,11 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(200)
     w.Write(make([]byte, 0))
 
-    fmt.Printf("Ola %s", r.URL)
+    login := chi.URLParam(r, "login")
+    unitId := chi.URLParam(r, "unitId")
+    opcode := chi.URLParam(r, "opcode")
+
+    log.Debug().
+        Str("login", login).Str("unitId", unitId).Str("opcode", opcode).
+        Msg("Command post")
 }

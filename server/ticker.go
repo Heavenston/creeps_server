@@ -2,6 +2,8 @@ package server
 
 import (
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type TickFunc func()
@@ -25,6 +27,7 @@ func NewTicker(ticksPerSeconds float64) *Ticker {
 }
 
 func (ticker *Ticker) Start() {
+    log.Info().Float64("tps", ticker.ticksPerSeconds).Msg("Ticker starting")
 	time_ticker := time.NewTicker(time.Duration(float64(time.Second) / ticker.ticksPerSeconds))
 	defer time_ticker.Stop()
 

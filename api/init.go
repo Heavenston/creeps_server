@@ -7,7 +7,9 @@ import (
 	"creeps.heav.fr/api/model"
 	"creeps.heav.fr/gameplay"
 	"creeps.heav.fr/server"
+
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type initHandle struct {
@@ -45,4 +47,12 @@ func (h *initHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	w.Write(data)
+
+	log.Info().Str("username", username).
+		Any("townhall_posiion", townhall).
+		Any("c1id", c1id).
+		Any("c2id", c2id).
+		Any("id", player.GetId()).
+		Any("addr", player.GetAddr()).
+		Msg("New player init")
 }

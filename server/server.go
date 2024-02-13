@@ -8,6 +8,7 @@ import (
 	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
+	"github.com/rs/zerolog/log"
 )
 
 type IUnit interface {
@@ -133,6 +134,7 @@ func (srv *Server) GetCosts() *model.CostsResponse {
 }
 
 func (srv *Server) Start() {
+	log.Info().Any("setup", srv.setup).Any("costs", srv.costs).Msg("Server starting")
 	srv.ticker.Start()
 }
 

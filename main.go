@@ -1,16 +1,26 @@
 package main
 
 import (
+	"os"
 	"time"
 
 	"creeps.heav.fr/api"
-	. "creeps.heav.fr/server"
-	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/api/model"
+	. "creeps.heav.fr/geom"
+	. "creeps.heav.fr/server"
 	. "creeps.heav.fr/server/terrain"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	cw := zerolog.ConsoleWriter{
+		Out: os.Stdout,
+	}
+	log.Logger = zerolog.New(cw).With().
+		Timestamp().
+		Logger()
+
 	generator := NewChunkGenerator(time.Now().UnixMilli())
 	tilemap := NewTilemap(generator)
 	srv := NewServer(&tilemap, &model.SetupResponse{

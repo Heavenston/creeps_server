@@ -1,8 +1,10 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type reportHandle struct {
@@ -13,5 +15,10 @@ func (h *reportHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(200)
     w.Write(make([]byte, 0))
 
-    fmt.Printf("Ola %s", r.URL)
+    reportId := chi.URLParam(r, "reportId")
+
+	log.Trace().
+        Str("reportId", reportId).
+        Str("addr", r.RemoteAddr).
+		Msg("Get report Id")
 }

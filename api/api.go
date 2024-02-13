@@ -9,6 +9,7 @@ import (
 	. "creeps.heav.fr/server"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/rs/zerolog/log"
 )
 
 type ApiServer struct {
@@ -24,7 +25,6 @@ type ApiErrorResponse struct {
 func (api *ApiServer) Start() {
     router := chi.NewRouter()
     router.Use(middleware.RealIP)
-    router.Use(middleware.Logger)
     router.Use(middleware.Recoverer)
     router.Use(middleware.Timeout(60 * time.Second))
 
@@ -40,11 +40,11 @@ func (api *ApiServer) Start() {
         api: api,
     })
     
-    router.Handle("/command/", &commandHandle {
+    router.Handle("/command/{login}/{unitId}/{opcode}", &commandHandle {
         api: api,
     })
     
-    router.Handle("/report/", &reportHandle {
+    router.Handle("/report/{reportId}", &reportHandle {
         api: api,
     })
     
@@ -62,6 +62,8 @@ func (api *ApiServer) Start() {
         }
     	fmt.Fprintf(w, "%s", marshalled)
     })
+
+    log.Info().Str("addr", api.Addr).Msg("Api server starting")
     
     http.ListenAndServe(api.Addr, router)
 }
