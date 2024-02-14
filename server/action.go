@@ -4,32 +4,35 @@ import (
 	"sync/atomic"
 
 	"creeps.heav.fr/api/model"
-	"creeps.heav.fr/uid"
 	. "creeps.heav.fr/geom"
+	"creeps.heav.fr/uid"
 )
 
 type ActionOpCode string
 
 const (
-	OpCodeMoveLeft        ActionOpCode = "move:left"
-	OpCodeMoveRight       ActionOpCode = "move:right"
-	OpCodeMoveUp          ActionOpCode = "move:up"
-	OpCodeMoveDown        ActionOpCode = "move:down"
-	OpCodeObserve         ActionOpCode = "observe"
-	OpCodeGather          ActionOpCode = "gather"
-	OpCodeDismantle       ActionOpCode = "dismantle"
-	OpCodeUpgrade         ActionOpCode = "upgrade"
-	OpCodeRefineCopper    ActionOpCode = "refine:copper"
-	OpCodeRefineWoodPlank ActionOpCode = "refine:wood-plank"
-	OpCodeBuildTownHall   ActionOpCode = "build:town-hall"
-	OpCodeBuildHousehold  ActionOpCode = "build:household"
-	OpCodeBuildSawmill    ActionOpCode = "build:sawmill"
-	OpCodeBuildSmeltery   ActionOpCode = "build:smeltery "
-	OpCodeBuildRoad       ActionOpCode = "build:road"
-	OpCodeSpawnTurret     ActionOpCode = "spawn:turret"
-	OpCodeSpawnBomberBot  ActionOpCode = "spawn:bomber-bot"
-	OpCodeFireTurret      ActionOpCode = "fire:turret"
-	OpCodeFireBomberBot   ActionOpCode = "fire:bomber-bot"
+	OpCodeMoveLeft ActionOpCode = "move:left"
+
+	OpCodeMoveRight       = "move:right"
+	OpCodeMoveUp          = "move:up"
+	OpCodeMoveDown        = "move:down"
+	OpCodeObserve         = "observe"
+	OpCodeGather          = "gather"
+	OpCodeUnload          = "unload"
+	OpCodeFarm            = "farm"
+	OpCodeDismantle       = "dismantle"
+	OpCodeUpgrade         = "upgrade"
+	OpCodeRefineCopper    = "refine:copper"
+	OpCodeRefineWoodPlank = "refine:wood-plank"
+	OpCodeBuildTownHall   = "build:town-hall"
+	OpCodeBuildHousehold  = "build:household"
+	OpCodeBuildSawmill    = "build:sawmill"
+	OpCodeBuildSmeltery   = "build:smeltery "
+	OpCodeBuildRoad       = "build:road"
+	OpCodeSpawnTurret     = "spawn:turret"
+	OpCodeSpawnBomberBot  = "spawn:bomber-bot"
+	OpCodeFireTurret      = "fire:turret"
+	OpCodeFireBomberBot   = "fire:bomber-bot"
 )
 
 func (opcode ActionOpCode) GetCost(unit IUnit) *model.CostResponse {
@@ -47,6 +50,10 @@ func (opcode ActionOpCode) GetCost(unit IUnit) *model.CostResponse {
 		return &srv.costs.Observe
 	case OpCodeGather:
 		return &srv.costs.Gather
+	case OpCodeUnload:
+		return &srv.costs.Unload
+	case OpCodeFarm:
+		return &srv.costs.Farm
 	case OpCodeDismantle:
 		return &srv.costs.Dismantle
 	case OpCodeUpgrade:
@@ -80,50 +87,15 @@ func (opcode ActionOpCode) GetCost(unit IUnit) *model.CostResponse {
 func (opcode ActionOpCode) MoveDirection() Point {
 	switch opcode {
 	case OpCodeMoveDown:
-		return Point{X:0, Y:-1}
+		return Point{X: 0, Y: -1}
 	case OpCodeMoveUp:
-		return Point{X:0, Y:1}
+		return Point{X: 0, Y: 1}
 	case OpCodeMoveLeft:
-		return Point{X:-1, Y:0}
+		return Point{X: -1, Y: 0}
 	case OpCodeMoveRight:
-		return Point{X:1, Y:0}
+		return Point{X: 1, Y: 0}
 	default:
 		return Point{}
-	}
-}
-
-// called by unit in units/unit.go when the action is finished
-func (opcode ActionOpCode) ApplyOn(unit IUnit) {
-	// srv := unit.GetServer()
-
-	movement := opcode.MoveDirection()
-	if movement != (Point{}) {
-		unit.ModifyPosition(func (pos Point) Point {
-			return pos.Add(movement)
-		})
-	}
-	
-	switch opcode {
-	case OpCodeMoveLeft:
-	case OpCodeMoveRight:
-	case OpCodeMoveUp:
-	case OpCodeMoveDown:
-
-	case OpCodeObserve:
-	case OpCodeGather:
-	case OpCodeDismantle:
-	case OpCodeUpgrade:
-	case OpCodeRefineCopper:
-	case OpCodeRefineWoodPlank:
-	case OpCodeBuildTownHall:
-	case OpCodeBuildHousehold:
-	case OpCodeBuildSawmill:
-	case OpCodeBuildSmeltery:
-	case OpCodeBuildRoad:
-	case OpCodeSpawnTurret:
-	case OpCodeSpawnBomberBot:
-	case OpCodeFireTurret:
-	case OpCodeFireBomberBot:
 	}
 }
 

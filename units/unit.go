@@ -1,6 +1,7 @@
 package units
 
 import (
+	"sync"
 	"sync/atomic"
 
 	"creeps.heav.fr/api/model"
@@ -19,11 +20,13 @@ type unit struct {
 	// read-only (no lock)
 	server *Server
 	// read-only (no lock)
-	id         uid.Uid
-	alive      atomic.Bool
-	position   AtomicPoint
-	lastAction atomic.Pointer[Action]
-	upgraded   atomic.Bool
+	id            uid.Uid
+	alive         atomic.Bool
+	position      AtomicPoint
+	lastAction    atomic.Pointer[Action]
+	upgraded      atomic.Bool
+	inventoryLock sync.RWMutex
+	inventory     model.Resources
 }
 
 func (unit *unit) unitInit(server *Server) {
@@ -69,12 +72,34 @@ func (unit *unit) ModifyPosition(cb func(Point) Point) (Point, Point) {
 	return unit.position.Modify(cb)
 }
 
-func (unit *unit) GetUpgraded() bool {
+func (unit *unit) IsUpgraded() bool {
 	return unit.upgraded.Load()
 }
 
 func (unit *unit) SetUpgraded(new bool) {
 	unit.upgraded.Store(new)
+}
+
+func (unit *unit) ObserveDistance() int {
+	return 0
+}
+
+func (unit *unit) GetInventory() model.Resources {
+	unit.inventoryLock.RLock()
+	defer unit.inventoryLock.RUnlock()
+	return unit.inventory
+}
+
+func (unit *unit) ModifyInventory(cb func(model.Resources) model.Resources) {
+	unit.inventoryLock.Lock()
+	defer unit.inventoryLock.Unlock()
+	unit.inventory = cb(unit.inventory)
+}
+
+func (unit *unit) SetInventory(newInv model.Resources) {
+	unit.inventoryLock.Lock()
+	defer unit.inventoryLock.Unlock()
+	unit.inventory = newInv
 }
 
 func startAction(this extendedUnit, action *Action, supported []ActionOpCode) error {
@@ -94,7 +119,7 @@ func startAction(this extendedUnit, action *Action, supported []ActionOpCode) er
 	}
 	if !issupported {
 		return UnsuportedActionError{
-			Tried: action.OpCode,
+			Tried:     action.OpCode,
 			Supported: supported,
 		}
 	}
@@ -152,5 +177,8 @@ func tick(this IUnit) {
 
 	// action is finished
 
-	action.OpCode.ApplyOn(this)
+	action.Finised.Store(true)
+
+	report := ApplyAction(action, this)
+	this.GetServer().AddReport(report)
 }

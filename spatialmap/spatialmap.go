@@ -11,6 +11,10 @@ type SpatialMap[T Positioned] struct {
 	objects []T
 }
 
+func Make[T Positioned]() SpatialMap[T] {
+	return SpatialMap[T]{}
+}
+
 func (m SpatialMap[T]) Copy() SpatialMap[T] {
 	return m
 }
@@ -50,13 +54,16 @@ func (m *SpatialMap[T]) GetAt(point geom.Point) *T {
 	})
 }
 
-func (m *SpatialMap[T]) GetIn(from geom.Point, upto geom.Point) (*T, bool) {
+func (m *SpatialMap[T]) GetAllWithin(from geom.Point, upto geom.Point) []T {
+	result := make([]T, 0)
+
 	for _, obj := range m.objects {
 		if obj.GetPosition().IsWithing(from, upto) {
-			return &obj, true
+			result = append(result, obj)
 		}
 	}
-	return nil, false
+
+	return result
 }
 
 func (m *SpatialMap[T]) Iter() func() (bool, int, *T) {

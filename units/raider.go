@@ -29,6 +29,10 @@ func (raider *RaiderUnit) getUnit() *unit {
 	return &raider.unit
 }
 
+func (raider *RaiderUnit) GetOpCode() string {
+	return "raider"
+}
+
 func (raider *RaiderUnit) GetUpgradeCosts() *model.CostResponse {
 	return nil
 }

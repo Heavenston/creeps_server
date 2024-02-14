@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"creeps.heav.fr/api/model"
 	"creeps.heav.fr/server"
@@ -18,8 +19,7 @@ type commandHandle struct {
 }
 
 func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    w.WriteHeader(200)
-    w.Write(make([]byte, 0))
+    addr := strings.Split(r.RemoteAddr, ":")[0]
 
     login := chi.URLParam(r, "login")
     unitIdStr := chi.URLParam(r, "unitId")
@@ -47,9 +47,11 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     player := h.api.Server.GetPlayerFromUsername(login)
 
-    if player == nil || player.GetAddr() != r.RemoteAddr {
+    if player == nil || player.GetAddr() != addr {
         log.Trace().
-            Any("player", player).
+            Str("login", login).
+            Bool("found", player != nil).
+            Str("addr", addr).
             Msg("Access denied")
 
         sendError(

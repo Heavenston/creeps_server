@@ -1,8 +1,9 @@
 package terrain
 
 import (
-	"fmt"
+	"io"
 
+	"creeps.heav.fr/api/model"
 	"github.com/fatih/color"
 )
 
@@ -26,45 +27,57 @@ const (
 const ChunkSize = 32
 const ChunkTileCount = ChunkSize * ChunkSize
 
+func (kind TileKind) GetResourceName() model.ResourceKind {
+	switch kind {
+	case TileBush:
+		return model.Food
+	case TileTree:
+		return model.Wood
+	case TileOil:
+		return model.Oil
+	}
+	return ""
+}
+
 type Tile struct {
 	Kind  TileKind
 	Value uint8
 }
 
-func (tile Tile) Print() {
-	color.Set(color.BgGreen)
-	color.Set(color.FgBlack)
+func (tile Tile) Print(w io.Writer) {
+	c := color.New()
+	c.Add(color.BgGreen)
+	c.Add(color.FgBlack)
 	switch tile.Kind {
 	case TileGrass:
-		fmt.Print("  ")
+		c.Fprint(w, "  ")
 	case TileWater:
-		color.Set(color.BgHiBlue)
-		color.Set(color.FgBlue)
-		fmt.Print("~ ")
+		c.Add(color.BgHiBlue)
+		c.Add(color.FgBlue)
+		c.Fprint(w, "~ ")
 	case TileStone:
-		color.Set(color.BgHiBlack)
-		color.Set(color.FgBlack)
-		fmt.Print("# ")
+		c.Add(color.BgHiBlack)
+		c.Add(color.FgBlack)
+		c.Fprint(w, "# ")
 	case TileBush:
-		color.Set(color.FgHiRed)
-		fmt.Print(". ")
+		c.Add(color.FgHiRed)
+		c.Fprint(w, ". ")
 	case TileTree:
-		color.Set(color.FgHiGreen)
-		fmt.Print("T ")
+		c.Add(color.FgHiGreen)
+		c.Fprint(w, "T ")
 	case TileOil:
-		color.Set(color.FgBlack)
-		fmt.Print("■ ")
+		c.Add(color.FgBlack)
+		c.Fprint(w, "■ ")
 
 	case TileTownHall:
-		fmt.Print("TH")
+		c.Fprint(w, "TH")
 	case TileHousehold:
-		fmt.Print("HH")
+		c.Fprint(w, "HH")
 	case TileRoad:
-		fmt.Print("RO")
+		c.Fprint(w, "RO")
 	case TileSawMill:
-		fmt.Print("SM")
+		c.Fprint(w, "SM")
 	case TileSmeltery:
-		fmt.Print("SL")
+		c.Fprint(w, "SL")
 	}
-	color.Unset()
 }

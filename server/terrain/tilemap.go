@@ -2,6 +2,7 @@ package terrain
 
 import (
 	"fmt"
+	"io"
 	"sync"
 
 	. "creeps.heav.fr/geom"
@@ -77,16 +78,40 @@ func (t *Tilemap) SetTile(p Point, newVal Tile) Tile {
 	return chunk.SetTile(Global2ChunkSubCoords(p), newVal)
 }
 
-func (t *Tilemap) PrintRegion(from Point, upto Point) {
-	min_x := mathutils.MinInt(from.X, upto.X)
-	min_y := mathutils.MinInt(from.Y, upto.Y)
-	max_x := mathutils.MaxInt(from.X, upto.X)
-	max_y := mathutils.MaxInt(from.Y, upto.Y)
+func (t *Tilemap) ModifyTile(p Point, cb func (Tile) Tile) {
+	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
+	chunk.ModifyTile(Global2ChunkSubCoords(p), cb)
+}
+
+func (t *Tilemap) PrintRegion(w io.Writer, from Point, upto Point) {
+	min_x := mathutils.Min(from.X, upto.X)
+	min_y := mathutils.Min(from.Y, upto.Y)
+	max_x := mathutils.Max(from.X, upto.X)
+	max_y := mathutils.Max(from.Y, upto.Y)
 
 	for y := max_y-1; y > min_y; y-- {
 		for x := min_x; x < max_x; x++ {
-			t.GetTile(Point { X:x, Y:y }).Print()
+			t.GetTile(Point { X:x, Y:y }).Print(w)
 		}
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
+}
+
+// Returns a list of tiles in the given region
+func (t *Tilemap) ObserveRegion(from Point, upto Point) []Tile {
+	min_x := mathutils.Min(from.X, upto.X)
+	min_y := mathutils.Min(from.Y, upto.Y)
+	max_x := mathutils.Max(from.X, upto.X)
+	max_y := mathutils.Max(from.Y, upto.Y)
+
+	tiles := make([]Tile, 0)
+
+	// FIXME: Lots of locks, but locking the correct chunks... too lazy rn
+	for y := min_y; y < max_y; y++ {
+		for x := min_x; x < max_x; x++ {
+			tiles = append(tiles, t.GetTile(Point { X:x, Y:y }))
+		}
+	}
+
+	return tiles
 }

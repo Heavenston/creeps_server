@@ -1,20 +1,34 @@
 package api
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 
+	"creeps.heav.fr/api/model"
 	"github.com/rs/zerolog/log"
 )
 
 type statisticsHandle struct {
-    api *ApiServer
+	api *ApiServer
 }
 
 func (h *statisticsHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    w.WriteHeader(200)
-    w.Write(make([]byte, 0))
+	resp := model.StatisticsResponse{
+		ServerId:    h.api.Server.GetSetup().ServerId,
+		GameRunning: true,
+		Tick:        h.api.Server.Ticker().GetTickNumber(),
+		Dimension:   h.api.Server.GetSetup().WorldDimension,
+		Players:     []model.Player{},
+	}
 
-    log.Trace().
-        Str("addr", r.RemoteAddr).
-        Msg("Statistics request")
+	body, err := json.Marshal(resp)
+	errors.Unwrap(err)
+
+	w.WriteHeader(200)
+	w.Write(body)
+
+	log.Trace().
+		Str("addr", r.RemoteAddr).
+		Msg("Statistics request")
 }

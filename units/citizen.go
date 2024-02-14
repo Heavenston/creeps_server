@@ -30,12 +30,24 @@ func (citizen *CitizenUnit) getUnit() *unit {
 	return &citizen.unit
 }
 
+func (citizen *CitizenUnit) GetOpCode() string {
+	return "citizen"
+}
+
 func (citizen *CitizenUnit) GetUpgradeCosts() *model.CostResponse {
 	return &citizen.GetServer().GetCosts().UpgradeCitizen
 }
 
 func (citizen *CitizenUnit) GetOwner() uid.Uid {
 	return citizen.owner
+}
+
+func (citizen *CitizenUnit) ObserveDistance() int {
+	if citizen.IsUpgraded() {
+		// FIXME: Is it correct ?
+		return 7
+	}
+	return 6
 }
 
 func (citizen *CitizenUnit) StartAction(action *Action) error {
@@ -56,6 +68,8 @@ func (citizen *CitizenUnit) StartAction(action *Action) error {
 		OpCodeSpawnTurret,
 
 		OpCodeGather,
+		OpCodeFarm,
+		OpCodeUnload,
 		OpCodeRefineCopper,
 		OpCodeRefineWoodPlank,
 
@@ -85,8 +99,8 @@ func (citizen *CitizenUnit) Tick() {
 
 	feedInterval := server.GetSetup().CitizenFeedingRate
 	feedAmount := 1
-	if citizen.GetUpgraded() {
-		feedAmount++
+	if citizen.IsUpgraded() {
+		feedAmount = 2
 	}
 
 	if ticker.GetTickNumber()-citizen.lastEatenAt > feedInterval {

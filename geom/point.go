@@ -78,10 +78,10 @@ func (a Point) Dist(b Point) int {
 // Returns true if the point is within the rectangle delimited by the given points
 // with from being included and upto expluded
 func (p Point) IsWithing(from Point, upto Point) bool {
-	min_x := mathutils.MinInt(from.X, upto.X)
-	min_y := mathutils.MinInt(from.Y, upto.Y)
-	max_x := mathutils.MaxInt(from.X, upto.X)
-	max_y := mathutils.MaxInt(from.Y, upto.Y)
+	min_x := mathutils.Min(from.X, upto.X)
+	min_y := mathutils.Min(from.Y, upto.Y)
+	max_x := mathutils.Max(from.X, upto.X)
+	max_y := mathutils.Max(from.Y, upto.Y)
 
 	return p.X >= min_x && p.Y >= min_y && p.X < max_x && p.Y < max_y
 }

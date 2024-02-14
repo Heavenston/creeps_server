@@ -6,6 +6,17 @@ import (
 	"creeps.heav.fr/uid"
 )
 
+type ResourceKind string
+
+const (
+	Copper    ResourceKind = "copper"
+	Food                   = "food"
+	Oil                    = "oil"
+	Rock                   = "rock"
+	Wood                   = "wood"
+	WoodPlank              = "woodPlank"
+)
+
 type Resources struct {
 	Rock      int `json:"rock"`
 	Wood      int `json:"wood"`
@@ -15,10 +26,28 @@ type Resources struct {
 	WoodPlank int `json:"woodPlank"`
 }
 
+func (res *Resources) OfKind(kind ResourceKind) *int {
+	switch kind {
+	case Rock:
+		return &res.Rock
+	case Wood:
+		return &res.Wood
+	case Food:
+		return &res.Food
+	case Oil:
+		return &res.Oil
+	case Copper:
+		return &res.Copper
+	case WoodPlank:
+		return &res.WoodPlank
+	}
+	return nil
+}
+
 // return how many times this resources have the other one
 // (4 copper 2 rock for 1 copper 1 rock returns 2)
 func (res Resources) EnoughFor(other Resources) float64 {
-	return mathutils.MinFloat64(
+	return mathutils.Min(
 		float64(res.Rock)/float64(other.Rock),
 		float64(res.Wood)/float64(other.Wood),
 		float64(res.Food)/float64(other.Food),
@@ -56,23 +85,29 @@ func (res Resources) Sum(other Resources) Resources {
 	return res
 }
 
+func (res Resources) Size() int {
+	return res.Rock + res.Wood + res.Food + res.Oil + res.Copper + res.WoodPlank
+}
+
 type StatusResponse struct {
 	Running bool `json:"running"`
 }
 
+type Player struct {
+	Name         string    `json:"name"`
+	Status       string    `json:"status"`
+	Units        int       `json:"units"`
+	Buildings    int       `json:"buildings"`
+	Resources    Resources `json:"resources"`
+	Achievements []string  `json:"achievements"`
+}
+
 type StatisticsResponse struct {
-	ServerId    string     `json:"qerverId"`
-	GameRunning string     `json:"qameRunning"`
-	Tick        int        `json:"qick"`
-	Dimensions  geom.Point `json:"qimensions"`
-	Players     []struct {
-		Name         string    `json:"name"`
-		Status       string    `json:"status"`
-		Units        int       `json:"units"`
-		Buildings    int       `json:"buildings"`
-		Resources    Resources `json:"resources"`
-		Achievements []string  `json:"achievements"`
-	} `json:"players"`
+	ServerId    string     `json:"serverId"`
+	GameRunning bool       `json:"gameRunning"`
+	Tick        int        `json:"tick"`
+	Dimension   geom.Point `json:"dimension"`
+	Players     []Player   `json:"players"`
 }
 
 type CostResponse struct {

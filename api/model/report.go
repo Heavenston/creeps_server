@@ -4,19 +4,20 @@ import (
 	"reflect"
 
 	"creeps.heav.fr/geom"
+	"creeps.heav.fr/uid"
 )
 
 // used by some reports
 type Unit struct {
 	OpCode   string     `json:"opcode"`
-	OwnerId  string     `json:"player"`
+	Player   string     `json:"player"`
 	Position geom.Point `json:"position"`
 }
 
 // used by some reports
 type Building struct {
 	OpCode   string     `json:"opcode"`
-	OwnerId  string     `json:"ownerId"`
+	Player   string     `json:"ownerId"`
 	Position geom.Point `json:"position"`
 }
 
@@ -32,14 +33,12 @@ type IReport interface {
 }
 
 type Report struct {
-	OpCode       *string     `json:"opcode"`
-	ReportId     *string     `json:"reportId"`
-	UnitId       *string     `json:"unitId"`
-	Login        *string     `json:"login"`
-	UnitPosition *geom.Point `json:"unitPosition"`
-	Status       *string     `json:"status"`
-	ErrorCode    *string     `json:"errorCode"`
-	Error        *string     `json:"error"`
+	OpCode       string     `json:"opcode"`
+	ReportId     uid.Uid    `json:"reportId"`
+	UnitId       uid.Uid    `json:"unitId"`
+	Login        string     `json:"login"`
+	UnitPosition geom.Point `json:"unitPosition"`
+	Status       string     `json:"status"`
 }
 
 func (r *Report) GetReport() *Report {
@@ -48,6 +47,12 @@ func (r *Report) GetReport() *Report {
 
 func (r *Report) GetParameterType() reflect.Type {
 	return nil
+}
+
+type ErrorReport struct {
+	Report
+	ErrorCode string `json:"errorCode"`
+	Error     string `json:"-"`
 }
 
 type NoOpReport struct {
@@ -67,9 +72,9 @@ type MoveReport struct {
 
 type GatherReport struct {
 	Report
-	Resources     string `json:"resources"`
-	Gathered      int    `json:"gathered"`
-	ResourcesLeft int    `json:"resourcesLeft"`
+	Resource      ResourceKind `json:"resource"`
+	Gathered      int          `json:"gathered"`
+	ResourcesLeft int          `json:"resourcesLeft"`
 }
 
 type UnloadReport struct {
@@ -89,14 +94,14 @@ type BuildReport struct {
 
 type BuildHouseHoldReport struct {
 	BuildReport
-	SpawnedCitizen1Id string `json:"spawnedCitizen1Id"`
-	SpawnedCitizen2Id string `json:"spawnedCitizen2Id"`
+	SpawnedCitizen1Id uid.Uid `json:"spawnedCitizen1Id"`
+	SpawnedCitizen2Id uid.Uid `json:"spawnedCitizen2Id"`
 }
 
 type SpawnReport struct {
 	Report
-	SpawnedUnitId string `json:"spawnedUnitId"`
-	SpawnedUnit   Unit   `json:"spawnedUnit"`
+	SpawnedUnitId uid.Uid `json:"spawnedUnitId"`
+	SpawnedUnit   Unit    `json:"spawnedUnit"`
 }
 
 type DismantleReport struct {
@@ -127,8 +132,8 @@ type MessageFetchReport struct {
 
 type FireReport struct {
 	Report
-	Target geom.Point `json:"target"`
-	KilledUnits []Unit `json:"killedUnits"`
+	Target      geom.Point `json:"target"`
+	KilledUnits []Unit     `json:"killedUnits"`
 }
 
 func (r *FireReport) GetParameterType() reflect.Type {

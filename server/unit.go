@@ -37,6 +37,8 @@ func (e NotEnoughResourcesError) Error() string {
 type IUnit interface {
 	GetServer() *Server
 	GetId() uid.Uid
+	// returns an identifier of this kind of unit
+	GetOpCode() string
 	IsBusy() bool
 	GetAlive() bool
 	SetAlive(new bool)
@@ -50,6 +52,12 @@ type IUnit interface {
 	// can return UnitBusyError or UnsuportedActionError
 	StartAction(action *Action) error
 	GetUpgradeCosts() *model.CostResponse
+	IsUpgraded() bool
+	ObserveDistance() int
+	GetInventory() model.Resources
+	// atomically modifier the inventory
+	ModifyInventory(func(model.Resources) model.Resources)
+	SetInventory(newInv model.Resources)
 	// Ran each tick after being registered by the server
 	// only if GetAlive returns true
 	Tick()

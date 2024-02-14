@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"creeps.heav.fr/api/model"
 	"creeps.heav.fr/gameplay"
@@ -17,12 +18,11 @@ type initHandle struct {
 }
 
 func (h *initHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
-	w.Write(make([]byte, 0))
+    addr := strings.Split(r.RemoteAddr, ":")[0]
 
 	username := chi.URLParam(r, "username")
 
-	player := server.NewPlayer(username, r.RemoteAddr)
+	player := server.NewPlayer(username, addr)
 	player.SetResources(h.api.Server.GetDefaultPlayerResources())
 	townhall, household, c1, c2 := gameplay.InitPlayer(h.api.Server, player)
 

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"math/rand"
 	"sync"
 
@@ -23,6 +24,9 @@ type Server struct {
 	units       spatialmap.SpatialMap[IUnit]
 	playersLock sync.RWMutex
 	players     map[uid.Uid]*Player
+	reportsLock sync.RWMutex
+	// reports older than (somevalue) gets removed by the creeps garbage collector
+	reports     map[uid.Uid]model.IReport
 
 	defaultPlayerResourcesLock sync.RWMutex
 	defaultPlayerResources     model.Resources
@@ -35,7 +39,10 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 	srv := new(Server)
 	srv.tilemap = tilemap
 
+	srv.units = spatialmap.Make[IUnit]()
 	srv.players = make(map[uid.Uid]*Player)
+	srv.reports = make(map[uid.Uid]model.IReport)
+
 	srv.ticker = NewTicker(setup.TicksPerSeconds)
 	srv.ticker.AddTickFunc(func() {
 		srv.tick()
@@ -109,6 +116,13 @@ func (srv *Server) GetUnit(id uid.Uid) IUnit {
 	return nil
 }
 
+func (srv *Server) GetUnitsWithin(from Point, upto Point) []IUnit {
+	srv.unitsLock.RLock()
+	defer srv.unitsLock.RUnlock()
+
+	return srv.units.GetAllWithin(from, upto)
+}
+
 // You probably want to use gameplay.InitPlayer instead
 func (srv *Server) RegisterPlayer(player *Player) {
 	srv.playersLock.Lock()
@@ -152,6 +166,23 @@ func (srv *Server) GetPlayerFromUsername(username string) *Player {
 		}
 	}
 	return nil
+}
+
+func (srv *Server) AddReport(report model.IReport) {
+	srv.reportsLock.Lock()
+	defer srv.reportsLock.Unlock()
+
+	if srv.reports[report.GetReport().ReportId] != nil {
+		panic(fmt.Errorf("cannot add a report twice (%s)", report.GetReport().ReportId))
+	}
+
+	srv.reports[report.GetReport().ReportId] = report
+}
+
+func (srv *Server) GetReport(id uid.Uid) model.IReport {
+	srv.reportsLock.Lock()
+	defer srv.reportsLock.Unlock()
+	return srv.reports[id]
 }
 
 func (srv *Server) GetSetup() *model.SetupResponse {

@@ -2,6 +2,7 @@ package terrain
 
 import (
 	"fmt"
+	"io"
 	"sync"
 
 	. "creeps.heav.fr/geom"
@@ -82,14 +83,27 @@ func (chunk *TilemapChunk) SetTile(subcoord Point, newValue Tile) Tile {
     return tile
 }
 
-func (chunk *TilemapChunk) Print() {
+// Atomically modify the given tile
+func (chunk *TilemapChunk) ModifyTile(subcoord Point, cb func(Tile) Tile) {
+	if !chunk.IsInBounds(subcoord) {
+        panic("out of bound chunk tile access")
+	}
+
+	chunk.tileslock.Lock()
+	defer chunk.tileslock.Unlock()
+
+    tile := chunk.tiles[chunk.tileIndex(subcoord)]
+	chunk.tiles[chunk.tileIndex(subcoord)] = cb(tile)
+}
+
+func (chunk *TilemapChunk) Print(w io.Writer) {
     rlc := chunk.RLock()
 	for y := ChunkSize - 1; y > 0; y-- {
 		for x := 0; x < ChunkSize; x++ {
 			point := Point{X: x, Y: y}
-			rlc.GetTile(point).Print()
+			rlc.GetTile(point).Print(w)
 		}
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
 }
 
