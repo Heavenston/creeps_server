@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"creeps.heav.fr/api/model"
@@ -17,15 +18,6 @@ type commandHandle struct {
 }
 
 func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    sendError := func(code string, mess string) {
-        bytes, err := json.Marshal(model.CommandResponse {
-            ErrorCode: &code,
-            Error: &mess,
-        })
-        errors.Unwrap(err)
-        w.Write(bytes)
-    }
-
     w.WriteHeader(200)
     w.Write(make([]byte, 0))
 
@@ -33,6 +25,21 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     unitIdStr := chi.URLParam(r, "unitId")
     unitId := uid.Uid(unitIdStr)
     opcode := chi.URLParam(r, "opcode")
+
+    sendError := func(code string, mess string) {
+        bytes, err := json.Marshal(model.CommandResponse {
+            OpCode: opcode,
+            Login: login,
+            ErrorCode: &code,
+            Error: &mess,
+        })
+        errors.Unwrap(err)
+        w.Write(bytes)
+        log.Trace().
+            Str("login", login).Str("unitId", unitIdStr).Str("opcode", opcode).
+            Str("code", code).Str("mess", mess).
+            Msg("Command failed")
+    }
 
     log.Debug().
         Str("login", login).Str("unitId", unitIdStr).Str("opcode", opcode).
@@ -69,9 +76,10 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 
     newAction := new(server.Action)
-    reportIdStr := string(newAction.ReportId)
     newAction.ReportId = uid.GenUid() 
+    newAction.OpCode = server.ActionOpCode(opcode)
 
+    reportIdStr := string(newAction.ReportId)
     err := unit.StartAction(newAction)
 
     if err != nil {
@@ -82,10 +90,10 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             )
             return
         }
-        if _, ok := err.(server.UnsuportedActionError); ok {
+        if err, ok := err.(server.UnsuportedActionError); ok {
             sendError(
                 "unrecognized",
-                "The opcode you requested was not recognized by the unit.",
+                fmt.Sprintf("Ocode %s is not supported, supported actions: %v", err.Tried, err.Supported),
             )
             return
         }
@@ -99,9 +107,9 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 
     response := model.CommandResponse {
-        OpCode: &opcode,
+        OpCode: opcode,
         ReportId: &reportIdStr,
-        Login: &login,
+        Login: login,
         UnitId: &unitIdStr,
         Misses: 0, // < TODO: Count misses (put in player struct)
     }

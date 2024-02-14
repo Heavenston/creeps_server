@@ -16,10 +16,11 @@ func (e UnitBusyError) Error() string {
 
 type UnsuportedActionError struct {
 	Tried     ActionOpCode
+	Supported []ActionOpCode
 }
 
 func (e UnsuportedActionError) Error() string {
-	return fmt.Sprintf("action %s is not supported", e.Tried)
+	return fmt.Sprintf("action %s is not supported, supported: %v", e.Tried, e.Supported)
 }
 
 type NotEnoughResourcesError struct {

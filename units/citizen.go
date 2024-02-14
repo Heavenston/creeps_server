@@ -58,6 +58,8 @@ func (citizen *CitizenUnit) StartAction(action *Action) error {
 		OpCodeGather,
 		OpCodeRefineCopper,
 		OpCodeRefineWoodPlank,
+
+		OpCodeObserve,
 	})
 	if err != nil {
 		return err

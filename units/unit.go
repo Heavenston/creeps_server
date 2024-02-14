@@ -78,20 +78,24 @@ func (unit *unit) SetUpgraded(new bool) {
 }
 
 func startAction(this extendedUnit, action *Action, supported []ActionOpCode) error {
+	if this == nil || action == nil {
+		panic("cannot work nil")
+	}
 	if action.Finised.Load() {
 		panic("cannot start finished action")
 	}
 
-	supp := false
+	issupported := false
 	for _, op := range supported {
 		if op == action.OpCode {
-			supp = true
+			issupported = true
 			break
 		}
 	}
-	if !supp {
+	if !issupported {
 		return UnsuportedActionError{
 			Tried: action.OpCode,
+			Supported: supported,
 		}
 	}
 

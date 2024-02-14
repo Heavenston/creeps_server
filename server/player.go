@@ -72,10 +72,7 @@ func (player *Player) GetTownHalls() []Point {
 	return player.townHalls
 }
 
-func (player *Player) HasTownHall(p Point) bool {
-	player.lock.RLock()
-	defer player.lock.RUnlock()
-
+func (player *Player) hasTownHall(p Point) bool {
 	for _, op := range player.townHalls {
 		if op == p {
 			return true
@@ -84,11 +81,17 @@ func (player *Player) HasTownHall(p Point) bool {
 	return false
 }
 
+func (player *Player) HasTownHall(p Point) bool {
+	player.lock.RLock()
+	defer player.lock.RUnlock()
+	return player.hasTownHall(p)
+}
+
 func (player *Player) AddTownHall(p Point) {
 	player.lock.Lock()
 	defer player.lock.Unlock()
 
-	if player.HasTownHall(p) {
+	if player.hasTownHall(p) {
 		panic("Cannot add a town hall twice")
 	}
 
