@@ -23,6 +23,7 @@ type unit struct {
 	alive      atomic.Bool
 	position   AtomicPoint
 	lastAction atomic.Pointer[Action]
+	upgraded   atomic.Bool
 }
 
 func (unit *unit) unitInit(server *Server) {
@@ -64,8 +65,16 @@ func (unit *unit) GetLastAction() *Action {
 	return unit.lastAction.Load()
 }
 
-func (unit *unit) ModifyPosition(cb func (Point) Point) (Point, Point) {
+func (unit *unit) ModifyPosition(cb func(Point) Point) (Point, Point) {
 	return unit.position.Modify(cb)
+}
+
+func (unit *unit) GetUpgraded() bool {
+	return unit.upgraded.Load()
+}
+
+func (unit *unit) SetUpgraded(new bool) {
+	unit.upgraded.Store(new)
 }
 
 func startAction(this extendedUnit, action *Action, supported []ActionOpCode) error {
@@ -111,7 +120,7 @@ func startAction(this extendedUnit, action *Action, supported []ActionOpCode) er
 		})
 		if !hadEnough {
 			return NotEnoughResourcesError{
-				Required: cost.Resources,
+				Required:  cost.Resources,
 				Available: had,
 			}
 		}
