@@ -100,7 +100,7 @@ func startAction(this extendedUnit, action *Action, supported []ActionOpCode) er
 	}
 
 	lastAction := this.GetLastAction()
-	if lastAction != nil || !lastAction.Finised.Load() {
+	if lastAction != nil && !lastAction.Finised.Load() {
 		return UnitBusyError{}
 	}
 

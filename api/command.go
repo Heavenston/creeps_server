@@ -48,6 +48,10 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     player := h.api.Server.GetPlayerFromUsername(login)
 
     if player == nil || player.GetAddr() != r.RemoteAddr {
+        log.Trace().
+            Any("player", player).
+            Msg("Access denied")
+
         sendError(
             "noplayer",
             "The login you provided does not exist or is not someone you have access to",
@@ -58,15 +62,10 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     unit := h.api.Server.GetUnit(unitId)
 
     if unit == nil || unit.GetOwner() != player.GetId() {
-        errorcode := "nounit"
-        error := "The unitId you provided did not match any of your units."
-
-        bytes, err := json.Marshal(model.CommandResponse {
-            ErrorCode: &errorcode,
-            Error: &error,
-        })
-        errors.Unwrap(err)
-        w.Write(bytes)
+        sendError(
+            "nounit",
+            "The unitId you provided did not match any of your units.",
+        )
         return
     }
 
@@ -79,7 +78,6 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     newAction.ReportId = uid.GenUid() 
     newAction.OpCode = server.ActionOpCode(opcode)
 
-    reportIdStr := string(newAction.ReportId)
     err := unit.StartAction(newAction)
 
     if err != nil {
@@ -108,9 +106,9 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     response := model.CommandResponse {
         OpCode: opcode,
-        ReportId: &reportIdStr,
+        ReportId: &newAction.ReportId,
         Login: login,
-        UnitId: &unitIdStr,
+        UnitId: &unitId,
         Misses: 0, // < TODO: Count misses (put in player struct)
     }
 

@@ -7,11 +7,11 @@ import (
 )
 
 type Resources struct {
-	Rock       int `json:"rock"`
-	Wood       int `json:"wood"`
-	Food       int `json:"food"`
-	Oil        int `json:"oil"`
-	Copper     int `json:"copper"`
+	Rock      int `json:"rock"`
+	Wood      int `json:"wood"`
+	Food      int `json:"food"`
+	Oil       int `json:"oil"`
+	Copper    int `json:"copper"`
 	WoodPlank int `json:"woodPlank"`
 }
 
@@ -19,12 +19,12 @@ type Resources struct {
 // (4 copper 2 rock for 1 copper 1 rock returns 2)
 func (res Resources) EnoughFor(other Resources) float64 {
 	return mathutils.MinFloat64(
-		float64(res.Rock) / float64(other.Rock),
-		float64(res.Wood) / float64(other.Wood),
-		float64(res.Food) / float64(other.Food),
-		float64(res.Oil) / float64(other.Oil),
-		float64(res.Copper) / float64(other.Copper),
-		float64(res.WoodPlank) / float64(other.WoodPlank),
+		float64(res.Rock)/float64(other.Rock),
+		float64(res.Wood)/float64(other.Wood),
+		float64(res.Food)/float64(other.Food),
+		float64(res.Oil)/float64(other.Oil),
+		float64(res.Copper)/float64(other.Copper),
+		float64(res.WoodPlank)/float64(other.WoodPlank),
 	)
 }
 
@@ -126,8 +126,8 @@ type SetupResponse struct {
 }
 
 type InitResponse struct {
-	Citizen1Id           *uid.Uid        `json:"citizen1Id"`
-	Citizen2Id           *uid.Uid        `json:"citizen2Id"`
+	Citizen1Id           *uid.Uid       `json:"citizen1Id"`
+	Citizen2Id           *uid.Uid       `json:"citizen2Id"`
 	Costs                *CostsResponse `json:"costs"`
 	Error                *string        `json:"error"`
 	HouseholdCoordinates *geom.Point    `json:"householdCoordinates"`
@@ -135,27 +135,16 @@ type InitResponse struct {
 	PlayerId             *int16         `json:"playerId"`
 	Resources            *Resources     `json:"resources"`
 	Setup                *SetupResponse `json:"setup"`
-	Tick                 int           `json:"tick"`
+	Tick                 int            `json:"tick"`
 	TownHallCoordinates  *geom.Point    `json:"townHallCoordinates"`
 }
 
 type CommandResponse struct {
-	OpCode    string `json:"opCode"`
-	ReportId  *string `json:"reportId"`
-	ErrorCode *string `json:"errorCode"`
-	Error     *string `json:"error"`
-	Login     string `json:"login"`
-	UnitId    *string `json:"unitId"`
-	Misses    int     `json:"misses"`
-}
-
-type Report struct {
-	OpCode       *string     `json:"opCode"`
-	ReportId     *string     `json:"reportId"`
-	UnitId       *string     `json:"unitId"`
-	Login        *string     `json:"login"`
-	UnitPosition *geom.Point `json:"unitPosition"`
-	Status       *string     `json:"status"`
-	ErrorCode    *string     `json:"errorCode"`
-	Error        *string     `json:"error"`
+	OpCode    string   `json:"opcode"`
+	ReportId  *uid.Uid `json:"reportId"`
+	ErrorCode *string  `json:"errorCode"`
+	Error     *string  `json:"error"`
+	Login     string   `json:"login"`
+	UnitId    *uid.Uid `json:"unitId"`
+	Misses    int      `json:"misses"`
 }
