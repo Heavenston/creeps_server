@@ -11,6 +11,10 @@ type SpatialMap[T Positioned] struct {
 	objects []T
 }
 
+func (m SpatialMap[T]) Copy() SpatialMap[T] {
+	return m
+}
+
 func (m *SpatialMap[T]) Add(p T) {
 	for _, o := range m.objects {
 		if o == p {

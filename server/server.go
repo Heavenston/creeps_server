@@ -2,6 +2,7 @@ package server
 
 import (
 	"math/rand"
+	"sync"
 
 	"creeps.heav.fr/api/model"
 	. "creeps.heav.fr/geom"
@@ -18,11 +19,15 @@ type Server struct {
 	setup *model.SetupResponse
 	costs *model.CostsResponse
 
-	units   spatialmap.SpatialMap[IUnit]
-	players map[uid.Uid]*Player
+	unitsLock   sync.RWMutex
+	units       spatialmap.SpatialMap[IUnit]
+	playersLock sync.RWMutex
+	players     map[uid.Uid]*Player
 
-	defaultPlayerResources model.Resources
+	defaultPlayerResourcesLock sync.RWMutex
+	defaultPlayerResources     model.Resources
 
+	randLock  sync.Mutex
 	spawnRand rand.Rand
 }
 
@@ -45,7 +50,12 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 }
 
 func (srv *Server) tick() {
-	next := srv.units.Iter()
+	// Copy to not hold on the lock during the tick
+	srv.unitsLock.RLock()
+	units := srv.units.Copy()
+	srv.unitsLock.RUnlock()
+
+	next := units.Iter()
 	for ok, _, unit := next(); ok; ok, _, unit = next() {
 		if !(*unit).GetAlive() {
 			continue
@@ -66,10 +76,17 @@ func (srv *Server) RegisterUnit(unit IUnit) {
 	if unit.GetServer() != srv {
 		panic("Cannot register unit made for another server")
 	}
+
+	srv.unitsLock.Lock()
+	defer srv.unitsLock.Unlock()
+
 	srv.units.Add(unit)
 }
 
 func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
+	srv.unitsLock.Lock()
+	defer srv.unitsLock.Unlock()
+
 	unit := srv.units.RemoveFirst(func(unit IUnit) bool {
 		return unit.GetId() == id
 	})
@@ -79,8 +96,24 @@ func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
 	return *unit
 }
 
+func (srv *Server) GetUnit(id uid.Uid) IUnit {
+	srv.unitsLock.RLock()
+	defer srv.unitsLock.RUnlock()
+
+	next := srv.units.Iter()
+	for ok, _, unit := next(); ok; ok, _, unit = next() {
+		if (*unit).GetId() == id {
+			return (*unit)
+		}
+	}
+	return nil
+}
+
 // You probably want to use gameplay.InitPlayer instead
 func (srv *Server) RegisterPlayer(player *Player) {
+	srv.playersLock.Lock()
+	defer srv.playersLock.Unlock()
+
 	present := srv.players[player.id]
 	if present == player {
 		panic("Player " + player.id + " already registred")
@@ -91,6 +124,9 @@ func (srv *Server) RegisterPlayer(player *Player) {
 }
 
 func (srv *Server) RemovePlayer(id uid.Uid) *Player {
+	srv.playersLock.Lock()
+	defer srv.playersLock.Unlock()
+
 	player := srv.players[id]
 	if player == nil {
 		return nil
@@ -100,23 +136,19 @@ func (srv *Server) RemovePlayer(id uid.Uid) *Player {
 }
 
 func (srv *Server) GetPlayerFromId(id uid.Uid) *Player {
+	srv.playersLock.RLock()
+	defer srv.playersLock.RUnlock()
+
 	return srv.players[id]
 }
 
 func (srv *Server) GetPlayerFromUsername(username string) *Player {
+	srv.playersLock.RLock()
+	defer srv.playersLock.RUnlock()
+
 	for _, player := range srv.players {
 		if player.GetUsername() == username {
 			return player
-		}
-	}
-	return nil
-}
-
-func (srv *Server) GetUnit(id uid.Uid) IUnit {
-	next := srv.units.Iter()
-	for ok, _, unit := next(); ok; ok, _, unit = next() {
-		if (*unit).GetId() == id {
-			return (*unit)
 		}
 	}
 	return nil
@@ -136,10 +168,14 @@ func (srv *Server) Start() {
 }
 
 func (srv *Server) SetDefaultPlayerResources(resources model.Resources) {
+	srv.defaultPlayerResourcesLock.Lock()
+	defer srv.defaultPlayerResourcesLock.Unlock()
 	srv.defaultPlayerResources = resources
 }
 
 func (srv *Server) GetDefaultPlayerResources() model.Resources {
+	srv.defaultPlayerResourcesLock.RLock()
+	defer srv.defaultPlayerResourcesLock.RUnlock()
 	return srv.defaultPlayerResources
 }
 
@@ -201,6 +237,9 @@ func (srv *Server) FindSpawnPoint() Point {
 	// TODO: Make an algorithm to maintain some player density
 
 	dist := 5
+
+	srv.randLock.Lock()
+	defer srv.randLock.Unlock()
 
 	log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] Looking for spawn point...")
 	for dist < 1_000_000_000 {

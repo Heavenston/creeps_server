@@ -25,21 +25,21 @@ func main() {
 	tilemap := NewTilemap(generator)
 	srv := NewServer(&tilemap, &model.SetupResponse{
 		CitizenFeedingRate: 20,
-		EnableGC: false,
-		GcTickRate: 50,
-		EnableEnemies: false,
-		EnemyTickRate: 75,
-		MaxLoad: 25,
+		EnableGC:           false,
+		GcTickRate:         50,
+		EnableEnemies:      false,
+		EnemyTickRate:      75,
+		MaxLoad:            25,
 		MaxMissesPerPlayer: 200,
-		MaxMissesPerUnit: 200,
-		ServerId: "heavenstone_server",
-		TicksPerSeconds: 5,
-		TrackAchievements: false,
-		WorldDimension: Point{},
-		FoodGatherRate: 5,
-		OilGatherRate: 5,
-		RockGatherRate: 5,
-		WoodGatherRate: 5,
+		MaxMissesPerUnit:   200,
+		ServerId:           "heavenstone_server",
+		TicksPerSeconds:    5,
+		TrackAchievements:  false,
+		WorldDimension:     Point{},
+		FoodGatherRate:     5,
+		OilGatherRate:      5,
+		RockGatherRate:     5,
+		WoodGatherRate:     5,
 	}, &model.CostsResponse{
 		BuildHousehold: model.CostResponse{
 			Cast: 1,
@@ -112,16 +112,16 @@ func main() {
 		},
 	})
 	srv.SetDefaultPlayerResources(model.Resources{
-		Rock: 30,
-		Wood: 30,
-		Food: 30,
-		Oil: 0,
-		Copper: 0,
+		Rock:      30,
+		Wood:      30,
+		Food:      30,
+		Oil:       0,
+		Copper:    0,
 		WoodPlank: 0,
 	})
 
-	api_server := &api.ApiServer {
-		Addr: "localhost:1664",
+	api_server := &api.ApiServer{
+		Addr:   "localhost:1664",
 		Server: srv,
 	}
 
