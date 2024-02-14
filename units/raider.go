@@ -1,7 +1,6 @@
 package units
 
 import (
-	"errors"
 	"sync"
 
 	"creeps.heav.fr/api/model"
@@ -9,6 +8,7 @@ import (
 	mathutils "creeps.heav.fr/math_utils"
 	. "creeps.heav.fr/server"
 	"creeps.heav.fr/uid"
+	"github.com/rs/zerolog/log"
 )
 
 type RaiderUnit struct {
@@ -24,6 +24,11 @@ func NewRaiderUnit(server *Server, target Point) *RaiderUnit {
 	return raider
 }
 
+// for the extendedUnit interface
+func (raider *RaiderUnit) getUnit() *unit {
+	return &raider.unit
+}
+
 func (raider *RaiderUnit) GetUpgradeCosts() *model.CostResponse {
 	return nil
 }
@@ -37,19 +42,15 @@ func (raider *RaiderUnit) GetTarget() Point {
 }
 
 func (raider *RaiderUnit) StartAction(action *Action) error {
-	if action.Finised.Load() {
-		panic("cannot start finished action")
+	err := startAction(raider, action, []ActionOpCode {
+		OpCodeMoveDown,
+		OpCodeMoveUp,
+		OpCodeMoveLeft,
+		OpCodeMoveRight,
+	})
+	if err != nil {
+		return err
 	}
-
-	if action.OpCode.MoveDirection() == (Point{}) {
-		return UnsuportedActionError{Tried: action.OpCode}
-	}
-
-	lastAction := raider.GetLastAction()
-	if lastAction != nil || !lastAction.Finised.Load() {
-		return UnitBusyError{}
-	}
-
 	return nil
 }
 
@@ -73,7 +74,6 @@ func (raider *RaiderUnit) Tick() {
 
 	diff := raider.target.Sub(position)
 	newAction := new(Action)
-	newAction.ReportId = uid.GenUid()
 	newAction.StartedAtTick = raider.GetServer().Ticker().GetTickNumber()
 
 	if mathutils.AbsInt(diff.X) > mathutils.AbsInt(diff.Y) {
@@ -91,5 +91,10 @@ func (raider *RaiderUnit) Tick() {
 	}
 
 	err := raider.StartAction(newAction)
-	errors.Unwrap(err)
+	if err != nil {
+		log.Error().
+			Any("action", newAction).
+			Err(err).
+			Msg("[RAIDER] Could not start action")
+	}
 }

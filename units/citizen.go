@@ -24,6 +24,11 @@ func NewCitizenUnit(server *Server, owner uid.Uid) *CitizenUnit {
 	return citizen
 }
 
+// for the extendedUnit interface
+func (citizen *CitizenUnit) getUnit() *unit {
+	return &citizen.unit
+}
+
 func (citizen *CitizenUnit) GetUpgradeCosts() *model.CostResponse {
 	return &citizen.GetServer().GetCosts().UpgradeCitizen
 }
@@ -33,6 +38,29 @@ func (citizen *CitizenUnit) GetOwner() uid.Uid {
 }
 
 func (citizen *CitizenUnit) StartAction(action *Action) error {
+	err := startAction(citizen, action, []ActionOpCode {
+		OpCodeMoveDown,
+		OpCodeMoveUp,
+		OpCodeMoveLeft,
+		OpCodeMoveRight,
+
+		OpCodeBuildHousehold,
+		OpCodeBuildRoad,
+		OpCodeBuildSawmill,
+		OpCodeBuildSmeltery,
+		OpCodeBuildTownHall,
+
+		OpCodeUpgrade,
+		OpCodeSpawnBomberBot,
+		OpCodeSpawnTurret,
+
+		OpCodeGather,
+		OpCodeRefineCopper,
+		OpCodeRefineWoodPlank,
+	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -46,5 +74,6 @@ func (citizen *CitizenUnit) Tick() {
 	feedInterval := server.GetSetup().CitizenFeedingRate
 
 	if ticker.GetTickNumber()-citizen.lastEatenAt > feedInterval {
+		citizen.lastEatenAt = ticker.GetTickNumber()
 	}
 }

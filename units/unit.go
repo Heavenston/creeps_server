@@ -3,10 +3,16 @@ package units
 import (
 	"sync/atomic"
 
+	"creeps.heav.fr/api/model"
 	. "creeps.heav.fr/geom"
 	. "creeps.heav.fr/server"
 	"creeps.heav.fr/uid"
 )
+
+type extendedUnit interface {
+	IUnit
+	getUnit() *unit
+}
 
 // See server.go's IUnit interface to explain its functions
 type unit struct {
@@ -33,6 +39,11 @@ func (unit *unit) GetId() uid.Uid {
 	return unit.id
 }
 
+func (unit *unit) IsBusy() bool {
+	action := unit.GetLastAction()
+	return action != nil && !action.Finised.Load()
+}
+
 func (unit *unit) GetAlive() bool {
 	return unit.alive.Load()
 }
@@ -55,6 +66,60 @@ func (unit *unit) GetLastAction() *Action {
 
 func (unit *unit) ModifyPosition(cb func (Point) Point) (Point, Point) {
 	return unit.position.Modify(cb)
+}
+
+func startAction(this extendedUnit, action *Action, supported []ActionOpCode) error {
+	if action.Finised.Load() {
+		panic("cannot start finished action")
+	}
+
+	supp := false
+	for _, op := range supported {
+		if op == action.OpCode {
+			supp = true
+			break
+		}
+	}
+	if !supp {
+		return UnsuportedActionError{
+			Tried: action.OpCode,
+		}
+	}
+
+	lastAction := this.GetLastAction()
+	if lastAction != nil || !lastAction.Finised.Load() {
+		return UnitBusyError{}
+	}
+
+	cost := action.OpCode.GetCost(this)
+	if this.GetOwner() != uid.ServerUid {
+		owner := this.GetServer().GetPlayerFromId(this.GetOwner())
+		if owner == nil {
+			panic("could not find owner")
+		}
+
+		var hadEnough bool
+		var had model.Resources
+		owner.ModifyResources(func(res model.Resources) model.Resources {
+			if res.EnoughFor(cost.Resources) < 1 {
+				hadEnough = false
+				had = res
+				return res
+			}
+			hadEnough = true
+			return res.Sub(cost.Resources)
+		})
+		if !hadEnough {
+			return NotEnoughResourcesError{
+				Required: cost.Resources,
+				Available: had,
+			}
+		}
+	}
+
+	this.getUnit().lastAction.Store(action)
+
+	return nil
 }
 
 func tick(this IUnit) {

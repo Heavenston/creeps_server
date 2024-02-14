@@ -2,6 +2,7 @@ package model
 
 import (
 	"creeps.heav.fr/geom"
+	mathutils "creeps.heav.fr/math_utils"
 	"creeps.heav.fr/uid"
 )
 
@@ -12,6 +13,47 @@ type Resources struct {
 	Oil        int `json:"oil"`
 	Copper     int `json:"copper"`
 	WoodPlank int `json:"woodPlank"`
+}
+
+// return how many times this resources have the other one
+// (4 copper 2 rock for 1 copper 1 rock returns 2)
+func (res Resources) EnoughFor(other Resources) float64 {
+	return mathutils.MinFloat64(
+		float64(res.Rock) / float64(other.Rock),
+		float64(res.Wood) / float64(other.Wood),
+		float64(res.Food) / float64(other.Food),
+		float64(res.Oil) / float64(other.Oil),
+		float64(res.Copper) / float64(other.Copper),
+		float64(res.WoodPlank) / float64(other.WoodPlank),
+	)
+}
+
+func (res *Resources) Remove(other Resources) {
+	res.Rock -= other.Rock
+	res.Wood -= other.Wood
+	res.Food -= other.Food
+	res.Oil -= other.Oil
+	res.Copper -= other.Copper
+	res.WoodPlank -= other.WoodPlank
+}
+
+func (res Resources) Sub(other Resources) Resources {
+	res.Remove(other)
+	return res
+}
+
+func (res *Resources) Add(other Resources) {
+	res.Rock += other.Rock
+	res.Wood += other.Wood
+	res.Food += other.Food
+	res.Oil += other.Oil
+	res.Copper += other.Copper
+	res.WoodPlank += other.WoodPlank
+}
+
+func (res Resources) Sum(other Resources) Resources {
+	res.Add(other)
+	return res
 }
 
 type StatusResponse struct {

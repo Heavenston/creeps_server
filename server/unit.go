@@ -22,10 +22,21 @@ func (e UnsuportedActionError) Error() string {
 	return fmt.Sprintf("action %s is not supported", e.Tried)
 }
 
+type NotEnoughResourcesError struct {
+	Required model.Resources
+	Available model.Resources
+}
+
+func (e NotEnoughResourcesError) Error() string {
+	return fmt.Sprintf("not enough resources to perform action")
+}
+
 // every unit operation must be thread-safe atomic
+// implemented in the server/units package
 type IUnit interface {
 	GetServer() *Server
 	GetId() uid.Uid
+	IsBusy() bool
 	GetAlive() bool
 	SetAlive(new bool)
 	// the id of the owner, note: can be the server by way of ServerUid
@@ -35,6 +46,7 @@ type IUnit interface {
 	// atomically modifies the position of the unit
 	ModifyPosition(cb func(Point) Point) (Point, Point)
 	GetLastAction() *Action
+	// can return UnitBusyError or UnsuportedActionError
 	StartAction(action *Action) error
 	GetUpgradeCosts() *model.CostResponse
 	// Ran each tick after being registered by the server
