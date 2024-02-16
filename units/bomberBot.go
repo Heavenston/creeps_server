@@ -3,7 +3,7 @@ package units
 import (
 	"sync"
 
-	"creeps.heav.fr/api/model"
+	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/server"
 	"creeps.heav.fr/uid"
 )

@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"sync"
 
-	"creeps.heav.fr/api/model"
+	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/spatialmap"

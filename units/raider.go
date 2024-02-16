@@ -3,7 +3,7 @@ package units
 import (
 	"sync"
 
-	"creeps.heav.fr/api/model"
+	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
 	mathutils "creeps.heav.fr/math_utils"
 	. "creeps.heav.fr/server"

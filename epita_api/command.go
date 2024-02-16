@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"creeps.heav.fr/api/model"
+	"creeps.heav.fr/epita_api/model"
 	"creeps.heav.fr/server"
 	"creeps.heav.fr/uid"
 	"github.com/go-chi/chi/v5"

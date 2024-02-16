@@ -4,8 +4,8 @@ import (
 	"os"
 	"time"
 
-	"creeps.heav.fr/api"
-	"creeps.heav.fr/api/model"
+	"creeps.heav.fr/epita_api"
+	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
 	. "creeps.heav.fr/server"
 	. "creeps.heav.fr/server/terrain"

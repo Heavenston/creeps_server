@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 
-	"creeps.heav.fr/api/model"
+	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/uid"
 )
