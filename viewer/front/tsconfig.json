@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "esnext" ,
+    "module": "commonjs" ,
+    "lib": [ "esnext", "dom" ],
+    "noEmit": true,
+    "strict": true ,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true ,
+    "moduleResolution": "node",
+    "esModuleInterop": true ,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "exclude": ["node_modules"]
+}

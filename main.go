@@ -9,6 +9,7 @@ import (
 	. "creeps.heav.fr/geom"
 	. "creeps.heav.fr/server"
 	. "creeps.heav.fr/server/terrain"
+	"creeps.heav.fr/viewer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -124,7 +125,12 @@ func main() {
 		Addr:   "localhost:1664",
 		Server: srv,
 	}
-
 	go api_server.Start()
+
+	viewer_server := &viewer.ViewerServer{
+		Addr:   "localhost:1234",
+	}
+	go viewer_server.Start()
+
 	srv.Start()
 }

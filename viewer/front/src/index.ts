@@ -1,1 +1,2 @@
-import "./canvas.ts"
+import "./canvas"
+import "./api"

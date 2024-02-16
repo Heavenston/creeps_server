@@ -11,11 +11,13 @@ import { MinzeElement } from "minze"
   }
   `
 
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
+  private canvas: HTMLCanvasElement | null = null;
+  private ctx: CanvasRenderingContext2D | null = null;
   private animationFrameId: number = -1;
 
   private resizeCanvas() {
+    if (this.canvas == null)
+      return;
     this.canvas.width = this.clientWidth;
     this.canvas.height = this.clientHeight;
     this.renderCanvas(this.lastTime);
@@ -31,6 +33,8 @@ import { MinzeElement } from "minze"
   private readonly h: number = 50;
 
   private renderCanvas(time: number) {
+    if (this.canvas == null || this.ctx == null)
+      return;
     const dt = time - this.lastTime;
     this.lastTime = time;
 
