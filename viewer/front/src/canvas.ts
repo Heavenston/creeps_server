@@ -1,6 +1,6 @@
 import { MinzeElement } from "minze"
 
-export class CreepsCanvas extends MinzeElement {
+(class extends MinzeElement {
   // html template
   html = () => `<canvas/> `
 
@@ -80,5 +80,4 @@ export class CreepsCanvas extends MinzeElement {
   onDestroy() {
     cancelAnimationFrame(this.animationFrameId);
   }
-}
-CreepsCanvas.define()
+}).define("creeps-canvas")
