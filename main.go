@@ -120,7 +120,7 @@ func main() {
 		WoodPlank: 0,
 	})
 
-	api_server := &api.ApiServer{
+	api_server := &epita_api.ApiServer{
 		Addr:   "localhost:1664",
 		Server: srv,
 	}

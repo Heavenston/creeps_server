@@ -1,4 +1,4 @@
-package api
+package epita_api
 
 import (
 	"encoding/json"
