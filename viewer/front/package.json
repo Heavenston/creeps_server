@@ -3,5 +3,13 @@
   "type": "module",
   "devDependencies": {
     "parcel": "^2.11.0"
+  },
+  "scripts": {
+    "dev": "parcel src/index.html",
+    "build": "parcel build src/index.html",
+    "serve": "parcel serve src/index.html"
+  },
+  "dependencies": {
+    "chota": "^0.9.2"
   }
 }
