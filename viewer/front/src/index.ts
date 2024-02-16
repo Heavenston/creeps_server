@@ -1,1 +1,1 @@
-
+import "./canvas.ts"

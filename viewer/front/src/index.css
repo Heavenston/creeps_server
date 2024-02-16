@@ -1,9 +1,12 @@
-@import url(npm:chota/dist/chota.min.css);
+@import url(npm:ress/dist/ress.min.css);
 
-body.dark {
-  --bg-color: #000;
-  --bg-secondary-color: #131316;
-  --font-color: #f5f5f5;
-  --color-grey: #ccc;
-  --color-darkGrey: #777;
+html {
+  height: 100%;
+}
+
+body {
+  font-family: Sans-Serif;
+  background-color: #111111;
+  color: white;
+  height: 100%;
 }
