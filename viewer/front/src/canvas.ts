@@ -1,29 +1,19 @@
 import { MinzeElement } from "minze"
 
-(class extends MinzeElement {
-  // html template
-  html = () => `<canvas/> `
+class WorldRenderer {
+  private readonly canvas: HTMLCanvasElement;
+  private readonly ctx: CanvasRenderingContext2D;
 
-  // scoped stylesheet
-  css = () => `
-  :host {
-    height: 100%;
+  public constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      alert("device/browser not supported");
+      throw new Error("could not create context");
+    }
+
+    this.ctx = ctx;
   }
-  `
-
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
-  private animationFrameId: number = -1;
-
-  private resizeCanvas() {
-    if (this.canvas == null)
-      return;
-    this.canvas.width = this.clientWidth;
-    this.canvas.height = this.clientHeight;
-    this.renderCanvas(this.lastTime);
-  }
-
-  private lastTime = 0;
 
   private x: number = 0;
   private y: number = 0;
@@ -32,11 +22,9 @@ import { MinzeElement } from "minze"
   private readonly w: number = 50;
   private readonly h: number = 50;
 
-  private renderCanvas(time: number) {
+  public render(dt: number) {
     if (this.canvas == null || this.ctx == null)
       return;
-    const dt = time - this.lastTime;
-    this.lastTime = time;
 
     this.x += this.dx * dt;
     if (this.x < 0) {
@@ -61,10 +49,43 @@ import { MinzeElement } from "minze"
 
     this.ctx.fillStyle = "white";
     this.ctx.fillRect(this.x, this.y, this.w, this.h);
-
-    cancelAnimationFrame(this.animationFrameId);
-    this.animationFrameId = requestAnimationFrame(this.renderCanvas.bind(this));
   }
+}
+
+(class extends MinzeElement {
+  // html template
+  html = () => `<canvas/> `
+
+  // scoped stylesheet
+  css = () => `
+  :host {
+    height: 100%;
+  }
+  `
+
+  private canvas: HTMLCanvasElement | null = null;
+  private rendeder: WorldRenderer | null = null;
+  private animationFrameId: number = -1;
+
+  private lastTime = 0;
+
+  private resizeCanvas() {
+    if (this.canvas == null)
+      return;
+    this.canvas.width = this.clientWidth;
+    this.canvas.height = this.clientHeight;
+
+    this.renderCanvas(this.lastTime);
+  }
+
+  private renderCanvas(time: number) {
+    this.rendeder?.render(this.lastTime - time);
+    this.lastTime = time;
+
+    if (this.animationFrameId != -1)
+      cancelAnimationFrame(this.animationFrameId);
+    this.animationFrameId = requestAnimationFrame(this.renderCanvas.bind(this));
+   }
 
   onReady() {
     this.canvas = this.select("canvas") ?? document.createElement("canvas");
@@ -73,7 +94,7 @@ import { MinzeElement } from "minze"
       alert("unsupported device");
       return;
     }
-    this.ctx = ctx;
+    this.rendeder = new WorldRenderer(this.canvas);
     this.resizeCanvas();
 
     new ResizeObserver(() => {

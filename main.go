@@ -129,6 +129,7 @@ func main() {
 
 	viewer_server := &viewer.ViewerServer{
 		Addr:   "localhost:1234",
+		Server: srv,
 	}
 	go viewer_server.Start()
 
