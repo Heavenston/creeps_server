@@ -52,24 +52,14 @@ export class ConnectionEvent extends Event {
   public readonly message: string;
 
   constructor(isConnected: boolean, message: string) {
-    super("connection_stage");
+    super("connection_event");
     this.isConnected = isConnected;
     this.message = message;
   }
 }
 
 export function addEventListener(
-  name: "disconnected",
-  cb: () => void,
-  cfg?: AddEventListenerOptions
-): void;
-export function addEventListener(
-  name: "connected",
-  cb: () => void,
-  cfg?: AddEventListenerOptions
-): void;
-export function addEventListener(
-  name: "connection_stage",
+  name: "connection_event",
   cb: (e: ConnectionEvent) => void,
   cfg?: AddEventListenerOptions
 ): void;
