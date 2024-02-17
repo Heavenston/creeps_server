@@ -21,12 +21,27 @@ export type InitMessage = {
   }
 }
 
-export type Message = InitMessage
+export type SubscribeMessage = {
+  kind: "subscribe",
+  content: {
+    chunkPos: { x: number, y: number }
+  }
+}
+
+export type UnsubscribeMessage = {
+  kind: "unsubscribe",
+  content: {
+    chunkPos: { x: number, y: number }
+  }
+}
+
+export type RecvMessage = InitMessage;
+export type SendMessage = SubscribeMessage | UnsubscribeMessage;
 
 export class MessageEvent extends Event {
-  public readonly message: Message;
+  public readonly message: RecvMessage;
 
-  constructor(message: Message) {
+  constructor(message: RecvMessage) {
     super("message");
     this.message = message;
   }
@@ -43,17 +58,43 @@ export class ConnectionEvent extends Event {
   }
 }
 
-export function addEventListener(name: "disconnected", cb: () => void): void;
-export function addEventListener(name: "connected", cb: () => void): void;
-export function addEventListener(name: "connection_stage", cb: (e: ConnectionEvent) => void): void;
-export function addEventListener(name: "message", cb: (e: MessageEvent) => void): void;
+export function addEventListener(
+  name: "disconnected",
+  cb: () => void,
+  cfg?: AddEventListenerOptions
+): void;
+export function addEventListener(
+  name: "connected",
+  cb: () => void,
+  cfg?: AddEventListenerOptions
+): void;
+export function addEventListener(
+  name: "connection_stage",
+  cb: (e: ConnectionEvent) => void,
+  cfg?: AddEventListenerOptions
+): void;
+export function addEventListener(
+  name: "message",
+  cb: (e: MessageEvent) => void,
+  cfg?: AddEventListenerOptions
+): void;
 
-export function addEventListener(name: string, cb: (e: any) => void): void {
-  events.addEventListener(name, cb);
+export function addEventListener(name: string, cb: (e: any) => void, cfg?: AddEventListenerOptions): void {
+  events.addEventListener(name, cb, cfg);
 }
 
 export function removeEventListener(name: string, cb: (e: any) => void): void {
   events.removeEventListener(name, cb);
+}
+
+export function sendMessage(message: SendMessage) {
+  if (ws == null)
+  {
+    console.warn("could not send message, not connected", message);
+    return;
+  }
+
+  ws.send(JSON.stringify(message));
 }
 
 connect();
