@@ -65,7 +65,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 	channel chan terrain.TilemapUpdateEvent,
 ) {
 	// send full chunk at start
-	{
+	send := func() {
 		tiles := make([]byte, 2*terrain.ChunkSize*terrain.ChunkSize)
 		for y := 0; y < terrain.ChunkSize; y++ {
 			for x := 0; x < terrain.ChunkSize; x++ {
@@ -91,16 +91,16 @@ func (viewer *ViewerServer) handleClientSubscription(
 		connLock.Unlock()
 	}
 
+	send();
+
 	for {
 		_, ok := (<- channel)
 		if !ok {
 			break
 		}
 
-		// TODO: Send real chunk updates
-		connLock.Lock()
-		conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"chunkupdate","content":{}}`))
-		connLock.Unlock()
+		// TODO: Send parials chunk updates
+		send();
 	}
 }
 
