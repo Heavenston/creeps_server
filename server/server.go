@@ -73,6 +73,12 @@ func (srv *Server) Tilemap() *terrain.Tilemap {
 	return srv.tilemap
 }
 
+// returns the spatial map with all units, do NOT use it to add or remove
+// units, only use Server.RegisterUnit and Server.RemoveUnit for that
+func (srv *Server) Units() *spatialmap.SpatialMap[IUnit] {
+	return srv.units
+}
+
 func (srv *Server) RegisterUnit(unit IUnit) {
 	if unit.GetServer() != srv {
 		panic("Cannot register unit made for another server")
@@ -101,10 +107,6 @@ func (srv *Server) GetUnit(id uid.Uid) IUnit {
 		}
 	}
 	return nil
-}
-
-func (srv *Server) GetUnitsWithin(from Point, upto Point) []IUnit {
-	return srv.units.GetAllWithin(from, upto)
 }
 
 // You probably want to use gameplay.InitPlayer instead

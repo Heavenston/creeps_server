@@ -7,14 +7,14 @@ import (
 	. "creeps.heav.fr/geom"
 )
 
-type MovedEvent struct {
+type ObjectMovedEvent struct {
 	From Point
 	To   Point
 }
 
 type Positioned interface {
 	comparable
-	MovementEvents() *events.EventProvider[MovedEvent]
+	MovementEvents() *events.EventProvider[ObjectMovedEvent]
 	GetPosition() Point
 }
 
@@ -23,36 +23,73 @@ type el[T Positioned] struct {
 	subHandle *events.CancelHandle
 }
 
-type internalMovedEvent[T Positioned] struct {
-	From   Point
-	To     Point
-	Object T
+type SpatialMapEvent[T Positioned] struct {
+	PreviousPosition Point
+	Position         Point
+	Object           T
 }
 
-// Operations for fetching a list of entities by their positions
+type sub[T Positioned] struct {
+	From    Point
+	Upto    Point
+	Channel chan SpatialMapEvent[T]
+	Handle  *events.CancelHandle
+}
+
+// Data structure for fetching a list of entities by their positions
+// TODO: Optimize with like maybe an octree or smthg
 type SpatialMap[T Positioned] struct {
 	lock sync.RWMutex
 
-	isCopy     bool
-	updateChan chan internalMovedEvent[T]
+	isReadOnly bool
+	updateChan chan SpatialMapEvent[T]
 	objects    []el[T]
+
+	subscriptions []sub[T]
 }
 
+// rountine always running while the spatial map is active
 func (m *SpatialMap[T]) updateRoutine() {
 	for {
-		_, ok := (<- m.updateChan)
+		event, ok := (<-m.updateChan)
 		if !ok {
 			break
 		}
+
+		// also filters the subscriptions
+		index := 0
+		for _, sub := range m.subscriptions {
+			// filter
+			if !sub.Handle.IsCancelled() {
+				m.subscriptions[index] = sub
+				index++
+			} else {
+				close(sub.Channel)
+				continue
+			}
+
+			if !event.Position.IsWithing(sub.From, sub.Upto) && !event.PreviousPosition.IsWithing(sub.From, sub.Upto) {
+				continue
+			}
+			sub.Channel <- event
+		}
+		m.subscriptions = m.subscriptions[:index]
 	}
 }
 
+// must be eventually closed with Close, or a goroutine leak will occure
 func Make[T Positioned]() *SpatialMap[T] {
 	this := &SpatialMap[T]{
-		updateChan: make(chan internalMovedEvent[T]),
+		updateChan: make(chan SpatialMapEvent[T]),
 	}
 	go this.updateRoutine()
 	return this
+}
+
+// after closing the map is now readonly
+func (m *SpatialMap[T]) Close() {
+	close(m.updateChan)
+	m.isReadOnly = true
 }
 
 // makes a shallow copy, the copy is read-only
@@ -60,13 +97,13 @@ func (m *SpatialMap[T]) Copy() SpatialMap[T] {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	return SpatialMap[T]{
-		isCopy: true,
-		objects: m.objects,
+		isReadOnly: true,
+		objects:    m.objects,
 	}
 }
 
 func (m *SpatialMap[T]) Add(p T) {
-	if m.isCopy {
+	if m.isReadOnly {
 		panic("cannot modify a spatialmap copy")
 	}
 
@@ -78,7 +115,7 @@ func (m *SpatialMap[T]) Add(p T) {
 			panic("cannot have duplicate objects")
 		}
 	}
-	channel := make(chan MovedEvent)
+	channel := make(chan ObjectMovedEvent)
 	handle := p.MovementEvents().Subscribe(channel)
 
 	// 'converts' MovedEvents to internalMovedEvent
@@ -88,10 +125,10 @@ func (m *SpatialMap[T]) Add(p T) {
 			if !ok {
 				break
 			}
-			m.updateChan <- internalMovedEvent[T]{
-				From:   event.From,
-				To:     event.To,
-				Object: p,
+			m.updateChan <- SpatialMapEvent[T]{
+				PreviousPosition: event.From,
+				Position:         event.To,
+				Object:           p,
 			}
 		}
 	})()
@@ -103,7 +140,7 @@ func (m *SpatialMap[T]) Add(p T) {
 }
 
 func (m *SpatialMap[T]) RemoveFirst(predicate func(T) bool) *T {
-	if m.isCopy {
+	if m.isReadOnly {
 		panic("cannot modify a spatialmap copy")
 	}
 
@@ -156,6 +193,38 @@ func (m *SpatialMap[T]) GetAllWithin(from Point, upto Point) []T {
 	}
 
 	return result
+}
+
+// subscribes to all objects moving from, into, or within the given region
+//
+// will send an event with the same value for PreviousPosition and Position with
+// all objects that were already inside
+func (m *SpatialMap[T]) SubscribeWithin(
+	from Point,
+	upto Point,
+	channel chan SpatialMapEvent[T],
+) *events.CancelHandle {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	handle := &events.CancelHandle{}
+
+	m.subscriptions = append(m.subscriptions, sub[T]{
+		From:    from,
+		Upto:    upto,
+		Channel: channel,
+		Handle:  handle,
+	})
+
+	for _, obj := range m.GetAllWithin(from, upto) {
+		pos := obj.GetPosition()
+		channel <- SpatialMapEvent[T] {
+			PreviousPosition: pos,
+			Position: pos,
+			Object: obj,
+		}
+	}
+
+	return handle
 }
 
 func (m *SpatialMap[T]) Iter() func() (bool, int, *T) {

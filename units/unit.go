@@ -29,7 +29,7 @@ type unit struct {
 	upgraded      atomic.Bool
 	inventoryLock sync.RWMutex
 	inventory     model.Resources
-	movedEvents   events.EventProvider[spatialmap.MovedEvent]
+	movedEvents   events.EventProvider[spatialmap.ObjectMovedEvent]
 }
 
 func (unit *unit) unitInit(server *Server) {
@@ -65,13 +65,13 @@ func (unit *unit) GetPosition() Point {
 
 func (unit *unit) SetPosition(new_pos Point) {
 	prevValue := unit.position.Store(new_pos)
-	unit.movedEvents.Emit(spatialmap.MovedEvent{
+	unit.movedEvents.Emit(spatialmap.ObjectMovedEvent{
 		From: prevValue,
 		To: new_pos,
 	})
 }
 
-func (unit *unit) MovementEvents() *events.EventProvider[spatialmap.MovedEvent] {
+func (unit *unit) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent] {
 	return &unit.movedEvents
 }
 

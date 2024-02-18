@@ -19,7 +19,7 @@ func observe(unit IUnit, into *model.ObserveReport) {
 	// remainder upto is excluded
 	upto := unit.GetPosition().Plus(dist+1, dist+1)
 
-	units := server.GetUnitsWithin(from, upto)
+	units := server.Units().GetAllWithin(from, upto)
 	into.Units = make([]model.Unit, 0, len(units))
 	for _, ounit := range units {
 		playerUsername := "server"

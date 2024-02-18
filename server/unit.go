@@ -48,7 +48,7 @@ type IUnit interface {
 	GetOwner() uid.Uid
 	GetPosition() Point
 	SetPosition(newPos Point)
-	MovementEvents() *events.EventProvider[spatialmap.MovedEvent]
+	MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent]
 	// atomically modifies the position of the unit
 	ModifyPosition(cb func(Point) Point) (Point, Point)
 	GetLastAction() *Action
