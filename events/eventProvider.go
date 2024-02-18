@@ -31,16 +31,23 @@ type EventProvider[T any] struct {
 }
 
 func (provider *EventProvider[T]) Subscribe(channel chan T) *CancelHandle {
+    handle := new(CancelHandle)
+    provider.SubscribeWithHandle(channel, handle)
+    return handle
+}
+
+func (provider *EventProvider[T]) SubscribeWithHandle(channel chan T, handle *CancelHandle) {
+    if handle.IsCancelled() {
+        return;
+    }
+
     provider.mutex.Lock()
     defer provider.mutex.Unlock()
 
-    handle := new(CancelHandle)
     provider.subs = append(provider.subs, sub[T]{
         sendChan: channel,
         handle: handle,
     })
-    handle.cancelled.Store(false)
-    return handle
 }
 
 func (provider *EventProvider[T]) Emit(event T) {

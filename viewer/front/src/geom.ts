@@ -1,10 +1,10 @@
 
-export function vec(other: Vector2): Vector2;
+export function vec(other: { x: number, y: number }): Vector2;
 export function vec(x: number): Vector2;
 export function vec(x: number, y: number): Vector2;
 
-export function vec(other: Vector2 | number, other2?: number): Vector2 {
-  if (other instanceof Vector2)
+export function vec(other: { x: number, y: number } | number, other2?: number): Vector2 {
+  if (other instanceof Object)
     return new Vector2(other.x, other.y);
   if (other2 == undefined)
     return new Vector2(other, other);

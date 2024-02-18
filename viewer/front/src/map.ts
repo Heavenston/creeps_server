@@ -2,10 +2,12 @@ import { vec, Vector2 } from "./geom"
 import * as api from "./api"
 
 export class Chunk {
+  public readonly pos: Vector2;
   private tiles: Uint8Array;
 
-  public constructor(data: string) {
+  public constructor(data: string, pos: Vector2) {
     this.tiles = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+    this.pos = pos;
   }
 
   public static get chunkSize(): number {
@@ -50,21 +52,23 @@ api.addEventListener("message", event => {
   if (event.message.kind == "fullchunk") {
     const content = event.message.content;
     const pos = vec(content.chunkPos.x, content.chunkPos.y);
-    chunks.set(key(pos), new Chunk(content.tiles));
+    chunks.set(key(pos), new Chunk(content.tiles, pos));
   }
 })
 
 export function subscribe(pos: Vector2) {
+  const k = key(pos);
+
   if (!api.isConnected()) {
     console.warn("Tried to subscribe to", pos, "while not connected")
     return;
   }
-  if (subs.has(key(pos))) {
+  if (subs.has(k)) {
     console.warn("Tried to resubscribe to", pos)
     return;
   }
 
-  subs.add(key(pos));
+  subs.add(k);
   api.sendMessage({
     kind: "subscribe",
     content: {
@@ -74,16 +78,19 @@ export function subscribe(pos: Vector2) {
 }
 
 export function unsubscribe(pos: Vector2) {
+  const k = key(pos);
+
   if (!api.isConnected()) {
     console.warn("Tried to unsubscribe to", pos, "while not connected")
     return;
   }
-  if (!subs.has(key(pos))) {
+  if (!subs.has(k)) {
     console.warn("Tried to reunsubscribe to", pos)
     return;
   }
 
-  subs.delete(key(pos));
+  subs.delete(k);
+  chunks.delete(k);
   api.sendMessage({
     kind: "unsubscribe",
     content: {
@@ -122,6 +129,10 @@ export function global2ChunkSubCoords(global: Vector2): Vector2 {
   return global
     .mapped(Math.round)
     .mapped(a => remEuclid(a, Chunk.chunkSize))
+}
+
+export function getChunk(chunkPos: Vector2): Chunk | null {
+  return chunks.get(key(chunkPos)) ?? null;
 }
 
 /// get the tile at the given global position or -1 if unavailable

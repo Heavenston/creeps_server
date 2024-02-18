@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"creeps.heav.fr/epita_api/model"
-	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
 	"creeps.heav.fr/server/terrain"
@@ -57,50 +56,77 @@ type unsubscribeRequestContent struct {
 	ChunkPos Point `json:"chunkPos"`
 }
 
+type connection struct {
+	socketLock       sync.Mutex
+	socket           *websocket.Conn
+	chunksLock       sync.RWMutex
+	subscribedChunks map[Point]bool
+}
+
 func (viewer *ViewerServer) handleClientSubscription(
 	chunkPos Point,
-	connLock *sync.Mutex,
-	conn *websocket.Conn,
-	chunk *terrain.TilemapChunk,
-	channel chan terrain.TilemapUpdateEvent,
+	conn *connection,
 ) {
-	// send full chunk at start
-	send := func() {
+	chunk := viewer.Server.Tilemap().GetChunk(chunkPos)
+	if chunk == nil {
+		// FIXME: DO NOT GENERATE, maybe create the object but still to-be-generated
+		//        as we still need to be notified when it is generated
+		chunk = viewer.Server.Tilemap().GenerateChunk(chunkPos)
+	}
+
+	terrainChangeChannel := make(chan terrain.TilemapUpdateEvent)
+	cancelHandle := chunk.UpdatedEventProvider.Subscribe(terrainChangeChannel)
+	defer cancelHandle.Cancel()
+
+	// send full chunk
+	sendTerrain := func() {
 		tiles := make([]byte, 2*terrain.ChunkSize*terrain.ChunkSize)
 		for y := 0; y < terrain.ChunkSize; y++ {
 			for x := 0; x < terrain.ChunkSize; x++ {
-				i := 2*(x + y*terrain.ChunkSize)
-				tile := chunk.GetTile(Point{X:x, Y:y})
+				i := 2 * (x + y*terrain.ChunkSize)
+				tile := chunk.GetTile(Point{X: x, Y: y})
 				tiles[i] = byte(tile.Kind)
 				tiles[i+1] = byte(tile.Value)
 			}
 		}
-		content, err := json.Marshal(fullChunkContent {
+		content, err := json.Marshal(fullChunkContent{
 			ChunkPos: chunkPos,
-			Tiles: tiles,
+			Tiles:    tiles,
 		})
 		if err != nil {
 			log.Warn().Err(err).Msg("full chunk ser error")
 			return
 		}
-		connLock.Lock()
-		conn.WriteJSON(message{
-			Kind: "fullchunk",
+		conn.socketLock.Lock()
+		conn.socket.WriteJSON(message{
+			Kind:    "fullchunk",
 			Content: content,
 		})
-		connLock.Unlock()
+		conn.socketLock.Unlock()
 	}
 
-	send();
+	sendTerrain()
 
 	for {
-		_, ok := (<- channel)
-		if !ok {
+		conn.chunksLock.RLock()
+		stillSubed := conn.subscribedChunks[chunkPos]
+		conn.chunksLock.RUnlock()
+		if !stillSubed {
 			break
 		}
 
-		// TODO: Send parials chunk updates
-		send();
+		select {
+		case _, ok := (<-terrainChangeChannel):
+			if !ok {
+				break
+			}
+			// TODO: Send parials chunk updates
+			sendTerrain()
+		// makes sure at lease once every 30s we check if we are still subed to
+		// the chunk
+		case <-time.After(time.Second * 30):
+		}
+
 	}
 }
 
@@ -112,8 +138,10 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 
 	log.Debug().Any("addr", conn.RemoteAddr()).Msg("New websocket connection")
 
-	var subsCancels []*events.CancelHandle
-	var connLock sync.Mutex
+	connection := connection{
+		socket:           conn,
+		subscribedChunks: make(map[Point]bool),
+	}
 
 	{
 		var initMessage message
@@ -161,21 +189,33 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 				goto softerror
 			}
 
-			chunk := viewer.Server.Tilemap().GetChunk(content.ChunkPos)
-			// FIXME: DO NOT GENERATE, maybe create the object but still to-be-generated
-			//        as we still need to be notified when it is generated
-			if chunk == nil {
-				chunk = viewer.Server.Tilemap().GenerateChunk(content.ChunkPos)
-			}
-			if chunk != nil {
-				updateChannel := make(chan terrain.TilemapUpdateEvent)
-				nc := chunk.UpdatedEventProvider.Subscribe(updateChannel)
-				subsCancels = append(subsCancels, nc)
-				go viewer.handleClientSubscription(content.ChunkPos, &connLock, conn, chunk, updateChannel)
-			} else {
-				go viewer.handleClientSubscription(content.ChunkPos, &connLock, conn, chunk, nil)
+			connection.chunksLock.Lock()
+
+			connection.subscribedChunks[content.ChunkPos] = true
+
+			log.Trace().Any("addr", conn.RemoteAddr()).
+				Any("chunkPos", content.ChunkPos).
+				Int("subCount", len(connection.subscribedChunks)).
+				Msg("Subscribed to a chunk")
+
+			connection.chunksLock.Unlock()
+			go viewer.handleClientSubscription(content.ChunkPos, &connection)
+		case "unsubscribe":
+			var content unsubscribeRequestContent
+			err = json.Unmarshal(mess.Content, &content)
+			if err != nil {
+				goto softerror
 			}
 
+			connection.chunksLock.Lock()
+			delete(connection.subscribedChunks, content.ChunkPos)
+
+			log.Trace().Any("addr", conn.RemoteAddr()).
+				Any("chunkPos", content.ChunkPos).
+				Int("subCount", len(connection.subscribedChunks)).
+				Msg("Unsubscribed to a chunk")
+
+			connection.chunksLock.Unlock()
 		default:
 			log.Debug().
 				Any("addr", conn.RemoteAddr()).
@@ -195,12 +235,6 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 error:
 	if err != nil {
 		return
-	}
-
-	for _, sc := range subsCancels {
-		if sc != nil {
-			sc.Cancel()
-		}
 	}
 
 	if _, ok := err.(*websocket.CloseError); ok {

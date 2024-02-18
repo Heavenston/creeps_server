@@ -18,6 +18,7 @@ class WorldRenderer {
   private eventAbort = new AbortController();
 
   private chunksOnCamera: Vector2[] = [];
+  private chunksCanvases: WeakMap<map.Chunk, OffscreenCanvas> = new WeakMap();
 
   private get screenTopLeftInWorldPos(): Vector2 {
     return this.cameraPos
@@ -78,6 +79,13 @@ class WorldRenderer {
       signal: this.eventAbort.signal,
     });
 
+    this.canvas.addEventListener("mouseleave", () => {
+      clickCameraStart = null;
+      clickMouseStart = null;
+    }, {
+      signal: this.eventAbort.signal,
+    });
+
     this.canvas.addEventListener("wheel", e => {
       const sign = e.deltaY < 0 ? -1 : 1;
       if (sign > 0)
@@ -95,7 +103,18 @@ class WorldRenderer {
       }
     }, {
       signal: this.eventAbort.signal,
-    })
+    });
+
+    api.addEventListener("message", event => {
+      if (event.message.kind != "fullchunk")      
+        return;
+      const pos = vec(event.message.content.chunkPos);
+      const chunk = map.getChunk(pos)
+      if (!chunk)
+        return;
+      // force redraw
+      this.chunksCanvases.delete(chunk);
+    });
 
     this.ctx = ctx;
   }
@@ -128,50 +147,73 @@ class WorldRenderer {
     map.setSubscribed(chunksOnCamera)
   }
 
-  private renderChunk(pos: Vector2) {
-    const start = this.screenTopLeftInWorldPos;
-    const end = this.screenBottomRightInWorldPos;
+  private renderChunkCanvas(chunk: map.Chunk): OffscreenCanvas {
+    const canvas = new OffscreenCanvas(map.Chunk.chunkSize, map.Chunk.chunkSize);
+    const ctx = canvas.getContext("2d");
+    if (ctx == undefined)
+      throw new Error("unsupported device");
+    ctx.imageSmoothingEnabled = false;
+
+    this.chunksCanvases.set(chunk, canvas);
+
     for (let sx = 0; sx < map.Chunk.chunkSize; sx++) {
       for (let sy = 0; sy < map.Chunk.chunkSize; sy++) {
         const subTileCoord = vec(sx, sy);
-        const globalTileCoord = pos.times(map.Chunk.chunkSize).plus(subTileCoord);
 
-        if (globalTileCoord.x < start.x-1 || globalTileCoord.y < start.y-1)
-          continue;
-        if (globalTileCoord.x > end.x || globalTileCoord.y > end.y)
-          continue;
+        const value = chunk.getTileKind(subTileCoord)
 
-        const value = map.getTileKind(globalTileCoord)
-
+        let style: string;
         switch (value) {
         case 0:
-          this.ctx.fillStyle = "green";
+          style = "green";
           break;
         case 1:
-          this.ctx.fillStyle = "blue";
+          style = "blue";
           break;
         case 2:
-          this.ctx.fillStyle = "gray";
+          style = "gray";
           break;
         case 3:
-          this.ctx.fillStyle = "lime";
+          style = "lime";
           break;
         case 4:
-          this.ctx.fillStyle = "red";
+          style = "red";
           break;
         case 5:
-          this.ctx.fillStyle = "black";
+          style = "black";
           break;
         default:
-          this.ctx.fillStyle = "yellow";
+          style = "yellow";
           break;
         }
-        this.ctx.fillRect(
-          globalTileCoord.x, globalTileCoord.y,
+
+        ctx.fillStyle = style;
+        ctx.fillRect(
+          map.Chunk.chunkSize-subTileCoord.x-1, map.Chunk.chunkSize-subTileCoord.y-1,
           1, 1,
         );
       }
     }
+
+    return canvas;
+  }
+
+  private renderChunk(pos: Vector2) {
+    // const start = this.screenTopLeftInWorldPos;
+    // const end = this.screenBottomRightInWorldPos;
+
+    const chunk = map.getChunk(pos);
+    if (chunk == null)
+      return;
+
+    let canvas = this.chunksCanvases.get(chunk);
+    if (!canvas)
+      canvas = this.renderChunkCanvas(chunk);
+
+    const drawpos = pos.times(map.Chunk.chunkSize);
+
+    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.drawImage(canvas, drawpos.x, drawpos.y);
   }
 
   public render(dt: number) {
