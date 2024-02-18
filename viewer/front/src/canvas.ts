@@ -144,9 +144,6 @@ class WorldRenderer {
         const value = map.getTileKind(globalTileCoord)
 
         switch (value) {
-        case -1:
-          this.ctx.fillStyle = "yellow";
-          break;
         case 0:
           this.ctx.fillStyle = "green";
           break;
@@ -157,13 +154,16 @@ class WorldRenderer {
           this.ctx.fillStyle = "gray";
           break;
         case 3:
-          this.ctx.fillStyle = "red";
+          this.ctx.fillStyle = "lime";
           break;
         case 4:
-          this.ctx.fillStyle = "lime";
+          this.ctx.fillStyle = "red";
           break;
         case 5:
           this.ctx.fillStyle = "black";
+          break;
+        default:
+          this.ctx.fillStyle = "yellow";
           break;
         }
         this.ctx.fillRect(

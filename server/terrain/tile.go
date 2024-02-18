@@ -13,15 +13,17 @@ const (
 	TileGrass TileKind = iota
 	TileWater
 	TileStone
-	TileBush
 	TileTree
+	TileBush
 	TileOil
 
 	TileTownHall
 	TileHousehold
-	TileRoad
-	TileSawMill
 	TileSmeltery
+	TileSawMill
+	TileRaiderCamp
+	TileRaiderBorder
+	TileRoad
 )
 
 const ChunkSize = 16
