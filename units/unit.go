@@ -5,8 +5,10 @@ import (
 	"sync/atomic"
 
 	"creeps.heav.fr/epita_api/model"
+	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
 	. "creeps.heav.fr/server"
+	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
 )
 
@@ -27,6 +29,7 @@ type unit struct {
 	upgraded      atomic.Bool
 	inventoryLock sync.RWMutex
 	inventory     model.Resources
+	movedEvents   events.EventProvider[spatialmap.MovedEvent]
 }
 
 func (unit *unit) unitInit(server *Server) {
@@ -61,7 +64,15 @@ func (unit *unit) GetPosition() Point {
 }
 
 func (unit *unit) SetPosition(new_pos Point) {
-	unit.position.Store(new_pos)
+	prevValue := unit.position.Store(new_pos)
+	unit.movedEvents.Emit(spatialmap.MovedEvent{
+		From: prevValue,
+		To: new_pos,
+	})
+}
+
+func (unit *unit) MovementEvents() *events.EventProvider[spatialmap.MovedEvent] {
+	return &unit.movedEvents
 }
 
 func (unit *unit) GetLastAction() *Action {

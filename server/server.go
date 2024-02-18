@@ -20,8 +20,7 @@ type Server struct {
 	setup *model.SetupResponse
 	costs *model.CostsResponse
 
-	unitsLock   sync.RWMutex
-	units       spatialmap.SpatialMap[IUnit]
+	units       *spatialmap.SpatialMap[IUnit]
 	playersLock sync.RWMutex
 	players     map[uid.Uid]*Player
 	reportsLock sync.RWMutex
@@ -57,12 +56,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 }
 
 func (srv *Server) tick() {
-	// Copy to not hold on the lock during the tick
-	srv.unitsLock.RLock()
-	units := srv.units.Copy()
-	srv.unitsLock.RUnlock()
-
-	next := units.Iter()
+	next := srv.units.Iter()
 	for ok, _, unit := next(); ok; ok, _, unit = next() {
 		if !(*unit).GetAlive() {
 			continue
@@ -84,16 +78,10 @@ func (srv *Server) RegisterUnit(unit IUnit) {
 		panic("Cannot register unit made for another server")
 	}
 
-	srv.unitsLock.Lock()
-	defer srv.unitsLock.Unlock()
-
 	srv.units.Add(unit)
 }
 
 func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
-	srv.unitsLock.Lock()
-	defer srv.unitsLock.Unlock()
-
 	unit := srv.units.RemoveFirst(func(unit IUnit) bool {
 		return unit.GetId() == id
 	})
@@ -104,10 +92,9 @@ func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
 }
 
 func (srv *Server) GetUnit(id uid.Uid) IUnit {
-	srv.unitsLock.RLock()
-	defer srv.unitsLock.RUnlock()
+	units := srv.units.Copy()
 
-	next := srv.units.Iter()
+	next := units.Iter()
 	for ok, _, unit := next(); ok; ok, _, unit = next() {
 		if (*unit).GetId() == id {
 			return (*unit)
@@ -117,9 +104,6 @@ func (srv *Server) GetUnit(id uid.Uid) IUnit {
 }
 
 func (srv *Server) GetUnitsWithin(from Point, upto Point) []IUnit {
-	srv.unitsLock.RLock()
-	defer srv.unitsLock.RUnlock()
-
 	return srv.units.GetAllWithin(from, upto)
 }
 

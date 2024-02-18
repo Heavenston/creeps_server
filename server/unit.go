@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"creeps.heav.fr/epita_api/model"
+	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
+	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
 )
 
@@ -46,6 +48,7 @@ type IUnit interface {
 	GetOwner() uid.Uid
 	GetPosition() Point
 	SetPosition(newPos Point)
+	MovementEvents() *events.EventProvider[spatialmap.MovedEvent]
 	// atomically modifies the position of the unit
 	ModifyPosition(cb func(Point) Point) (Point, Point)
 	GetLastAction() *Action
