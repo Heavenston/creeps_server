@@ -72,6 +72,8 @@ func (gen *ChunkGenerator) GenerateChunk(chunkPos geom.Point) *TilemapChunk {
 	wcl := chunk.WLock()
 	defer wcl.UnLock()
 
+	chunk.chunkPos = chunkPos
+
 	for x := 0; x < ChunkSize; x++ {
 		for y := 0; y < ChunkSize; y++ {
 			point := geom.Point{X: x, Y: y}

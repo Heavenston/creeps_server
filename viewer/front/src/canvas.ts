@@ -1,6 +1,7 @@
 import { MinzeElement } from "minze"
 import { vec, Vector2 } from "./geom"
 import * as api from "./api"
+import * as map from "./map"
 
 class WorldRenderer {
   private readonly canvas: HTMLCanvasElement;
@@ -9,18 +10,24 @@ class WorldRenderer {
   // position of the center of the screen in world coordinate
   public cameraPos: Vector2 = vec(0, 0);
   // scale to go from screen pos to world pos
-  public cameraScale: number = 1;
+  public cameraScale: number = 25;
 
   // position of the mouse in screen coordinated
   private mousePos: Vector2 = vec(0, 0);
 
   private eventAbort = new AbortController();
 
-  private pos = vec(0, 0);
-  private vel = vec(0.5, 0.5);
-  private readonly size = vec(50, 50);
-  private minpos = vec(-400, -300);
-  private maxpos = vec( 400,  300);
+  private chunksOnCamera: Vector2[] = [];
+
+  private get screenTopLeftInWorldPos(): Vector2 {
+    return this.cameraPos
+      .minus(vec(this.canvas.width, this.canvas.height).times(0.5).times(1/this.cameraScale));
+  }
+
+  private get screenBottomRightInWorldPos(): Vector2 {
+    return this.cameraPos
+      .plus(vec(this.canvas.width, this.canvas.height).times(0.5).times(1/this.cameraScale));
+  }
 
   // changes the scale but also changes the cameraPos making sure the mousePos
   // doesn't change what it is pointing at
@@ -31,28 +38,6 @@ class WorldRenderer {
 
     this.cameraPos.sub(newGlobal.minus(prevGobal));
     this.cameraScale = val;
-  }
-
-  private update(dt: number) {
-    // this.cameraPos = vec(this.canvas.width, this.canvas.height).times(0.5);
-
-    this.pos.add(this.vel.times(dt));
-    if (this.pos.x < this.minpos.x) {
-      this.pos.x = this.minpos.x;
-      this.vel.x *= -1;
-    }
-    if (this.pos.x+this.size.x > this.maxpos.x) {
-      this.pos.x = this.maxpos.x-this.size.x;
-      this.vel.x *= -1;
-    }
-    if (this.pos.y < this.minpos.y) {
-      this.pos.y = this.minpos.y;
-      this.vel.y *= -1;
-    }
-    if (this.pos.y+this.size.y > this.maxpos.y) {
-      this.pos.y = this.maxpos.y-this.size.y;
-      this.vel.y *= -1;
-    }
   }
 
   public cleanup() {
@@ -106,13 +91,87 @@ class WorldRenderer {
     document.body.addEventListener("keydown", k => {
       if (k.key == "r") {
         this.cameraPos = vec(0, 0);
-        this.cameraScale = 1;
+        this.cameraScale = 25;
       }
     }, {
       signal: this.eventAbort.signal,
     })
 
     this.ctx = ctx;
+  }
+
+  private lastChunkUpadeCameraPos = vec(-5888888, -588888);
+  private update(_dt: number) {
+    // this.cameraPos = vec(this.canvas.width, this.canvas.height).times(0.5);
+
+    if (this.lastChunkUpadeCameraPos.x == this.cameraPos.x && this.lastChunkUpadeCameraPos.y == this.cameraPos.y)
+      return;
+    this.lastChunkUpadeCameraPos = vec(this.cameraPos);
+
+    const chunksOnCamera: Vector2[] = [];
+    this.chunksOnCamera = chunksOnCamera;
+
+    const start = this.screenTopLeftInWorldPos;
+    const end = this.screenBottomRightInWorldPos;
+    // console.log({start, end})
+    const cp = vec(start);
+    for (cp.x = start.x; cp.x-map.Chunk.chunkSize < end.x; cp.x += map.Chunk.chunkSize) {
+      for (cp.y = start.y; cp.y-map.Chunk.chunkSize < end.y; cp.y += map.Chunk.chunkSize) {
+        chunksOnCamera.push(map.global2ContainingChunkCoords(cp));
+      }
+    }
+
+    // console.log("----");
+    // for (const c of chunksOnCamera)
+    //   console.log(c);
+    // console.log("----");
+    map.setSubscribed(chunksOnCamera)
+  }
+
+  private renderChunk(pos: Vector2) {
+    const start = this.screenTopLeftInWorldPos;
+    const end = this.screenBottomRightInWorldPos;
+    for (let sx = 0; sx < map.Chunk.chunkSize; sx++) {
+      for (let sy = 0; sy < map.Chunk.chunkSize; sy++) {
+        const subTileCoord = vec(sx, sy);
+        const globalTileCoord = pos.times(map.Chunk.chunkSize).plus(subTileCoord);
+
+        if (globalTileCoord.x < start.x-1 || globalTileCoord.y < start.y-1)
+          continue;
+        if (globalTileCoord.x > end.x || globalTileCoord.y > end.y)
+          continue;
+
+        const value = map.getTileKind(globalTileCoord)
+
+        switch (value) {
+        case -1:
+          this.ctx.fillStyle = "yellow";
+          break;
+        case 0:
+          this.ctx.fillStyle = "green";
+          break;
+        case 1:
+          this.ctx.fillStyle = "blue";
+          break;
+        case 2:
+          this.ctx.fillStyle = "gray";
+          break;
+        case 3:
+          this.ctx.fillStyle = "red";
+          break;
+        case 4:
+          this.ctx.fillStyle = "lime";
+          break;
+        case 5:
+          this.ctx.fillStyle = "black";
+          break;
+        }
+        this.ctx.fillRect(
+          globalTileCoord.x, globalTileCoord.y,
+          1, 1,
+        );
+      }
+    }
   }
 
   public render(dt: number) {
@@ -137,19 +196,8 @@ class WorldRenderer {
       -this.cameraPos.y,
     );
 
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.minpos.x, this.minpos.y);
-    this.ctx.lineTo(this.maxpos.x, this.minpos.y);
-    this.ctx.lineTo(this.maxpos.x, this.maxpos.y);
-    this.ctx.lineTo(this.minpos.x, this.maxpos.y);
-    this.ctx.lineTo(this.minpos.x, this.minpos.y);
-    this.ctx.lineTo(this.maxpos.x, this.minpos.y);
-    this.ctx.strokeStyle = "white";
-    this.ctx.lineWidth = 10;
-    this.ctx.stroke();
-
-    this.ctx.fillStyle = "white";
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.size.x, this.size.y);
+    for (const chunk of this.chunksOnCamera)
+      this.renderChunk(chunk);
   }
 }
 

@@ -24,7 +24,7 @@ const (
 	TileSmeltery
 )
 
-const ChunkSize = 32
+const ChunkSize = 16
 const ChunkTileCount = ChunkSize * ChunkSize
 
 func (kind TileKind) GetResourceName() model.ResourceKind {

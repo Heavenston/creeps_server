@@ -4,6 +4,7 @@ export const WEBSOCKET_URL: string =
 let events: EventTarget = new EventTarget();
 const RETRY_INTERVAL: number = 5000;
 let ws: WebSocket | null = null;
+let isWsConnected: boolean = false;
 
 let initMessage: InitMessage | null = null;
 export function getInitMessage(): InitMessage | null {
@@ -35,7 +36,15 @@ export type UnsubscribeMessage = {
   }
 }
 
-export type RecvMessage = InitMessage;
+export type FullchunkMessage = {
+  kind: "fullchunk",
+  content: {
+    chunkPos: { x: number, y: number },
+    tiles: string,
+  }
+}
+
+export type RecvMessage = InitMessage | FullchunkMessage;
 export type SendMessage = SubscribeMessage | UnsubscribeMessage;
 
 export class MessageEvent extends Event {
@@ -87,6 +96,10 @@ export function sendMessage(message: SendMessage) {
   ws.send(JSON.stringify(message));
 }
 
+export function isConnected(): boolean {
+  return isWsConnected;
+}
+
 connect();
 function connect() {
   if (ws != null)
@@ -107,6 +120,7 @@ function connect() {
   }
 
   ws.addEventListener("open", (e) => {
+    isWsConnected = true;
     events.dispatchEvent(new ConnectionEvent(true, "connected!"));
     console.info("connected to websocket", e);
   });
@@ -131,6 +145,7 @@ function connect() {
   });
 
   ws.addEventListener("error", (e) => {
+    isWsConnected = false;
     events.dispatchEvent(new ConnectionEvent(false, "connection error, reconnecting in 5s"));
     if (ws == null)
       return;
@@ -139,6 +154,7 @@ function connect() {
     setTimeout(connect, RETRY_INTERVAL);
   });
   ws.addEventListener("close", (e) => {
+    isWsConnected = false;
     events.dispatchEvent(new ConnectionEvent(false, "connection error, reconnecting in 5s"));
     if (ws == null)
       return;

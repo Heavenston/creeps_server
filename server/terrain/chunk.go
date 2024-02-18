@@ -5,14 +5,23 @@ import (
 	"io"
 	"sync"
 
+	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
 	mathutils "creeps.heav.fr/math_utils"
 )
 
+type TilemapUpdateEvent struct {
+	UpdatedPosition Point
+	PreviousValue Tile
+	NewValue Tile
+}
+
 type TilemapChunk struct {
+	chunkPos Point
 	// guards tiles
 	tileslock sync.RWMutex
 	tiles [ChunkTileCount]Tile
+	UpdatedEventProvider events.EventProvider[TilemapUpdateEvent]
 }
 
 type readLockedChunk struct {
@@ -49,6 +58,11 @@ func Global2ChunkSubCoords(tile Point) Point {
 	}
 }
 
+// the "chunk position" (world pos / chunkSize)
+func (chunk *TilemapChunk) GetChunkPos() Point {
+	return chunk.chunkPos
+}
+
 func (chunk *TilemapChunk) IsInBounds(subcoord Point) bool {
     return subcoord.X >= 0 && subcoord.X < ChunkSize ||
 		subcoord.Y >= 0 || subcoord.Y < ChunkSize
@@ -76,24 +90,31 @@ func (chunk *TilemapChunk) SetTile(subcoord Point, newValue Tile) Tile {
         panic("out of bound chunk tile access")
 	}
 
-	chunk.tileslock.Lock()
-	defer chunk.tileslock.Unlock()
-    tile := chunk.tiles[chunk.tileIndex(subcoord)]
-	chunk.tiles[chunk.tileIndex(subcoord)] = newValue
-    return tile
+	return chunk.ModifyTile(subcoord, func(t Tile) Tile {
+		return newValue
+	})
 }
 
 // Atomically modify the given tile
-func (chunk *TilemapChunk) ModifyTile(subcoord Point, cb func(Tile) Tile) {
+// returns the pervious value
+func (chunk *TilemapChunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 	if !chunk.IsInBounds(subcoord) {
         panic("out of bound chunk tile access")
 	}
 
 	chunk.tileslock.Lock()
-	defer chunk.tileslock.Unlock()
+	tileRef := &chunk.tiles[chunk.tileIndex(subcoord)]
+    prevValue := *tileRef
+	*tileRef = cb(prevValue)
+	chunk.tileslock.Unlock()
 
-    tile := chunk.tiles[chunk.tileIndex(subcoord)]
-	chunk.tiles[chunk.tileIndex(subcoord)] = cb(tile)
+	chunk.UpdatedEventProvider.Emit(TilemapUpdateEvent{
+		UpdatedPosition: subcoord,
+		PreviousValue: prevValue,
+		NewValue: *tileRef,
+	})
+
+	return prevValue
 }
 
 func (chunk *TilemapChunk) Print(w io.Writer) {

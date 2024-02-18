@@ -116,4 +116,13 @@ export class Vector2 {
       nv.mul(other, other2);
     return nv;
   }
+
+  public map(cb: (x:number) => number) {
+    this.x = cb(this.x);
+    this.y = cb(this.y);
+  }
+
+  public mapped(cb: (x:number) => number): Vector2 {
+    return vec(cb(this.x), cb(this.y));
+  }
 }

@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
 	. "creeps.heav.fr/geom"
 	mathutils "creeps.heav.fr/math_utils"
+	"github.com/rs/zerolog/log"
 )
 
 type Tilemap struct {
@@ -52,8 +54,14 @@ func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *TilemapChunk {
 		return chunk
 	}
 
+	log.Trace().Any("pos", chunkPos).Msg("Generating chunk")
+	start := time.Now()
 	// Only now can we safely generate the chunk
 	tilemap.chunks[chunkPos] = tilemap.generator.GenerateChunk(chunkPos)
+	log.Debug().
+		Any("pos", chunkPos).
+		TimeDiff("took", time.Now(), start).
+		Msg("Finished generating chunk")
 	return tilemap.chunks[chunkPos]
 }
 
