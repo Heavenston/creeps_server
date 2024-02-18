@@ -17,7 +17,7 @@ type Unit struct {
 // used by some reports
 type Building struct {
 	OpCode   string     `json:"opcode"`
-	Player   string     `json:"ownerId"`
+	Player   uint16     `json:"ownerId"`
 	Position geom.Point `json:"position"`
 }
 

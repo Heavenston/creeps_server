@@ -30,6 +30,8 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         bytes, err := json.Marshal(model.CommandResponse {
             OpCode: opcode,
             Login: login,
+            UnitId: &unitId,
+            ReportId: nil,
             ErrorCode: &code,
             Error: &mess,
         })

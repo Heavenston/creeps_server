@@ -43,9 +43,16 @@ func main() {
 		WoodGatherRate:     5,
 	}, &model.CostsResponse{
 		BuildHousehold: model.CostResponse{
+			Resources: model.Resources{
+				Rock: 3,
+				Wood: 5,
+			},
 			Cast: 1,
 		},
 		BuildRoad: model.CostResponse{
+			Resources: model.Resources{
+				Rock: 1,
+			},
 			Cast: 1,
 		},
 		BuildSawmill: model.CostResponse{

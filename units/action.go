@@ -89,10 +89,6 @@ func build(
 	target terrain.TileKind,
 ) (report model.IReport) {
 	server := unit.GetServer()
-	playerUsername := "server"
-	if player := server.GetPlayerFromId(unit.GetId()); player != nil {
-		playerUsername = player.GetUsername()
-	}
 	tilemap := server.Tilemap()
 	position := unit.GetPosition()
 
@@ -130,7 +126,7 @@ func build(
 		report = &model.BuildReport{
 			Building: model.Building{
 				OpCode:   opcode,
-				Player:   playerUsername,
+				Player:   69,
 				Position: position,
 			},
 		}
