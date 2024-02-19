@@ -14,15 +14,18 @@ type Player struct {
 
 	id        uid.Uid
 	username  string
-	resources model.Resources
 	addr      string
+	spawnPoint Point
+
+	resources model.Resources
 
 	townHalls []Point
 }
 
-func NewPlayer(username string, addr string) *Player {
+func NewPlayer(username string, addr string, spawnPoint Point) *Player {
 	player := new(Player)
 
+	player.spawnPoint = spawnPoint
 	player.addr = addr
 	player.id = uid.GenUid()
 	player.username = username
@@ -34,12 +37,16 @@ func (player *Player) GetId() uid.Uid {
 	return player.id
 }
 
+func (player *Player) GetUsername() string {
+	return player.username
+}
+
 func (player *Player) GetAddr() string {
 	return player.addr
 }
 
-func (player *Player) GetUsername() string {
-	return player.username
+func (player *Player) GetSpawnPoint() Point {
+	return player.spawnPoint
 }
 
 func (player *Player) GetResources() model.Resources {
@@ -50,7 +57,7 @@ func (player *Player) GetResources() model.Resources {
 
 // Do not call for modification after GetResources, to avoid race conditions use
 // modify resources
-func (player *Player) SetResources(resources model.Resources)  {
+func (player *Player) SetResources(resources model.Resources) {
 	player.lock.Lock()
 	defer player.lock.Unlock()
 
@@ -58,7 +65,7 @@ func (player *Player) SetResources(resources model.Resources)  {
 }
 
 // atomically modifies the resources
-func (player *Player) ModifyResources(f func (res model.Resources) model.Resources)  {
+func (player *Player) ModifyResources(f func(res model.Resources) model.Resources) {
 	player.lock.Lock()
 	defer player.lock.Unlock()
 

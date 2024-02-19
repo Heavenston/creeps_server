@@ -12,11 +12,10 @@ func InitPlayer(
 	srv *server.Server,
 	player *server.Player,
 ) (townhall Point, household Point, c1, c2 *units.CitizenUnit) {
-	spawnPoint := srv.FindSpawnPoint()
 	srv.RegisterPlayer(player)
 
-	townhall = spawnPoint
-	household = spawnPoint.Plus(0, 1)
+	townhall = player.GetSpawnPoint()
+	household = player.GetSpawnPoint().Plus(0, 1)
 
 	srv.Tilemap().SetTile(townhall, terrain.Tile{
 		Kind:  terrain.TileTownHall,
