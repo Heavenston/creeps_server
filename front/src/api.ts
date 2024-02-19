@@ -1,5 +1,5 @@
 export const WEBSOCKET_URL: string =
-  process.env.PREVIEW_WEBSOCKET_URL ?? "ws://localhost:1234/websocket";
+  process.env.PREVIEW_WEBSOCKET_URL ?? "ws://localhost:1665/websocket";
 
 let events: EventTarget = new EventTarget();
 const RETRY_INTERVAL: number = 5000;

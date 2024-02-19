@@ -1,9 +1,7 @@
 package viewer
 
 import (
-	"embed"
 	"encoding/json"
-	"io/fs"
 	"net/http"
 	"sync"
 	"time"
@@ -289,13 +287,11 @@ error:
 	conn.Close()
 }
 
-//go:embed front/dist
-var frontFs embed.FS
-
 func (viewer *ViewerServer) Start() {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool { return true; },
 	}
 
 	router := chi.NewRouter()
@@ -303,10 +299,6 @@ func (viewer *ViewerServer) Start() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	subFs, err := fs.Sub(frontFs, "front/dist")
-	if err != nil {
-		log.Fatal().Err(err)
-	}
 	router.HandleFunc("/websocket", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -316,8 +308,6 @@ func (viewer *ViewerServer) Start() {
 
 		go viewer.handleClient(conn)
 	})
-
-	router.Handle("/*", http.FileServer(http.FS(subFs)))
 
 	log.Info().Str("addr", viewer.Addr).Msg("Viewer server starting")
 	http.ListenAndServe(viewer.Addr, router)

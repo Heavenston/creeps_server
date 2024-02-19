@@ -135,7 +135,7 @@ func main() {
 	go api_server.Start()
 
 	viewer_server := &viewer.ViewerServer{
-		Addr:   "localhost:1234",
+		Addr:   "localhost:1665",
 		Server: srv,
 	}
 	go viewer_server.Start()

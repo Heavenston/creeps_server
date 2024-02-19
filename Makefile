@@ -1,10 +1,11 @@
 
-build_viewer_front:
-	cd viewer/front; \
-	npm install --include=dev; \
-	npm run build;
+build_front:
+	@make -C front build
 
-dev: build_viewer_front
-	go run .
+dev:
+	./dev.sh
 
-.PHONY: dev build_viewer_front
+clean:
+	make -C front clean
+
+.PHONY: dev build_front clean

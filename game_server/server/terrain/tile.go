@@ -26,9 +26,6 @@ const (
 	TileRoad
 )
 
-const ChunkSize = 32
-const ChunkTileCount = ChunkSize * ChunkSize
-
 func (kind TileKind) GetResourceName() model.ResourceKind {
 	switch kind {
 	case TileBush:

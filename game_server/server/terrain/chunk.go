@@ -34,6 +34,9 @@ type writeLockedChunk struct {
     chunk *TilemapChunk
 }
 
+const ChunkSize = 32
+const ChunkTileCount = ChunkSize * ChunkSize
+
 // Gets the position of the chunk containing the given global position
 // Ex with ChunkSize as 16:
 //
