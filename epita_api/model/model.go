@@ -1,6 +1,8 @@
 package model
 
 import (
+	"math"
+
 	"creeps.heav.fr/geom"
 	mathutils "creeps.heav.fr/math_utils"
 	"creeps.heav.fr/uid"
@@ -47,13 +49,20 @@ func (res *Resources) OfKind(kind ResourceKind) *int {
 // return how many times this resources have the other one
 // (4 copper 2 rock for 1 copper 1 rock returns 2)
 func (res Resources) EnoughFor(other Resources) float64 {
+	div := func(a float64, b float64) float64 {
+		if b == 0 {
+			return math.Inf(1)
+		}
+		return a/b
+	}
+
 	return mathutils.Min(
-		float64(res.Rock)/float64(other.Rock),
-		float64(res.Wood)/float64(other.Wood),
-		float64(res.Food)/float64(other.Food),
-		float64(res.Oil)/float64(other.Oil),
-		float64(res.Copper)/float64(other.Copper),
-		float64(res.WoodPlank)/float64(other.WoodPlank),
+		div(float64(res.Rock),float64(other.Rock)),
+		div(float64(res.Wood),float64(other.Wood)),
+		div(float64(res.Food),float64(other.Food)),
+		div(float64(res.Oil),float64(other.Oil)),
+		div(float64(res.Copper),float64(other.Copper)),
+		div(float64(res.WoodPlank),float64(other.WoodPlank)),
 	)
 }
 
