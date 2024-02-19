@@ -235,6 +235,18 @@ class WorldRenderer {
     this.ctx.drawImage(canvas, drawpos.x, drawpos.y);
   }
 
+  private renderUnit(unit: api.UnitMessage) {
+    const pos = vec(unit.content.position.x, unit.content.position.y);
+    if (unit.content.opCode == "turret") {
+      this.ctx.fillStyle = "magenta";
+      this.ctx.fillRect(pos.x + 0.125, pos.y + 0.125, 0.75, 0.75);
+    }
+    else {
+      this.ctx.fillStyle = "orange";
+      this.ctx.fillRect(pos.x + 0.25, pos.y + 0.25, 0.5, 0.5);
+    }
+  }
+
   public render(dt: number) {
     if (this.canvas == null || this.ctx == null)
       return;
@@ -260,11 +272,12 @@ class WorldRenderer {
     for (const chunk of this.chunksOnCamera)
       this.renderChunk(chunk);
 
-    for (const unit of this.lastUnitMessage.values()) {
-      const pos = vec(unit.content.position.x, unit.content.position.y);
-      this.ctx.fillStyle = "orange";
-      this.ctx.fillRect(pos.x + 0.25, pos.y + 0.25, 0.5, 0.5);
-    }
+    for (const unit of this.lastUnitMessage.values())
+      if (unit.content.opCode == "turret")
+        this.renderUnit(unit);
+    for (const unit of this.lastUnitMessage.values())
+      if (unit.content.opCode != "turret")
+        this.renderUnit(unit);
   }
 }
 

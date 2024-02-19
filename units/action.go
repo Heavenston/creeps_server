@@ -205,6 +205,9 @@ func spawn[T IUnit](
 		return
 	}
 
+	precreatedUnit.SetPosition(unit.GetPosition())
+	server.RegisterUnit(precreatedUnit)
+
 	playerUsername := "server"
 	if player := unit.GetServer().GetPlayerFromId(precreatedUnit.GetId()); player != nil {
 		playerUsername = player.GetUsername()
@@ -267,32 +270,30 @@ func ApplyAction(action *Action, unit IUnit) (report model.IReport) {
 				return tile
 			}
 
-			took := 0
 			unit.ModifyInventory(func(res model.Resources) model.Resources {
 				size := res.Size()
 				if size >= maxInventorySize {
 					return res
 				}
 
-				took = mathutils.Min(
+				took := mathutils.Min(
 					maxInventorySize-res.Size(),
 					int(tile.Value),
 				)
-				*res.OfKind(resKind) += int(tile.Value)
+				*res.OfKind(resKind) += took
+
+				tile.Value -= uint8(took)
+				if tile.Value == 0 {
+					tile.Kind = terrain.TileGrass
+				}
+
+				report = &model.GatherReport{
+					Resource:      resKind,
+					Gathered:      took,
+					ResourcesLeft: int(tile.Value),
+				}
 				return res
 			})
-
-			tile.Value -= uint8(took)
-			if tile.Value == 0 {
-				tile.Kind = terrain.TileGrass
-			}
-
-			report = &model.GatherReport{
-				Resource:      resKind,
-				Gathered:      took,
-				ResourcesLeft: int(tile.Value),
-			}
-
 			return tile
 		})
 	case OpCodeUnload:
