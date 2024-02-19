@@ -21,7 +21,7 @@ func NewCitizenUnit(server *Server, owner uid.Uid) *CitizenUnit {
 	citizen.unitInit(server)
 	citizen.lastEatenAt = server.Ticker().GetTickNumber()
 	citizen.owner = owner
-
+	citizen.this = citizen
 	return citizen
 }
 
@@ -51,7 +51,7 @@ func (citizen *CitizenUnit) ObserveDistance() int {
 }
 
 func (citizen *CitizenUnit) StartAction(action *Action) error {
-	err := startAction(citizen, action, []ActionOpCode{
+	err := citizen.startAction(action, []ActionOpCode{
 		OpCodeMoveDown,
 		OpCodeMoveUp,
 		OpCodeMoveLeft,
@@ -85,7 +85,7 @@ func (citizen *CitizenUnit) Tick() {
 	citizen.lock.Lock()
 	defer citizen.lock.Unlock()
 
-	tick(citizen)
+	citizen.tick()
 
 	server := citizen.server
 	ticker := server.Ticker()

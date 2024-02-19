@@ -21,6 +21,7 @@ func NewRaiderUnit(server *Server, target Point) *RaiderUnit {
 	raider := new(RaiderUnit)
 	raider.unitInit(server)
 	raider.target = target
+	raider.this = raider
 	return raider
 }
 
@@ -46,7 +47,7 @@ func (raider *RaiderUnit) GetTarget() Point {
 }
 
 func (raider *RaiderUnit) StartAction(action *Action) error {
-	err := startAction(raider, action, []ActionOpCode {
+	err := raider.startAction(action, []ActionOpCode {
 		OpCodeMoveDown,
 		OpCodeMoveUp,
 		OpCodeMoveLeft,
@@ -62,7 +63,7 @@ func (raider *RaiderUnit) Tick() {
 	raider.lock.Lock()
 	defer raider.lock.Unlock()
 
-	tick(raider)
+	raider.tick()
 
 	position := raider.GetPosition()
 

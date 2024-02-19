@@ -10,7 +10,6 @@ import (
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
 	"creeps.heav.fr/server/terrain"
-	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -85,11 +84,16 @@ func (viewer *ViewerServer) handleClientSubscription(
 	terrainCancelHandle := chunk.UpdatedEventProvider.Subscribe(terrainChangeChannel)
 	defer terrainCancelHandle.Cancel()
 
-	unitMovementChannel := make(chan spatialmap.SpatialMapEvent[server.IUnit], 64)
-	from := chunkPos.Times(terrain.ChunkSize)
-	upto := from.Plus(terrain.ChunkSize, terrain.ChunkSize)
-	unitsCancelHandle := viewer.Server.Units().SubscribeWithin(from, upto, unitMovementChannel)
-	defer unitsCancelHandle.Cancel()
+	serverEventsChannel := make(chan server.IServerEvent, 64)
+	aabb := AABB {
+		From: chunkPos.Times(terrain.ChunkSize),
+		Size: Point {
+			X: terrain.ChunkSize,
+			Y: terrain.ChunkSize,
+		},
+	}
+	serverEventsHandle := viewer.Server.Events().Subscribe(serverEventsChannel, aabb)
+	defer serverEventsHandle.Cancel()
 
 	sendMessage := func(kind string, content any) {
 		contentbytes, err := json.Marshal(content)
@@ -133,7 +137,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 
 	sendTerrain()
 
-	units := viewer.Server.Units().GetAllWithin(from, upto)
+	units := viewer.Server.Units().GetAllIntersects(aabb)
 	for _, unit := range units {
 		sendUnit(unit)
 	}
@@ -155,14 +159,18 @@ func (viewer *ViewerServer) handleClientSubscription(
 
 			// TODO: Send parials chunk updates
 			sendTerrain()
-		case event, ok := (<-unitMovementChannel):
+		case event, ok := (<-serverEventsChannel):
 			if !ok {
-				log.Info().Msg("movement channel closed")
+				log.Trace().Msg("server events channel closed")
 				break
 			}
 
-			// TODO: Send partials units?
-			sendUnit(event.Object)
+			if e, ok := event.(*server.UnitSpawnEvent); ok {
+				sendUnit(e.Unit)
+			}
+			if e, ok := event.(*server.UnitMovedEvent); ok {
+				sendUnit(e.Unit)
+			}
 		// makes sure at lease once every 30s we check if we are still subed to
 		// the chunk
 		case <-time.After(time.Second * 30):

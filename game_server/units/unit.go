@@ -7,6 +7,7 @@ import (
 	"creeps.heav.fr/epita_api/model"
 	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
+	"creeps.heav.fr/server"
 	. "creeps.heav.fr/server"
 	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
@@ -19,6 +20,7 @@ type extendedUnit interface {
 
 // See server.go's IUnit interface to explain its functions
 type unit struct {
+	this IUnit
 	// read-only (no lock)
 	server *Server
 	// read-only (no lock)
@@ -69,6 +71,20 @@ func (unit *unit) SetPosition(new_pos Point) {
 		From: prevValue,
 		To: new_pos,
 	})
+	if unit.server != nil {
+		unit.server.Events().Emit(&server.UnitMovedEvent {
+			Unit: unit.this,
+			From: prevValue,
+			To: new_pos,
+		})
+	}
+}
+
+func (unit *unit) GetAABB() AABB {
+	return AABB {
+		From: unit.GetPosition(),
+		Size: Point { X: 1, Y: 1 },
+	}
 }
 
 func (unit *unit) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent] {
@@ -86,6 +102,13 @@ func (unit *unit) ModifyPosition(cb func(Point) Point) (Point, Point) {
 			From: old,
 			To: new,
 		})
+		if unit.server != nil {
+			unit.server.Events().Emit(&server.UnitMovedEvent {
+				Unit: unit.this,
+				From: old,
+				To: new,
+			})
+		}
 	}
 	return old, new
 }
@@ -120,8 +143,8 @@ func (unit *unit) SetInventory(newInv model.Resources) {
 	unit.inventory = newInv
 }
 
-func startAction(this extendedUnit, action *Action, supported []ActionOpCode) error {
-	if this == nil || action == nil {
+func (unit *unit) startAction(action *Action, supported []ActionOpCode) error {
+	if unit == nil || action == nil {
 		panic("cannot work nil")
 	}
 	if action.Finised.Load() {
@@ -142,14 +165,14 @@ func startAction(this extendedUnit, action *Action, supported []ActionOpCode) er
 		}
 	}
 
-	lastAction := this.GetLastAction()
+	lastAction := unit.GetLastAction()
 	if lastAction != nil && !lastAction.Finised.Load() {
 		return UnitBusyError{}
 	}
 
-	cost := action.OpCode.GetCost(this)
-	if this.GetOwner() != uid.ServerUid {
-		owner := this.GetServer().GetPlayerFromId(this.GetOwner())
+	cost := action.OpCode.GetCost(unit.this)
+	if unit.this.GetOwner() != uid.ServerUid {
+		owner := unit.GetServer().GetPlayerFromId(unit.this.GetOwner())
 		if owner == nil {
 			panic("could not find owner")
 		}
@@ -173,13 +196,13 @@ func startAction(this extendedUnit, action *Action, supported []ActionOpCode) er
 		}
 	}
 
-	this.getUnit().lastAction.Store(action)
+	unit.lastAction.Store(action)
 
 	return nil
 }
 
-func tick(this IUnit) {
-	action := this.GetLastAction()
+func (unit *unit) tick() {
+	action := unit.GetLastAction()
 	if action == nil {
 		return
 	}
@@ -188,8 +211,8 @@ func tick(this IUnit) {
 		return
 	}
 
-	costs := action.OpCode.GetCost(this)
-	if this.GetServer().Ticker().GetTickNumber()-action.StartedAtTick < costs.Cast {
+	costs := action.OpCode.GetCost(unit.this)
+	if unit.GetServer().Ticker().GetTickNumber()-action.StartedAtTick < costs.Cast {
 		return
 	}
 
@@ -197,6 +220,6 @@ func tick(this IUnit) {
 
 	action.Finised.Store(true)
 
-	report := ApplyAction(action, this)
-	this.GetServer().AddReport(report)
+	report := ApplyAction(action, unit.this)
+	unit.GetServer().AddReport(report)
 }

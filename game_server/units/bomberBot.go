@@ -18,7 +18,7 @@ func NewBomberBotUnit(server *Server, owner uid.Uid) *BomberBotUnit {
 	bomberBot := new(BomberBotUnit)
 	bomberBot.unitInit(server)
 	bomberBot.owner = owner
-
+	bomberBot.this = bomberBot
 	return bomberBot
 }
 
@@ -48,7 +48,7 @@ func (bomberBot *BomberBotUnit) ObserveDistance() int {
 }
 
 func (bomberBot *BomberBotUnit) StartAction(action *Action) error {
-	err := startAction(bomberBot, action, []ActionOpCode{
+	err := bomberBot.startAction(action, []ActionOpCode{
 		OpCodeUpgrade,
 		OpCodeFireBomberBot,
 	})
@@ -62,6 +62,6 @@ func (bomberBot *BomberBotUnit) Tick() {
 	bomberBot.lock.Lock()
 	defer bomberBot.lock.Unlock()
 
-	tick(bomberBot)
+	bomberBot.tick()
 }
 

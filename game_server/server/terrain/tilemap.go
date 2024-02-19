@@ -106,17 +106,12 @@ func (t *Tilemap) PrintRegion(w io.Writer, from Point, upto Point) {
 }
 
 // Returns a list of tiles in the given region
-func (t *Tilemap) ObserveRegion(from Point, upto Point) []Tile {
-	min_x := mathutils.Min(from.X, upto.X)
-	min_y := mathutils.Min(from.Y, upto.Y)
-	max_x := mathutils.Max(from.X, upto.X)
-	max_y := mathutils.Max(from.Y, upto.Y)
-
+func (t *Tilemap) ObserveRegion(aabb AABB) []Tile {
 	tiles := make([]Tile, 0)
 
 	// FIXME: Lots of locks, but locking the correct chunks... too lazy rn
-	for y := min_y; y < max_y; y++ {
-		for x := min_x; x < max_x; x++ {
+	for y := aabb.From.Y; y < aabb.Upto().Y; y++ {
+		for x := aabb.From.X; x < aabb.Upto().X; x++ {
 			tiles = append(tiles, t.GetTile(Point { X:x, Y:y }))
 		}
 	}

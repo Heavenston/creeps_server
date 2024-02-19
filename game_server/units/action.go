@@ -15,11 +15,16 @@ import (
 func observe(unit IUnit, into *model.ObserveReport) {
 	server := unit.GetServer()
 	dist := unit.ObserveDistance() / 2
-	from := unit.GetPosition().Minus(dist, dist)
 	// remainder upto is excluded
-	upto := unit.GetPosition().Plus(dist+1, dist+1)
+	aabb := AABB {
+		From: unit.GetPosition().Minus(dist, dist),
+		Size: Point {
+			X: unit.ObserveDistance(),
+			Y: unit.ObserveDistance(),
+		},
+	}
 
-	units := server.Units().GetAllWithin(from, upto)
+	units := server.Units().GetAllIntersects(aabb)
 	into.Units = make([]model.Unit, 0, len(units))
 	for _, ounit := range units {
 		playerUsername := "server"
@@ -34,7 +39,7 @@ func observe(unit IUnit, into *model.ObserveReport) {
 		})
 	}
 
-	tiles := server.Tilemap().ObserveRegion(from, upto)
+	tiles := server.Tilemap().ObserveRegion(aabb)
 	into.Tiles = make([]uint16, 0, len(units))
 	for _, tile := range tiles {
 		into.Tiles = append(into.Tiles, uint16(tile.Kind)<<10|uint16(tile.Value))

@@ -18,7 +18,7 @@ func NewTurretUnit(server *Server, owner uid.Uid) *TurretUnit {
 	turret := new(TurretUnit)
 	turret.unitInit(server)
 	turret.owner = owner
-
+	turret.this = turret
 	return turret
 }
 
@@ -48,7 +48,7 @@ func (turret *TurretUnit) ObserveDistance() int {
 }
 
 func (turret *TurretUnit) StartAction(action *Action) error {
-	err := startAction(turret, action, []ActionOpCode{
+	err := turret.startAction(action, []ActionOpCode{
 		OpCodeUpgrade,
 		OpCodeFireTurret,
 	})
@@ -62,6 +62,6 @@ func (turret *TurretUnit) Tick() {
 	turret.lock.Lock()
 	defer turret.lock.Unlock()
 
-	tick(turret)
+	turret.tick()
 }
 

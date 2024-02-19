@@ -35,7 +35,7 @@ func (e NotEnoughResourcesError) Error() string {
 }
 
 // every unit operation must be thread-safe atomic
-// implemented in the server/units package
+// implemented in the server/units package (avoids circular depedency)
 type IUnit interface {
 	GetServer() *Server
 	GetId() uid.Uid
@@ -48,6 +48,7 @@ type IUnit interface {
 	GetOwner() uid.Uid
 	GetPosition() Point
 	SetPosition(newPos Point)
+	GetAABB() AABB
 	MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent]
 	// atomically modifies the position of the unit
 	ModifyPosition(cb func(Point) Point) (Point, Point)

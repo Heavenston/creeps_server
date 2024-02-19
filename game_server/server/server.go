@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"creeps.heav.fr/epita_api/model"
+	"creeps.heav.fr/events/spatialevents"
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/spatialmap"
@@ -19,6 +20,8 @@ type Server struct {
 
 	setup *model.SetupResponse
 	costs *model.CostsResponse
+
+	events *spatialevents.SpatialEventProvider[IServerEvent]
 
 	units       *spatialmap.SpatialMap[IUnit]
 	playersLock sync.RWMutex
@@ -38,7 +41,9 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 	srv := new(Server)
 	srv.tilemap = tilemap
 
-	srv.units = spatialmap.Make[IUnit]()
+	srv.events = spatialevents.NewSpatialEventProvider[IServerEvent]()
+
+	srv.units = spatialmap.NewSpatialMap[IUnit]()
 	srv.players = make(map[uid.Uid]*Player)
 	srv.reports = make(map[uid.Uid]model.IReport)
 
@@ -79,12 +84,23 @@ func (srv *Server) Units() *spatialmap.SpatialMap[IUnit] {
 	return srv.units
 }
 
+// returns the spatial map with all units, do NOT use it to add or remove
+// units, only use Server.RegisterUnit and Server.RemoveUnit for that
+func (srv *Server) Events() *spatialevents.SpatialEventProvider[IServerEvent] {
+	return srv.events
+}
+
 func (srv *Server) RegisterUnit(unit IUnit) {
 	if unit.GetServer() != srv {
 		panic("Cannot register unit made for another server")
 	}
 
 	srv.units.Add(unit)
+
+	srv.events.Emit(&UnitSpawnEvent{
+		Unit: unit,
+		AABB: unit.GetAABB(),
+	})
 }
 
 func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
@@ -94,6 +110,12 @@ func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
 	if unit == nil {
 		return nil
 	}
+
+	srv.events.Emit(&UnitDispawnEvent{
+		Unit: *unit,
+		AABB: (*unit).GetAABB(),
+	})
+	
 	return *unit
 }
 
@@ -112,7 +134,6 @@ func (srv *Server) GetUnit(id uid.Uid) IUnit {
 // You probably want to use gameplay.InitPlayer instead
 func (srv *Server) RegisterPlayer(player *Player) {
 	srv.playersLock.Lock()
-	defer srv.playersLock.Unlock()
 
 	present := srv.players[player.id]
 	if present == player {
@@ -121,17 +142,29 @@ func (srv *Server) RegisterPlayer(player *Player) {
 		panic("A player with id " + player.id + " is already registred")
 	}
 	srv.players[player.id] = player
+
+	srv.playersLock.Unlock()
+
+	srv.events.Emit(&PlayerSpawnEvent{
+		Player: player,
+	})
 }
 
 func (srv *Server) RemovePlayer(id uid.Uid) *Player {
 	srv.playersLock.Lock()
-	defer srv.playersLock.Unlock()
 
 	player := srv.players[id]
 	if player == nil {
+		srv.playersLock.Unlock()
 		return nil
 	}
 	delete(srv.players, id)
+	srv.playersLock.Unlock()
+
+	srv.events.Emit(&PlayerSpawnEvent{
+		Player: player,
+	})
+
 	return player
 }
 
@@ -196,6 +229,9 @@ func (srv *Server) GetDefaultPlayerResources() model.Resources {
 	return srv.defaultPlayerResources
 }
 
+// returns wether the given point is safe for player spawning 
+// also gives the average position of all graas tiles found
+// (used as an heuristic for which direction to go after)
 func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
 	count := 0.
 	grass_count := 0
@@ -209,7 +245,7 @@ func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
 			tile := srv.tilemap.GetTile(np)
 			if tile.Kind == terrain.TileGrass {
 				sum_x += float64(np.X)
-				sum_y += float64(np.X)
+				sum_y += float64(np.Y)
 				grass_count += 1
 			}
 
@@ -222,7 +258,9 @@ func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
 
 // Returns a point safe for spawning near the given point and true
 // or 0,0 and false it none could be found
-func (srv *Server) FindSpawnPointNear(from Point) (Point, bool) {
+// 
+// (yes kinda over engineered)
+func (srv *Server) findSpawnPointNear(from Point) (Point, bool) {
 	visited := make(map[Point]bool)
 
 	for {
@@ -251,8 +289,6 @@ func (srv *Server) FindSpawnPointNear(from Point) (Point, bool) {
 
 // Returns a safe spawn point
 func (srv *Server) FindSpawnPoint() Point {
-	// TODO: Make an algorithm to maintain some player density
-
 	dist := 5
 
 	srv.randLock.Lock()
@@ -265,7 +301,9 @@ func (srv *Server) FindSpawnPoint() Point {
 
 			playerNear := false
 			for _, player := range srv.players {
-				if player.spawnPoint.Dist(center) < 50 {
+				// keep in mind FindSpawnPointNear might get closer to other players
+				// after
+				if player.spawnPoint.Dist(center) < 100 {
 					playerNear = true
 					break
 				}
@@ -274,7 +312,7 @@ func (srv *Server) FindSpawnPoint() Point {
 				continue
 			}
 
-			point, found := srv.FindSpawnPointNear(center)
+			point, found := srv.findSpawnPointNear(center)
 			if found {
 				log.Trace().Any("point", point).Msg("[SPAWN_POINT] Found")
 				return point

@@ -12,73 +12,48 @@ type ObjectMovedEvent struct {
 	To   Point
 }
 
-type Positioned interface {
+type Spatialized interface {
 	comparable
+	// can return nil if the object's aabb is guarenteed to never change
 	MovementEvents() *events.EventProvider[ObjectMovedEvent]
-	GetPosition() Point
+	// if the returned AABB has size 0 this the object will match all queries
+	GetAABB() AABB
 }
 
-type el[T Positioned] struct {
+type el[T Spatialized] struct {
 	val       T
 	subHandle *events.CancelHandle
 }
 
-type SpatialMapEvent[T Positioned] struct {
+type SpatialMapEvent[T Spatialized] struct {
 	PreviousPosition Point
 	Position         Point
 	Object           T
 }
 
-type sub[T Positioned] struct {
-	From    Point
-	Upto    Point
-	Channel chan SpatialMapEvent[T]
-	Handle  *events.CancelHandle
-}
-
-// Data structure for fetching a list of entities by their positions
-// TODO: Optimize with like maybe an octree or smthg
-type SpatialMap[T Positioned] struct {
+// Data structure for fetching a list of entities by their aabbs
+// TODO: Optimize with like maybe an quadtree or smthg
+type SpatialMap[T Spatialized] struct {
 	lock sync.RWMutex
 
 	isReadOnly bool
 	updateChan chan SpatialMapEvent[T]
 	objects    []el[T]
-
-	subscriptions []sub[T]
 }
 
 // rountine always running while the spatial map is active
 func (m *SpatialMap[T]) updateRoutine() {
 	for {
-		event, ok := (<-m.updateChan)
+		_, ok := (<-m.updateChan)
 		if !ok {
 			break
 		}
-
-		// also filters the subscriptions
-		index := 0
-		for _, sub := range m.subscriptions {
-			// filter
-			if !sub.Handle.IsCancelled() {
-				m.subscriptions[index] = sub
-				index++
-			} else {
-				close(sub.Channel)
-				continue
-			}
-
-			if !event.Position.IsWithing(sub.From, sub.Upto) && !event.PreviousPosition.IsWithing(sub.From, sub.Upto) {
-				continue
-			}
-			sub.Channel <- event
-		}
-		m.subscriptions = m.subscriptions[:index]
+		// could do something to keep its data structure up to date
 	}
 }
 
 // must be eventually closed with Close, or a goroutine leak will occure
-func Make[T Positioned]() *SpatialMap[T] {
+func NewSpatialMap[T Spatialized]() *SpatialMap[T] {
 	this := &SpatialMap[T]{
 		updateChan: make(chan SpatialMapEvent[T]),
 	}
@@ -108,42 +83,39 @@ func (m *SpatialMap[T]) Add(p T) {
 	}
 
 	m.lock.Lock()
+	defer m.lock.Unlock()
 
 	for _, o := range m.objects {
 		if o.val == p {
 			panic("cannot have duplicate objects")
 		}
 	}
-	channel := make(chan ObjectMovedEvent)
-	handle := p.MovementEvents().Subscribe(channel)
 
-	// 'converts' MovedEvents to internalMovedEvent
-	go (func() {
-		for {
-			event, ok := (<-channel)
-			if !ok {
-				break
+	var handle *events.CancelHandle = nil
+	if events := p.MovementEvents(); events != nil {
+		channel := make(chan ObjectMovedEvent)
+		handle = events.Subscribe(channel)
+
+		// 'converts' MovedEvents to internalMovedEvent
+		go (func() {
+			for {
+				event, ok := (<-channel)
+				if !ok {
+					break
+				}
+				m.updateChan <- SpatialMapEvent[T]{
+					PreviousPosition: event.From,
+					Position:         event.To,
+					Object:           p,
+				}
 			}
-			m.updateChan <- SpatialMapEvent[T]{
-				PreviousPosition: event.From,
-				Position:         event.To,
-				Object:           p,
-			}
-		}
-	})()
+		})()
+	}
 
 	m.objects = append(m.objects, el[T]{
 		val:       p,
 		subHandle: handle,
 	})
-
-	m.lock.Unlock()
-
-	m.updateChan <- SpatialMapEvent[T]{
-		PreviousPosition: p.GetPosition(),
-		Position:         p.GetPosition(),
-		Object:           p,
-	}
 }
 
 func (m *SpatialMap[T]) RemoveFirst(predicate func(T) bool) *T {
@@ -156,7 +128,9 @@ func (m *SpatialMap[T]) RemoveFirst(predicate func(T) bool) *T {
 
 	for i, o := range m.objects {
 		if predicate(o.val) {
-			o.subHandle.Cancel()
+			if o.subHandle != nil {
+				o.subHandle.Cancel()
+			}
 			// swap with last remove
 			m.objects[i] = m.objects[len(m.objects)-1]
 			m.objects = m.objects[:len(m.objects)-1]
@@ -183,45 +157,24 @@ func (m *SpatialMap[T]) GetAt(point Point) *T {
 	defer m.lock.RUnlock()
 
 	return m.Find(func(t T) bool {
-		return t.GetPosition() == point
+		return t.GetAABB().Contains(point)
 	})
 }
 
-func (m *SpatialMap[T]) GetAllWithin(from Point, upto Point) []T {
+func (m *SpatialMap[T]) GetAllIntersects(aabb AABB) []T {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
 	result := make([]T, 0)
 
 	for _, obj := range m.objects {
-		if obj.val.GetPosition().IsWithing(from, upto) {
+		oaabb := obj.val.GetAABB()
+		if oaabb.IsZero() || aabb.Intersects(oaabb) {
 			result = append(result, obj.val)
 		}
 	}
 
 	return result
-}
-
-// subscribes to all objects moving from, into, or within the given region
-//
-// will not send any event for already existing objects
-func (m *SpatialMap[T]) SubscribeWithin(
-	from Point,
-	upto Point,
-	channel chan SpatialMapEvent[T],
-) *events.CancelHandle {
-	m.lock.Lock()
-	handle := &events.CancelHandle{}
-
-	m.subscriptions = append(m.subscriptions, sub[T]{
-		From:    from,
-		Upto:    upto,
-		Channel: channel,
-		Handle:  handle,
-	})
-	m.lock.Unlock()
-
-	return handle
 }
 
 func (m *SpatialMap[T]) Iter() func() (bool, int, *T) {
