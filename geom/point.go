@@ -71,6 +71,13 @@ func (a Point) Minus(x int, y int) Point {
 	}
 }
 
+func (a Point) Times(v int) Point {
+	return Point{
+		X: a.X * v,
+		Y: a.Y * v,
+	}
+}
+
 func (a Point) Dist(b Point) int {
 	return mathutils.AbsInt(a.X-b.X) + mathutils.AbsInt(a.Y-b.Y)
 }

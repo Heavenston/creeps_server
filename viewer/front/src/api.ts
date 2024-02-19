@@ -44,6 +44,16 @@ export type FullchunkMessage = {
   }
 }
 
+export type UnitMessage = {
+  kind: "unit",
+  content: {
+    opCode: string,
+    unitId: string,
+    owner: string,
+    position: { x: number, y: number },
+  }
+}
+
 export type RecvMessage = InitMessage | FullchunkMessage;
 export type SendMessage = SubscribeMessage | UnsubscribeMessage;
 

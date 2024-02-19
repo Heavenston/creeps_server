@@ -12,6 +12,8 @@ import (
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
 	"creeps.heav.fr/server/terrain"
+	"creeps.heav.fr/spatialmap"
+	"creeps.heav.fr/uid"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/websocket"
@@ -46,6 +48,13 @@ type fullChunkContent struct {
 	Tiles []byte `json:"tiles"`
 }
 
+type unitContent struct {
+	OpCode   string `json:"opCode"`
+	UnitId   uid.Uid `json:"unitId"`
+	Owner    uid.Uid `json:"owner"`
+	Position Point `json:"position"`
+}
+
 // sent by the front end to subscribe to a chunk content
 type subscribeRequestContent struct {
 	ChunkPos Point `json:"chunkPos"`
@@ -74,9 +83,29 @@ func (viewer *ViewerServer) handleClientSubscription(
 		chunk = viewer.Server.Tilemap().GenerateChunk(chunkPos)
 	}
 
-	terrainChangeChannel := make(chan terrain.TilemapUpdateEvent)
-	cancelHandle := chunk.UpdatedEventProvider.Subscribe(terrainChangeChannel)
-	defer cancelHandle.Cancel()
+	terrainChangeChannel := make(chan terrain.TilemapUpdateEvent, 64)
+	terrainCancelHandle := chunk.UpdatedEventProvider.Subscribe(terrainChangeChannel)
+	defer terrainCancelHandle.Cancel()
+
+	unitMovementChannel := make(chan spatialmap.SpatialMapEvent[server.IUnit], 64)
+	from := chunkPos.Times(terrain.ChunkSize)
+	upto := from.Plus(terrain.ChunkSize, terrain.ChunkSize)
+	unitsCancelHandle := viewer.Server.Units().SubscribeWithin(from, upto, unitMovementChannel)
+	defer unitsCancelHandle.Cancel()
+
+	sendMessage := func(kind string, content any) {
+		contentbytes, err := json.Marshal(content)
+		if err != nil {
+			log.Warn().Err(err).Msg("full chunk ser error")
+			return
+		}
+		conn.socketLock.Lock()
+		conn.socket.WriteJSON(message{
+			Kind:    kind,
+			Content: contentbytes,
+		})
+		conn.socketLock.Unlock()
+	}
 
 	// send full chunk
 	sendTerrain := func() {
@@ -89,23 +118,27 @@ func (viewer *ViewerServer) handleClientSubscription(
 				tiles[i+1] = byte(tile.Value)
 			}
 		}
-		content, err := json.Marshal(fullChunkContent{
+		sendMessage("fullchunk", fullChunkContent{
 			ChunkPos: chunkPos,
 			Tiles:    tiles,
 		})
-		if err != nil {
-			log.Warn().Err(err).Msg("full chunk ser error")
-			return
-		}
-		conn.socketLock.Lock()
-		conn.socket.WriteJSON(message{
-			Kind:    "fullchunk",
-			Content: content,
+	}
+
+	sendUnit := func(unit server.IUnit) {
+		sendMessage("unit", unitContent{
+			OpCode: unit.GetOpCode(),
+			UnitId: unit.GetId(),
+			Owner: unit.GetOwner(),
+			Position: unit.GetPosition(),
 		})
-		conn.socketLock.Unlock()
 	}
 
 	sendTerrain()
+
+	units := viewer.Server.Units().GetAllWithin(from, upto)
+	for _, unit := range units {
+		sendUnit(unit)
+	}
 
 	for {
 		conn.chunksLock.RLock()
@@ -118,15 +151,24 @@ func (viewer *ViewerServer) handleClientSubscription(
 		select {
 		case _, ok := (<-terrainChangeChannel):
 			if !ok {
+				log.Trace().Msg("terrain channel closed")
 				break
 			}
+
 			// TODO: Send parials chunk updates
 			sendTerrain()
+		case event, ok := (<-unitMovementChannel):
+			if !ok {
+				log.Info().Msg("movement channel closed")
+				break
+			}
+
+			// TODO: Send partials units?
+			sendUnit(event.Object)
 		// makes sure at lease once every 30s we check if we are still subed to
 		// the chunk
 		case <-time.After(time.Second * 30):
 		}
-
 	}
 }
 

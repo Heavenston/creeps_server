@@ -197,15 +197,13 @@ func (m *SpatialMap[T]) GetAllWithin(from Point, upto Point) []T {
 
 // subscribes to all objects moving from, into, or within the given region
 //
-// will send an event with the same value for PreviousPosition and Position with
-// all objects that were already inside
+// will not send any event for already existing objects
 func (m *SpatialMap[T]) SubscribeWithin(
 	from Point,
 	upto Point,
 	channel chan SpatialMapEvent[T],
 ) *events.CancelHandle {
 	m.lock.Lock()
-	defer m.lock.Unlock()
 	handle := &events.CancelHandle{}
 
 	m.subscriptions = append(m.subscriptions, sub[T]{
@@ -214,15 +212,7 @@ func (m *SpatialMap[T]) SubscribeWithin(
 		Channel: channel,
 		Handle:  handle,
 	})
-
-	for _, obj := range m.GetAllWithin(from, upto) {
-		pos := obj.GetPosition()
-		channel <- SpatialMapEvent[T] {
-			PreviousPosition: pos,
-			Position: pos,
-			Object: obj,
-		}
-	}
+	m.lock.Unlock()
 
 	return handle
 }

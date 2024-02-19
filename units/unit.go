@@ -80,7 +80,14 @@ func (unit *unit) GetLastAction() *Action {
 }
 
 func (unit *unit) ModifyPosition(cb func(Point) Point) (Point, Point) {
-	return unit.position.Modify(cb)
+	old, new := unit.position.Modify(cb)
+	if old != new {
+		unit.movedEvents.Emit(spatialmap.ObjectMovedEvent{
+			From: old,
+			To: new,
+		})
+	}
+	return old, new
 }
 
 func (unit *unit) IsUpgraded() bool {
