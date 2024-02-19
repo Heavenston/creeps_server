@@ -20,6 +20,8 @@ class WorldRenderer {
   private chunksOnCamera: Vector2[] = [];
   private chunksCanvases: WeakMap<map.Chunk, OffscreenCanvas> = new WeakMap();
 
+  private lastUnitMessage: Map<string, api.UnitMessage> = new Map();
+
   private get screenTopLeftInWorldPos(): Vector2 {
     return this.cameraPos
       .minus(vec(this.canvas.width, this.canvas.height).times(0.5).times(1/this.cameraScale));
@@ -28,6 +30,12 @@ class WorldRenderer {
   private get screenBottomRightInWorldPos(): Vector2 {
     return this.cameraPos
       .plus(vec(this.canvas.width, this.canvas.height).times(0.5).times(1/this.cameraScale));
+  }
+
+  private get mouseWorldPos(): Vector2 {
+    return this.mousePos
+      .minus(vec(this.canvas.width, this.canvas.height).times(0.5))
+      .times(1/this.cameraScale);
   }
 
   // changes the scale but also changes the cameraPos making sure the mousePos
@@ -56,6 +64,7 @@ class WorldRenderer {
     let clickMouseStart: Vector2 | null = null;
     let clickCameraStart: Vector2 | null = null;
     this.canvas.addEventListener("mousedown", ev => {
+      console.log(this.mouseWorldPos.mapped(Math.floor));
       clickMouseStart = vec(ev.clientX, ev.clientY);
       clickCameraStart = vec(this.cameraPos);
     }, {
@@ -114,6 +123,16 @@ class WorldRenderer {
         return;
       // force redraw
       this.chunksCanvases.delete(chunk);
+    }, {
+      signal: this.eventAbort.signal,
+    });
+
+    api.addEventListener("message", event => {
+      if (event.message.kind != "unit")      
+        return;
+      this.lastUnitMessage.set(event.message.content.unitId, event.message);
+    }, {
+      signal: this.eventAbort.signal,
     });
 
     this.ctx = ctx;
@@ -189,7 +208,7 @@ class WorldRenderer {
 
         ctx.fillStyle = style;
         ctx.fillRect(
-          map.Chunk.chunkSize-subTileCoord.x-1, map.Chunk.chunkSize-subTileCoord.y-1,
+          subTileCoord.x, subTileCoord.y,
           1, 1,
         );
       }
@@ -240,6 +259,12 @@ class WorldRenderer {
 
     for (const chunk of this.chunksOnCamera)
       this.renderChunk(chunk);
+
+    for (const unit of this.lastUnitMessage.values()) {
+      const pos = vec(unit.content.position.x, unit.content.position.y);
+      this.ctx.fillStyle = "orange";
+      this.ctx.fillRect(pos.x + 0.25, pos.y + 0.25, 0.5, 0.5);
+    }
   }
 }
 

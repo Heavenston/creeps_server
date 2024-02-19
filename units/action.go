@@ -48,6 +48,14 @@ func refine(
 	from model.ResourceKind,
 	to model.ResourceKind,
 ) (report model.IReport) {
+	server := unit.GetServer()
+	ownerId := unit.GetOwner()
+	player := server.GetPlayerFromId(ownerId)
+
+	if player == nil {
+		log.Fatal().Msg("no player no refine")
+	}
+
 	tile := unit.GetServer().Tilemap().GetTile(unit.GetPosition())
 	if tile.Kind != requiredTile {
 		report = &model.ErrorReport{
@@ -60,22 +68,22 @@ func refine(
 		return
 	}
 
-	unit.ModifyInventory(func(inv model.Resources) model.Resources {
-		ptr := inv.OfKind(from)
+	player.ModifyResources(func(resources model.Resources) model.Resources {
+		ptr := resources.OfKind(from)
 		if *ptr <= 0 {
 			report = &model.ErrorReport{
 				ErrorCode: "insufficient-funds",
 				Error:     fmt.Sprintf("Missing one %s to make one %s", from, to),
 			}
-			return inv
+			return resources
 		}
 
 		(*ptr)--
 
-		(*inv.OfKind(to))++
+		(*resources.OfKind(to))++
 
 		report = &model.RefineReport{}
-		return inv
+		return resources
 	})
 
 	return
@@ -89,8 +97,14 @@ func build(
 	target terrain.TileKind,
 ) (report model.IReport) {
 	server := unit.GetServer()
+	ownerId := unit.GetOwner()
+	player := server.GetPlayerFromId(ownerId)
 	tilemap := server.Tilemap()
 	position := unit.GetPosition()
+
+	if player == nil {
+		log.Fatal().Msg("no player no build")
+	}
 
 	tilemap.ModifyTile(position, func(t terrain.Tile) terrain.Tile {
 		if t.Kind != terrain.TileGrass {
@@ -102,18 +116,18 @@ func build(
 		}
 
 		could := false
-		unit.ModifyInventory(func(inv model.Resources) model.Resources {
-			if inv.EnoughFor(cost.Resources) < 1 {
+		player.ModifyResources(func(resources model.Resources) model.Resources {
+			if resources.EnoughFor(cost.Resources) < 1 {
 				report = &model.ErrorReport{
 					Error:     "Not enough resources",
 					ErrorCode: "insufficient-funds",
 				}
-				return inv
+				return resources
 			}
 
 			could = true
-			inv.Remove(cost.Resources)
-			return inv
+			resources.Remove(cost.Resources)
+			return resources
 		})
 
 		if !could {
@@ -123,12 +137,33 @@ func build(
 		t.Kind = target
 		t.Value = 0
 
-		report = &model.BuildReport{
-			Building: model.Building{
-				OpCode:   opcode,
-				Player:   69,
-				Position: position,
-			},
+		if opcode == "household" {
+			c1 := NewCitizenUnit(server, player.GetId())
+			c1.SetPosition(position)
+			server.RegisterUnit(c1)
+			c2 := NewCitizenUnit(server, player.GetId())
+			c2.SetPosition(position)
+			server.RegisterUnit(c2)
+
+			report = &model.BuildHouseHoldReport{
+				BuildReport: model.BuildReport{
+					Building: model.Building{
+						OpCode:   opcode,
+						Player:   69,
+						Position: position,
+					},
+				},
+				SpawnedCitizen1Id: c1.id,
+				SpawnedCitizen2Id: c2.id,
+			}
+		} else {
+			report = &model.BuildReport{
+				Building: model.Building{
+					OpCode:   opcode,
+					Player:   69,
+					Position: position,
+				},
+			}
 		}
 
 		return t
@@ -143,9 +178,16 @@ func spawn[T IUnit](
 	cost *model.CostResponse,
 	precreatedUnit T,
 ) (report model.IReport) {
+	server := unit.GetServer()
+	ownerId := unit.GetOwner()
+	player := server.GetPlayerFromId(ownerId)
+
+	if player == nil {
+		log.Fatal().Msg("no player no spawn")
+	}
 
 	could := false
-	unit.ModifyInventory(func(inv model.Resources) model.Resources {
+	player.ModifyResources(func(inv model.Resources) model.Resources {
 		if inv.EnoughFor(cost.Resources) < 1 {
 			report = &model.ErrorReport{
 				Error:     "Not enough resources",

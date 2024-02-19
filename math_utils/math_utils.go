@@ -2,7 +2,6 @@ package mathutils
 
 import (
 	"cmp"
-	"fmt"
 )
 
 func AbsInt(a int) int {
@@ -14,14 +13,11 @@ func AbsInt(a int) int {
 
 func FloorDivInt(a int, b int) int {
 	if b <= 0 {
-		panic(nil)
+		panic("division by non-positive number")
 	}
 
 	if a < 0 {
-		if -a < 0 {
-			panic(fmt.Sprintf("number too big: %d", -a))
-		}
-		return -FloorDivInt(-a, b) + 1
+		return -((-a) / b) - 1
 	}
 
 	return a / b

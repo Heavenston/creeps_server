@@ -33,7 +33,7 @@ func InitPlayer(
 	c1.SetPosition(household)
 	srv.RegisterUnit(c1)
 	c2 = units.NewCitizenUnit(srv, player.GetId())
-	c1.SetPosition(household)
+	c2.SetPosition(household)
 	srv.RegisterUnit(c2)
 
 	return

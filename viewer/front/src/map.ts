@@ -51,7 +51,7 @@ api.addEventListener("connection_event", ce => {
 api.addEventListener("message", event => {
   if (event.message.kind == "fullchunk") {
     const content = event.message.content;
-    const pos = vec(content.chunkPos.x, content.chunkPos.y);
+    const pos = vec(content.chunkPos);
     chunks.set(key(pos), new Chunk(content.tiles, pos));
   }
 })
@@ -121,13 +121,13 @@ function remEuclid(a: number, b: number): number {
 // see the go server same function lol
 export function global2ContainingChunkCoords(global: Vector2): Vector2 {
   return global
-    .mapped(Math.round)
+    .mapped(Math.floor)
     .mapped(x => Math.floor(x / Chunk.chunkSize));
 }
 
 export function global2ChunkSubCoords(global: Vector2): Vector2 {
   return global
-    .mapped(Math.round)
+    .mapped(Math.floor)
     .mapped(a => remEuclid(a, Chunk.chunkSize))
 }
 

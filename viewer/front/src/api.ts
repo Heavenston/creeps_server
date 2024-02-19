@@ -54,7 +54,7 @@ export type UnitMessage = {
   }
 }
 
-export type RecvMessage = InitMessage | FullchunkMessage;
+export type RecvMessage = InitMessage | FullchunkMessage | UnitMessage;
 export type SendMessage = SubscribeMessage | UnsubscribeMessage;
 
 export class MessageEvent extends Event {
