@@ -23,7 +23,17 @@ type ChunkGenerator struct {
 	patchs []patch
 }
 
-func (gen *ChunkGenerator) newPath(scale float64, thresh float64, kind TileKind, defaultTileValue uint8) {
+// First argument is a scale that should be applied to the simplex noise
+// second is the minimum value the noise must be for the tile to be applied
+// (note: simplex noise goes from -1 to 1)
+// so higher threshold means the tile is rarer, and the lower the scale the more
+// 'blury' and big the patches will be
+func (gen *ChunkGenerator) newPath(
+	scale float64,
+	thresh float64,
+	kind TileKind,
+	defaultTileValue uint8,
+) {
 	var elm = patch {
 		scale:  scale,
 		thresh: thresh,
@@ -41,6 +51,7 @@ func NewChunkGenerator(seed int64) *ChunkGenerator {
 	g.rand = rand.New(rand.NewSource(seed))
 	g.patchs = make([]patch, 0, 0)
 
+	// see newPath docs
 	g.newPath(1./6., 0.6, TileWater, 0)
 	g.newPath(1./6., 0.6, TileStone, 10)
 	g.newPath(1./1., 0.8, TileOil, 10)
