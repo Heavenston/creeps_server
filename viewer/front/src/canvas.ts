@@ -34,8 +34,8 @@ class WorldRenderer {
 
   private get mouseWorldPos(): Vector2 {
     return this.mousePos
-      .minus(vec(this.canvas.width, this.canvas.height).times(0.5))
-      .times(1/this.cameraScale);
+      .times(1/this.cameraScale)
+      .plus(this.screenTopLeftInWorldPos);
   }
 
   // changes the scale but also changes the cameraPos making sure the mousePos
@@ -64,7 +64,13 @@ class WorldRenderer {
     let clickMouseStart: Vector2 | null = null;
     let clickCameraStart: Vector2 | null = null;
     this.canvas.addEventListener("mousedown", ev => {
-      console.log(this.mouseWorldPos.mapped(Math.floor));
+      const tile = this.mouseWorldPos.mapped(Math.floor);
+      console.log("Cliked tile: ", {
+        position: [this.mouseWorldPos.x, this.mouseWorldPos.y].join(" "),
+        flooredPosition: [tile.x, tile.y].join(" "),
+        kind: map.getTileKind(tile),
+        value: map.getTileValue(tile),
+      });
       clickMouseStart = vec(ev.clientX, ev.clientY);
       clickCameraStart = vec(this.cameraPos);
     }, {
@@ -230,9 +236,13 @@ class WorldRenderer {
       canvas = this.renderChunkCanvas(chunk);
 
     const drawpos = pos.times(map.Chunk.chunkSize);
+    // console.log(pos, drawpos);
 
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.drawImage(canvas, drawpos.x, drawpos.y);
+    // this.ctx.strokeStyle = "black"
+    // this.ctx.lineWidth = 5 / this.cameraScale;
+    // this.ctx.strokeRect(drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize)
   }
 
   private renderUnit(unit: api.UnitMessage) {

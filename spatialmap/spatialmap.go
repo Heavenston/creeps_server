@@ -108,7 +108,6 @@ func (m *SpatialMap[T]) Add(p T) {
 	}
 
 	m.lock.Lock()
-	defer m.lock.Unlock()
 
 	for _, o := range m.objects {
 		if o.val == p {
@@ -137,6 +136,14 @@ func (m *SpatialMap[T]) Add(p T) {
 		val:       p,
 		subHandle: handle,
 	})
+
+	m.lock.Unlock()
+
+	m.updateChan <- SpatialMapEvent[T]{
+		PreviousPosition: p.GetPosition(),
+		Position:         p.GetPosition(),
+		Object:           p,
+	}
 }
 
 func (m *SpatialMap[T]) RemoveFirst(predicate func(T) bool) *T {

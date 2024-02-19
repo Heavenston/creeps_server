@@ -139,6 +139,11 @@ export function getChunk(chunkPos: Vector2): Chunk | null {
 export function getTileKind(globalPos: Vector2): number {
   const chunkPos = global2ContainingChunkCoords(globalPos);
   const chunkSubPos = global2ChunkSubCoords(globalPos);
+  console.log({
+    globalPos: key(globalPos),
+    chunkPos: key(chunkPos),
+    chunkSubPos: key(chunkSubPos),
+  })
 
   const chunk = chunks.get(key(chunkPos));
   if (!chunk)

@@ -138,7 +138,7 @@ function connect() {
   ws.addEventListener("message", (e) => {
     try {
       const c = JSON.parse(e.data);
-      console.log("message",c);
+      // console.trace("message",c);
       if (!("kind" in c)) {
         throw new Error("invalid input, missing kind");
       }
