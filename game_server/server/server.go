@@ -57,17 +57,41 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 
 	srv.spawnRand = *rand.New(rand.NewSource(256))
 
+	go (func (){
+		channel := make(chan IServerEvent)
+		srv.events.Subscribe(channel, AABB{})
+		for {
+			event, ok := (<-channel)
+			if !ok {
+				break
+			}
+
+			if e, ok := event.(*UnitSpawnEvent); ok {
+				log.Debug().Any("event", e).Msg("Unit spawn server event")
+			}
+			if e, ok := event.(*UnitDespawnEvent); ok {
+				log.Debug().Any("event", e).Msg("Unit despawn server event")
+			}
+			if e, ok := event.(*PlayerDespawnEvent); ok {
+				log.Debug().Any("event", e).Msg("Player despawn server event")
+			}
+			if e, ok := event.(*PlayerSpawnEvent); ok {
+				log.Debug().Any("event", e).Msg("Player spawn server event")
+			}
+		}
+	})()
+
 	return srv
 }
 
 func (srv *Server) tick() {
-	next := srv.units.Iter()
-	for ok, _, unit := next(); ok; ok, _, unit = next() {
-		if !(*unit).GetAlive() {
-			continue
+	units := srv.units.Copy()
+
+	units.ForEach(func (unit IUnit) {
+		if unit.GetAlive() {
+			unit.Tick()
 		}
-		(*unit).Tick()
-	}
+	})
 }
 
 func (srv *Server) Ticker() *Ticker {
@@ -111,7 +135,7 @@ func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
 		return nil
 	}
 
-	srv.events.Emit(&UnitDispawnEvent{
+	srv.events.Emit(&UnitDespawnEvent{
 		Unit: *unit,
 		AABB: (*unit).GetAABB(),
 	})
@@ -122,13 +146,15 @@ func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
 func (srv *Server) GetUnit(id uid.Uid) IUnit {
 	units := srv.units.Copy()
 
-	next := units.Iter()
-	for ok, _, unit := next(); ok; ok, _, unit = next() {
-		if (*unit).GetId() == id {
-			return (*unit)
-		}
+	found := units.Find(func (unit IUnit) bool {
+		return unit.GetId() == id
+	})
+
+	// unbox the unit
+	if found == nil {
+		return nil
 	}
-	return nil
+	return *found
 }
 
 // You probably want to use gameplay.InitPlayer instead

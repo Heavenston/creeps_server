@@ -126,6 +126,11 @@ func (viewer *ViewerServer) handleClientSubscription(
 			if e, ok := event.(*server.UnitSpawnEvent); ok {
 				sendUnit(e.Unit)
 			}
+			if e, ok := event.(*server.UnitDespawnEvent); ok {
+				sendMessage("unitDespawned", unitDespawnContent {
+					UnitId: e.Unit.GetId(),
+				})
+			}
 			if e, ok := event.(*server.UnitMovedEvent); ok {
 				sendUnit(e.Unit)
 			}

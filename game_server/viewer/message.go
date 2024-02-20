@@ -31,11 +31,17 @@ type fullChunkContent struct {
 	Tiles []byte `json:"tiles"`
 }
 
+// sent by the server when anything about a unit changed
 type unitContent struct {
 	OpCode   string `json:"opCode"`
 	UnitId   uid.Uid `json:"unitId"`
 	Owner    uid.Uid `json:"owner"`
 	Position Point `json:"position"`
+}
+
+// sent by the server
+type unitDespawnContent struct {
+	UnitId uid.Uid `json:"unitId"`
 }
 
 // sent by the front end to subscribe to a chunk content

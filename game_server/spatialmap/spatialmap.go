@@ -71,9 +71,13 @@ func (m *SpatialMap[T]) Close() {
 func (m *SpatialMap[T]) Copy() SpatialMap[T] {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
+
+	newObj := make([]el[T], len(m.objects))
+	copy(newObj, m.objects)
+
 	return SpatialMap[T]{
 		isReadOnly: true,
-		objects:    m.objects,
+		objects:    newObj,
 	}
 }
 
@@ -140,6 +144,33 @@ func (m *SpatialMap[T]) RemoveFirst(predicate func(T) bool) *T {
 	return nil
 }
 
+// remove all elements that matches the predicate and returns the amount of
+// matches
+func (m *SpatialMap[T]) RemoveAll(predicate func(T) bool) int {
+	if m.isReadOnly {
+		panic("cannot modify a spatialmap copy")
+	}
+
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	matches := 0
+
+	new := m.objects[:0]
+	for _, o := range m.objects {
+		if predicate(o.val) {
+			if o.subHandle != nil { o.subHandle.Cancel() }
+			matches++
+		} else {
+			new = append(new, o)
+		}
+	}
+	m.objects = new
+	return matches
+}
+
+// calls the predicate on ALL objects in the map and returns the first one
+// for which true is returned if any, nil otherwise
 func (m *SpatialMap[T]) Find(predicate func(T) bool) *T {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
@@ -177,17 +208,12 @@ func (m *SpatialMap[T]) GetAllIntersects(aabb AABB) []T {
 	return result
 }
 
-func (m *SpatialMap[T]) Iter() func() (bool, int, *T) {
-	var i int = 0
-	return (func() (bool, int, *T) {
-		m.lock.RLock()
-		defer m.lock.RUnlock()
+// if you want to short circuit maybe look at Find
+func (m *SpatialMap[T]) ForEach(cb func (T)) {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 
-		if i == len(m.objects) {
-			return false, 0, nil
-		}
-		v := m.objects[i]
-		i += 1
-		return true, i - 1, &v.val
-	})
+	for _, o := range m.objects {
+		cb(o.val)
+	}
 }

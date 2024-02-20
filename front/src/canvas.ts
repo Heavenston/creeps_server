@@ -141,6 +141,14 @@ class WorldRenderer {
       signal: this.eventAbort.signal,
     });
 
+    api.addEventListener("message", event => {
+      if (event.message.kind != "unitDespawned")      
+        return;
+      this.lastUnitMessage.delete(event.message.content.unitId);
+    }, {
+      signal: this.eventAbort.signal,
+    });
+
     this.ctx = ctx;
   }
 

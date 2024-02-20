@@ -33,13 +33,13 @@ func (event *UnitSpawnEvent) GetAABB() AABB {
 }
 
 // emitted by the server on the call of RemoveUnit
-type UnitDispawnEvent struct {
+type UnitDespawnEvent struct {
 	serverEventBase
 	Unit IUnit
 	AABB AABB
 }
 
-func (event *UnitDispawnEvent) GetAABB() AABB {
+func (event *UnitDespawnEvent) GetAABB() AABB {
 	return event.AABB
 }
 
@@ -74,12 +74,12 @@ func (event *PlayerSpawnEvent) GetAABB() AABB {
 }
 
 // emitted by the server on the call of RemovePlayer
-type PlayerDispawnEvent struct {
+type PlayerDespawnEvent struct {
 	serverEventBase
 	Player *Player
 }
 
-func (event *PlayerDispawnEvent) GetAABB() AABB {
+func (event *PlayerDespawnEvent) GetAABB() AABB {
 	// empty aabb = covers all map
 	return AABB{}
 }

@@ -93,7 +93,7 @@ func (citizen *CitizenUnit) Tick() {
 	if player == nil {
 		log.Error().
 			Msg("[CITIZEN] Could not find owner player (code kms initiated)")
-		citizen.SetAlive(false)
+		citizen.SetDead()
 		return
 	}
 
@@ -117,7 +117,7 @@ func (citizen *CitizenUnit) Tick() {
 		if couldFeed {
 			citizen.lastEatenAt = ticker.GetTickNumber()
 		} else {
-			citizen.SetAlive(false)
+			citizen.SetDead()
 		}
 	}
 }

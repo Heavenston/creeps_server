@@ -57,8 +57,17 @@ func (unit *unit) GetAlive() bool {
 	return unit.alive.Load()
 }
 
-func (unit *unit) SetAlive(new bool) {
-	unit.alive.Store(new)
+func (unit *unit) SetDead() {
+	if !unit.alive.Swap(false) {
+		// was already dead
+		return
+	}
+
+	if unit.server == nil {
+		return
+	}
+
+	unit.server.RemoveUnit(unit.id)
 }
 
 func (unit *unit) GetPosition() Point {

@@ -43,7 +43,7 @@ type IUnit interface {
 	GetOpCode() string
 	IsBusy() bool
 	GetAlive() bool
-	SetAlive(new bool)
+	SetDead()
 	// the id of the owner, note: can be the server by way of ServerUid
 	GetOwner() uid.Uid
 	GetPosition() Point

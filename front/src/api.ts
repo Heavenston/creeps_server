@@ -54,7 +54,14 @@ export type UnitMessage = {
   }
 }
 
-export type RecvMessage = InitMessage | FullchunkMessage | UnitMessage;
+export type UnitDespawnedMessage = {
+  kind: "unitDespawned",
+  content: {
+    unitId: string,
+  }
+}
+
+export type RecvMessage = InitMessage | FullchunkMessage | UnitMessage | UnitDespawnedMessage;
 export type SendMessage = SubscribeMessage | UnsubscribeMessage;
 
 export class MessageEvent extends Event {
@@ -138,7 +145,7 @@ function connect() {
   ws.addEventListener("message", (e) => {
     try {
       const c = JSON.parse(e.data);
-      // console.trace("message",c);
+      console.debug("message", c)
       if (!("kind" in c)) {
         throw new Error("invalid input, missing kind");
       }

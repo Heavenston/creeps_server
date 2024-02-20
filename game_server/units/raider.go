@@ -73,7 +73,7 @@ func (raider *RaiderUnit) Tick() {
 	}
 
 	if raider.target == position {
-		raider.SetAlive(false)
+		raider.SetDead()
 		return
 	}
 

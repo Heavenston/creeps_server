@@ -34,7 +34,7 @@ func main() {
 		MaxMissesPerPlayer: 200,
 		MaxMissesPerUnit:   200,
 		ServerId:           "heavenstone_server",
-		TicksPerSeconds:    20,
+		TicksPerSeconds:    5,
 		TrackAchievements:  false,
 		WorldDimension:     Point{},
 		FoodGatherRate:     5,
@@ -122,7 +122,7 @@ func main() {
 	srv.SetDefaultPlayerResources(model.Resources{
 		Rock:      30,
 		Wood:      30,
-		Food:      30,
+		Food:      3,
 		Oil:       0,
 		Copper:    0,
 		WoodPlank: 0,
