@@ -46,4 +46,4 @@ A web server is opened at port `1234`, while the epita-compatible creeps
 
 ### Known bugs
 
-- Resource tiles seems to sometimes reappear at the end of the gather action
+- None (please find them)
