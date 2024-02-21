@@ -1,10 +1,11 @@
 import { vec, Vector2 } from "~/src/geom"
 import * as api from "~/src/api"
 import * as map from "./map"
+import { OverlayRenderer } from "./overlayRenderer";
 
-export class WorldRenderer {
-  private readonly canvas: HTMLCanvasElement;
-  private readonly ctx: CanvasRenderingContext2D;
+export class Renderer {
+  public readonly canvas: HTMLCanvasElement;
+  public readonly ctx: CanvasRenderingContext2D;
 
   // position of the center of the screen in world coordinate
   public cameraPos: Vector2 = vec(0, 0);
@@ -12,14 +13,16 @@ export class WorldRenderer {
   public cameraScale: number = 25;
 
   // position of the mouse in screen coordinated
-  private mousePos: Vector2 = vec(0, 0);
+  public mousePos: Vector2 = vec(0, 0);
 
   private eventAbort = new AbortController();
 
-  private chunksOnCamera: Vector2[] = [];
+  public chunksOnCamera: Vector2[] = [];
   private chunksCanvases: WeakMap<map.Chunk, OffscreenCanvas> = new WeakMap();
 
   private lastUnitMessage: Map<string, api.UnitMessage> = new Map();
+
+  private overlayRenderer = new OverlayRenderer(this);
 
   private get screenTopLeftInWorldPos(): Vector2 {
     return this.cameraPos
@@ -50,6 +53,7 @@ export class WorldRenderer {
 
   public cleanup() {
     this.eventAbort.abort();
+    this.overlayRenderer.cleanup();
   }
 
   public constructor(canvas: HTMLCanvasElement) {
@@ -295,5 +299,7 @@ export class WorldRenderer {
     for (const unit of this.lastUnitMessage.values())
       if (unit.content.opCode != "turret")
         this.renderUnit(unit);
+
+    this.overlayRenderer.render(dt);
   }
 }

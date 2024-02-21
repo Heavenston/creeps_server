@@ -100,6 +100,15 @@ func (viewer *ViewerServer) handleClientSubscription(
 		sendUnit(unit)
 	}
 
+	viewer.Server.ForEachPlayer(func(player *server.Player) {
+		sendMessage("playerSpawn", playerSpawnContent {
+			Id: player.GetId(),
+			SpawnPosition: player.GetSpawnPoint(),
+			Username: player.GetUsername(),
+			Resources: player.GetResources(),
+		})
+	})
+
 	for {
 		conn.chunksLock.RLock()
 		stillSubed := conn.subscribedChunks[chunkPos]

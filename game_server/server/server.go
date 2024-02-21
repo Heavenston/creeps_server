@@ -213,6 +213,15 @@ func (srv *Server) GetPlayerFromUsername(username string) *Player {
 	return nil
 }
 
+func (srv *Server) ForEachPlayer(cb func (player *Player)) {
+	srv.playersLock.RLock()
+	defer srv.playersLock.RUnlock()
+
+	for _, player := range srv.players {
+		cb(player);
+	}
+}
+
 func (srv *Server) AddReport(report model.IReport) {
 	srv.reportsLock.Lock()
 	defer srv.reportsLock.Unlock()

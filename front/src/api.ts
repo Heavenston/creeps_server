@@ -61,7 +61,31 @@ export type UnitDespawnedMessage = {
   }
 }
 
-export type RecvMessage = InitMessage | FullchunkMessage | UnitMessage | UnitDespawnedMessage;
+export type PlayerSpawnMessage = {
+  kind: "playerSpawn",
+  content: {
+  	id: string,
+  	spawnPosition: { x: number, y: number },
+  	username: string,
+    // TODO: Describe
+  	resources: unknown,
+  }
+}
+
+export type PlayerDespawnMessage = {
+  kind: "playerDespawn",
+  content: {
+  	id: string,
+  }
+}
+
+export type RecvMessage =
+  | InitMessage
+  | FullchunkMessage
+  | UnitMessage
+  | UnitDespawnedMessage
+  | PlayerSpawnMessage
+  | PlayerDespawnMessage;
 export type SendMessage = SubscribeMessage | UnsubscribeMessage;
 
 export class MessageEvent extends Event {
