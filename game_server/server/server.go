@@ -325,11 +325,11 @@ func (srv *Server) FindSpawnPoint() Point {
 		for try := 0; try < 120; try++ {
 			center := Point{X: srv.spawnRand.Intn(dist*2) - dist, Y: srv.spawnRand.Intn(dist*2) - dist}
 
+			point, found := srv.findSpawnPointNear(center)
+
 			playerNear := false
 			for _, player := range srv.players {
-				// keep in mind FindSpawnPointNear might get closer to other players
-				// after
-				if player.spawnPoint.Dist(center) < 100 {
+				if player.spawnPoint.Dist(point) < 25 {
 					playerNear = true
 					break
 				}
@@ -338,7 +338,6 @@ func (srv *Server) FindSpawnPoint() Point {
 				continue
 			}
 
-			point, found := srv.findSpawnPointNear(center)
 			if found {
 				log.Trace().Any("point", point).Msg("[SPAWN_POINT] Found")
 				return point
