@@ -34,7 +34,7 @@ func main() {
 		MaxMissesPerPlayer: 200,
 		MaxMissesPerUnit:   200,
 		ServerId:           "heavenstone_server",
-		TicksPerSeconds:    20,
+		TicksPerSeconds:    5,
 		TrackAchievements:  false,
 		WorldDimension:     Point{},
 		FoodGatherRate:     5,
