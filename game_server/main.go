@@ -122,7 +122,7 @@ func main() {
 	srv.SetDefaultPlayerResources(model.Resources{
 		Rock:      30,
 		Wood:      30,
-		Food:      3,
+		Food:      30,
 		Oil:       0,
 		Copper:    0,
 		WoodPlank: 0,
