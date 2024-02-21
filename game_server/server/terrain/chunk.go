@@ -89,10 +89,6 @@ func (chunk *TilemapChunk) GetTile(subcoord Point) Tile {
 // Waits for a write access lock on the chunk and sets the given tile to the
 // given value, and returns the previous value
 func (chunk *TilemapChunk) SetTile(subcoord Point, newValue Tile) Tile {
-	if !chunk.IsInBounds(subcoord) {
-        panic("out of bound chunk tile access")
-	}
-
 	return chunk.ModifyTile(subcoord, func(t Tile) Tile {
 		return newValue
 	})
@@ -108,13 +104,14 @@ func (chunk *TilemapChunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 	chunk.tileslock.Lock()
 	tileRef := &chunk.tiles[chunk.tileIndex(subcoord)]
     prevValue := *tileRef
-	*tileRef = cb(prevValue)
+	newValue := cb(prevValue)
+	*tileRef = newValue
 	chunk.tileslock.Unlock()
 
 	chunk.UpdatedEventProvider.Emit(TilemapUpdateEvent{
 		UpdatedPosition: subcoord,
 		PreviousValue: prevValue,
-		NewValue: *tileRef,
+		NewValue: newValue,
 	})
 
 	return prevValue
@@ -122,6 +119,7 @@ func (chunk *TilemapChunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 
 func (chunk *TilemapChunk) Print(w io.Writer) {
     rlc := chunk.RLock()
+	defer rlc.UnLock()
 	for y := ChunkSize - 1; y > 0; y-- {
 		for x := 0; x < ChunkSize; x++ {
 			point := Point{X: x, Y: y}
