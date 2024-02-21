@@ -1,9 +1,8 @@
-import { MinzeElement } from "minze"
-import { vec, Vector2 } from "./geom"
-import * as api from "./api"
+import { vec, Vector2 } from "~/src/geom"
+import * as api from "~/src/api"
 import * as map from "./map"
 
-class WorldRenderer {
+export class WorldRenderer {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
 
@@ -298,81 +297,3 @@ class WorldRenderer {
         this.renderUnit(unit);
   }
 }
-
-(class extends MinzeElement {
-  // html template
-  html = () => `<canvas/> `
-
-  // scoped stylesheet
-  css = () => `
-  :host {
-    height: 100%;
-  }
-  `
-
-  private canvas: HTMLCanvasElement | null = null;
-  private renderer: WorldRenderer | null = null;
-  private animationFrameId: number = -1;
-
-  private lastTime = 0;
-
-  private eventAbort = new AbortController();
-
-  private resizeCanvas() {
-    if (this.canvas == null)
-      return;
-    this.canvas.width = this.clientWidth;
-    this.canvas.height = this.clientHeight;
-
-    this.renderCanvas(this.lastTime);
-  }
-
-  private renderCanvas(time: number) {
-    if (this.renderer == null)
-      return;
-    this.animationFrameId = -1;
-
-    this.renderer?.render(this.lastTime - time);
-    this.lastTime = time;
-
-    if (this.animationFrameId != -1)
-      cancelAnimationFrame(this.animationFrameId);
-    this.animationFrameId = requestAnimationFrame(this.renderCanvas.bind(this));
-  }
-
-  onReady() {
-    this.canvas = this.select("canvas") ?? document.createElement("canvas");
-    const ctx = this.canvas.getContext("2d")
-    if (ctx == null) {
-      alert("unsupported device");
-      return;
-    }
-
-    api.addEventListener("connection_event", c => {
-      if (c.isConnected) {
-        if (this.canvas != null)
-          this.renderer = new WorldRenderer(this.canvas);
-        this.resizeCanvas();
-      }
-      else {
-        this.renderer?.cleanup();
-        this.renderer = null;
-      }
-    }, {
-      signal: this.eventAbort.signal
-    });
-
-    const ro = new ResizeObserver(() => {
-      this.resizeCanvas();
-    });
-    ro.observe(this);
-    this.eventAbort.signal.addEventListener("abort", ro.disconnect.bind(ro));
-  }
-
-  onDestroy() {
-    if (this.renderer)
-      this.renderer.cleanup();
-    cancelAnimationFrame(this.animationFrameId);
-    this.eventAbort.abort();
-  }
-}).define("creeps-canvas")

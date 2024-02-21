@@ -11,7 +11,11 @@
     "esModuleInterop": true ,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "~*": ["./*"]
+    }
   },
   "exclude": ["node_modules"]
 }

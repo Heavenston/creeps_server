@@ -1,2 +1,1 @@
-import "./canvas"
-import "./api"
+import "./viewer/canvas"

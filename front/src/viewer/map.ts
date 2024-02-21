@@ -1,5 +1,5 @@
-import { vec, Vector2 } from "./geom"
-import * as api from "./api"
+import { vec, Vector2 } from "~/src/geom"
+import * as api from "~/src/api"
 
 export class Chunk {
   public readonly pos: Vector2;
