@@ -265,7 +265,9 @@ func ApplyAction(action *Action, unit IUnit) (report model.IReport) {
 		report = mv
 	case OpCodeGather:
 		maxInventorySize := server.GetSetup().MaxLoad
-		server.Tilemap().ModifyTile(unit.GetPosition(), func(tile terrain.Tile) terrain.Tile {
+		position := unit.GetPosition()
+
+		server.Tilemap().ModifyTile(position, func(tile terrain.Tile) terrain.Tile {
 			resKind := tile.Kind.GetResourceName()
 			if resKind == "" {
 				log.Trace().
