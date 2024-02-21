@@ -203,7 +203,7 @@ func (srv *Server) RemovePlayer(id uid.Uid) *Player {
 	delete(srv.players, id)
 	srv.playersLock.Unlock()
 
-	srv.events.Emit(&PlayerSpawnEvent{
+	srv.events.Emit(&PlayerDespawnEvent{
 		Player: player,
 	})
 

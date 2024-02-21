@@ -6,9 +6,12 @@ import (
 	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/uid"
+	"github.com/rs/zerolog/log"
 )
 
 type Player struct {
+	server *Server
+
 	// locks everything not read only
 	lock sync.RWMutex
 
@@ -23,9 +26,15 @@ type Player struct {
 	units     []IUnit
 }
 
-func NewPlayer(username string, addr string, spawnPoint Point) *Player {
+func NewPlayer(
+	server *Server,
+	username string,
+	addr string,
+	spawnPoint Point,
+) *Player {
 	player := new(Player)
 
+	player.server = server;
 	player.spawnPoint = spawnPoint
 	player.addr = addr
 	player.id = uid.GenUid()
@@ -100,7 +109,11 @@ func (player *Player) AddTownHall(p Point) {
 	defer player.lock.Unlock()
 
 	if player.hasTownHall(p) {
-		panic("Cannot add a town hall twice")
+		log.Warn().
+			Str("player_id", string(player.id)).
+			Any("th_pos", p).
+			Msg("Attempted to add a town hall twice to a player")
+		return
 	}
 
 	player.townHalls = append(player.townHalls, p)
@@ -150,24 +163,41 @@ func (player *Player) AddUnit(p IUnit) {
 	defer player.lock.Unlock()
 
 	if player.hasUnit(p.GetId()) {
-		panic("Cannot add a unit twice")
+		log.Warn().
+			Str("player_id", string(player.id)).
+			Str("unit_id", string(p.GetId())).
+			Msg("Attempted to add a unit twice to a player")
+		return
 	}
 
 	player.units = append(player.units, p)
 }
 
 // this is done by the server on RemoveUnit
-func (player *Player) RemoveUnit(p IUnit) {
+func (player *Player) RemoveUnit(p IUnit) bool {
 	player.lock.Lock()
 	defer player.lock.Unlock()
 
-	if player.hasUnit(p.GetId()) {
-		panic("Cannot add a unit twice")
+	for i, unit := range player.units {
+		if unit.GetId() == p.GetId() {
+			player.units[i] = player.units[len(player.units)-1]
+			player.units = player.units[:len(player.units)-1]
+			return true
+		}
 	}
+	return false
+}
 
-	player.units = append(player.units, p)
+func (player *Player) kill() {
+	player.server.RemovePlayer(player.id)
 }
 
 func (player *Player) Tick() {
-	
+	player.lock.Lock()
+	defer player.lock.Unlock()
+
+	if len(player.units) == 0 || len(player.townHalls) == 0 {
+		player.kill();
+		return
+	}
 }

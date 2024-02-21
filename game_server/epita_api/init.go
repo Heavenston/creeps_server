@@ -23,7 +23,7 @@ func (h *initHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	username := chi.URLParam(r, "username")
 
 	spawnPoint := h.api.Server.FindSpawnPoint()
-	player := server.NewPlayer(username, addr, spawnPoint)
+	player := server.NewPlayer(h.api.Server, username, addr, spawnPoint)
 	player.SetResources(h.api.Server.GetDefaultPlayerResources())
 	townhall, household, c1, c2 := gameplay.InitPlayer(h.api.Server, player)
 

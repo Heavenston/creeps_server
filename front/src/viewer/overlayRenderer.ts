@@ -49,7 +49,7 @@ export class OverlayRenderer {
       ctx.strokeStyle = "rgba(0, 0, 0, 1)";
       ctx.lineWidth = 3 / this.renderer.cameraScale;
       ctx.strokeText(player.content.username, sp.x, sp.y);
-      ctx.font = `${30 / this.renderer.cameraScale}px arial`;
+      ctx.font = `${18 / this.renderer.cameraScale}px arial`;
       ctx.fillStyle = "rgba(255, 255, 255, 1)";
       ctx.fillText(player.content.username, sp.x, sp.y);
     }
