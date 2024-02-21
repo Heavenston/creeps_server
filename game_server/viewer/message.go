@@ -31,17 +31,28 @@ type fullChunkContent struct {
 	Tiles []byte `json:"tiles"`
 }
 
-// sent by the server when anything about a unit changed
+// sent by the server when anything about a unit changed (including spawn)
 type unitContent struct {
-	OpCode   string `json:"opCode"`
+	OpCode   string  `json:"opCode"`
 	UnitId   uid.Uid `json:"unitId"`
 	Owner    uid.Uid `json:"owner"`
-	Position Point `json:"position"`
+	Position Point   `json:"position"`
 }
 
 // sent by the server
 type unitDespawnContent struct {
 	UnitId uid.Uid `json:"unitId"`
+}
+
+type playerSpawnContent struct {
+	Id            uid.Uid         `json:"id"`
+	SpawnPosition Point           `json:"spawnPosition"`
+	Username      string          `json:"username"`
+	Resources     model.Resources `json:"resources"`
+}
+
+type playerDespawnContent struct {
+	Id uid.Uid `json:"id"`
 }
 
 // sent by the front end to subscribe to a chunk content

@@ -134,6 +134,19 @@ func (viewer *ViewerServer) handleClientSubscription(
 			if e, ok := event.(*server.UnitMovedEvent); ok {
 				sendUnit(e.Unit)
 			}
+			if e, ok := event.(*server.PlayerSpawnEvent); ok {
+				sendMessage("playerSpawn", playerSpawnContent {
+					Id: e.Player.GetId(),
+					SpawnPosition: e.Player.GetSpawnPoint(),
+					Username: e.Player.GetUsername(),
+					Resources: e.Player.GetResources(),
+				})
+			}
+			if e, ok := event.(*server.PlayerDespawnEvent); ok {
+				sendMessage("playerDespawn", playerDespawnContent {
+					Id: e.Player.GetId(),
+				})
+			}
 		// makes sure at lease once every 30s we check if we are still subed to
 		// the chunk
 		case <-time.After(time.Second * 30):
