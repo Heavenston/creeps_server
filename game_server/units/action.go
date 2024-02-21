@@ -142,7 +142,11 @@ func build(
 		t.Kind = target
 		t.Value = 0
 
-		if opcode == "household" {
+		if target == terrain.TileTownHall && player != nil {
+			player.AddTownHall(position)
+		}
+
+		if target == terrain.TileHousehold {
 			c1 := NewCitizenUnit(server, player.GetId())
 			c1.SetPosition(position)
 			server.RegisterUnit(c1)
