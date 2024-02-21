@@ -329,13 +329,40 @@ func ApplyAction(action *Action, unit IUnit) (report model.IReport) {
 			CreditedResources: credited,
 		}
 	case OpCodeFarm:
-		// TODO: Verify if there is water around
-		// (this is harder than you think unless tilemap has better lock guarantees than rn)
-		server.Tilemap().ModifyTile(unit.GetPosition(), func(tile terrain.Tile) terrain.Tile {
+		position := unit.GetPosition()
+
+		poses := []Point {
+			{ X:  1, Y:  0 },
+			{ X:  0, Y:  1 },
+			{ X: -1, Y:  0 },
+			{ X:  0, Y: -1 },
+		}
+
+		// note on race condition: as water cannot be removed if water is found
+		// it is guarenteed to still be here after
+		// if this guarentee is broken later, i guess its fine to have a weird
+		// race condition here ?
+		foundWater := false
+		for _, diff := range poses {
+			if server.Tilemap().GetTile(position.Add(diff)).Kind == terrain.TileWater {
+				foundWater = true
+				break
+			}
+		}
+
+		if !foundWater {
+			report = &model.ErrorReport{
+				ErrorCode: "no-water-nearby",
+				Error: "Cannot farm if no water is next to this tile",
+			}
+			break
+		}
+		
+		server.Tilemap().ModifyTile(position, func(tile terrain.Tile) terrain.Tile {
 			if tile.Kind != terrain.TileGrass {
 				report = &model.ErrorReport{
 					ErrorCode: "tile-occupied",
-					Error:     "no-water-nearby",
+					Error:     "Cannot farm if the tile is not grass",
 				}
 				return tile
 			}
