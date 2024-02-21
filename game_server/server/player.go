@@ -12,14 +12,15 @@ type Player struct {
 	// locks everything not read only
 	lock sync.RWMutex
 
-	id        uid.Uid
-	username  string
-	addr      string
+	id         uid.Uid
+	username   string
+	addr       string
 	spawnPoint Point
 
 	resources model.Resources
 
 	townHalls []Point
+	units     []IUnit
 }
 
 func NewPlayer(username string, addr string, spawnPoint Point) *Player {
@@ -119,4 +120,54 @@ func (player *Player) RemoveTownHall(p Point) bool {
 		}
 	}
 	return false
+}
+
+func (player *Player) GetUnits() []IUnit {
+	player.lock.RLock()
+	defer player.lock.RUnlock()
+
+	return player.units
+}
+
+func (player *Player) hasUnit(id uid.Uid) bool {
+	for _, unit := range player.units {
+		if unit.GetId() == id {
+			return true
+		}
+	}
+	return false
+}
+
+func (player *Player) HasUnit(id uid.Uid) bool {
+	player.lock.RLock()
+	defer player.lock.RUnlock()
+	return player.hasUnit(id)
+}
+
+// this is done by the server on RegisterUnit
+func (player *Player) AddUnit(p IUnit) {
+	player.lock.Lock()
+	defer player.lock.Unlock()
+
+	if player.hasUnit(p.GetId()) {
+		panic("Cannot add a unit twice")
+	}
+
+	player.units = append(player.units, p)
+}
+
+// this is done by the server on RemoveUnit
+func (player *Player) RemoveUnit(p IUnit) {
+	player.lock.Lock()
+	defer player.lock.Unlock()
+
+	if player.hasUnit(p.GetId()) {
+		panic("Cannot add a unit twice")
+	}
+
+	player.units = append(player.units, p)
+}
+
+func (player *Player) Tick() {
+	
 }

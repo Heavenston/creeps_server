@@ -92,6 +92,10 @@ func (srv *Server) tick() {
 			unit.Tick()
 		}
 	})
+
+	for _, player := range srv.players {
+		player.Tick()
+	}
 }
 
 func (srv *Server) Ticker() *Ticker {
@@ -121,6 +125,11 @@ func (srv *Server) RegisterUnit(unit IUnit) {
 
 	srv.units.Add(unit)
 
+	player := srv.GetPlayerFromId(unit.GetOwner())
+	if player != nil {
+		player.AddUnit(unit)
+	}
+
 	srv.events.Emit(&UnitSpawnEvent{
 		Unit: unit,
 		AABB: unit.GetAABB(),
@@ -131,16 +140,23 @@ func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
 	unit := srv.units.RemoveFirst(func(unit IUnit) bool {
 		return unit.GetId() == id
 	})
+
 	if unit == nil {
 		return nil
 	}
+	u := *unit
+
+	player := srv.GetPlayerFromId(u.GetOwner())
+	if player != nil {
+		player.RemoveUnit(u)
+	}
 
 	srv.events.Emit(&UnitDespawnEvent{
-		Unit: *unit,
-		AABB: (*unit).GetAABB(),
+		Unit: u,
+		AABB: u.GetAABB(),
 	})
 	
-	return *unit
+	return u
 }
 
 func (srv *Server) GetUnit(id uid.Uid) IUnit {
