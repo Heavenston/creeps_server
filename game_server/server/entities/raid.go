@@ -18,6 +18,7 @@ type Raid struct {
 	id     uid.Uid
 
 	campPosition Point
+	targetPosition Point
 	lastRaiderSpawn int
 }
 
@@ -26,6 +27,8 @@ func NewRaid(
 	ownerPlayerId uid.Uid,
 ) *Raid {
 	raid := new(Raid)
+
+	raid.InitOwnedEntities()
 
 	raid.server = server
 	raid.id = uid.GenUid()
@@ -89,6 +92,8 @@ func (raid *Raid) Register() {
 		Value: 0,
 	})
 
+	raid.targetPosition = player.GetSpawnPoint()
+
 	log.Info().Any("raid_id", raid.id).
 		Any("point", raid.campPosition).
 		Any("owner_player", raid.ownerPlayerId).
@@ -126,7 +131,11 @@ func (raid *Raid) Tick() {
 
 	raid.lastRaiderSpawn = currentTick
 
-	raider := NewTurretUnit(raid.server, raid.id)
+	raider := NewRaiderUnit(raid.server, raid.id, raid.targetPosition)
 	raider.SetPosition(raid.campPosition)
 	raider.Register()
+
+	log.Info().Any("id", raider.GetId()).
+		Any("pos", raider.GetPosition()).
+		Msg("Spawned new raider")
 }

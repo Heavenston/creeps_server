@@ -33,7 +33,7 @@ func observe(unit IUnit, into *model.ObserveReport) {
 		}
 
 		playerUsername := "server"
-		if player := server.GetEntity(ounit.GetOwner()).(*Player); player != nil {
+		if player, ok := server.GetEntity(ounit.GetOwner()).(*Player); ok {
 			playerUsername = player.GetUsername()
 		}
 
@@ -243,9 +243,11 @@ func spawn[T IUnit](
 }
 
 // called by unit in units/unit.go when the action is finished
-func ApplyAction(action *Action, unit IUnit) (report model.IReport) {
+func ApplyAction(action *Action, unit IUnit) model.IReport {
 	server := unit.GetServer()
 	player, _ := server.GetEntity(unit.GetOwner()).(*Player)
+
+	var report model.IReport
 
 	oldPosition := unit.GetPosition()
 
@@ -444,7 +446,15 @@ func ApplyAction(action *Action, unit IUnit) (report model.IReport) {
 			NewTurretUnit(server, unit.GetOwner()),
 		)
 	case OpCodeFireTurret:
+		report = &model.FireReport{
+			Target: Point{},
+			KilledUnits: []model.Unit{},
+		}
 	case OpCodeFireBomberBot:
+		report = &model.FireReport{
+			Target: Point{},
+			KilledUnits: []model.Unit{},
+		}
 	}
 
 	report.GetReport().ReportId = action.ReportId
@@ -452,10 +462,12 @@ func ApplyAction(action *Action, unit IUnit) (report model.IReport) {
 	report.GetReport().UnitId = unit.GetId()
 	report.GetReport().UnitPosition = oldPosition
 	report.GetReport().Status = "SUCCESS"
-	report.GetReport().Login = player.GetUsername()
+	if player != nil {
+		report.GetReport().Login = player.GetUsername()
+	}
 	if _, ok := report.(*model.ErrorReport); ok {
 		report.GetReport().Status = "ERROR"
 	}
 
-	return
+	return report
 }

@@ -32,7 +32,7 @@ func main() {
 		EnableEnemies:      true,
 		EnemyTickRate:      20,
 		EnemyBaseTickRate:  150,
-		MaxLoad:            25,
+		MaxLoad:            40,
 		MaxMissesPerPlayer: 200,
 		MaxMissesPerUnit:   200,
 		ServerId:           "heavenstone_server",

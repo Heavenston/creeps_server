@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"sync"
 
 	"creeps.heav.fr/epita_api/model"
@@ -68,7 +69,10 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 				break
 			}
 
-			log.Debug().Any("event", event).Msg("Server event")
+			log.Debug().
+				Str("type", reflect.TypeOf(event).String()).
+				Any("event", event).
+				Msg("Server event")
 		}
 	})()
 
@@ -123,6 +127,8 @@ func (srv *Server) RegisterEntity(entity IEntity) {
 	}
 	srv.entitiesSpatialmap.Add(entity)
 	srv.entitiesMap[entity.GetId()] = entity
+
+	log.Trace().Str("id", string(entity.GetId())).Msg("Registered entity")
 
 	ownerId := entity.GetOwner()
 	if ownerId == uid.ServerUid {
@@ -244,6 +250,10 @@ func (srv *Server) ForEachEntity(cb func(player IEntity) (shouldStop bool)) {
 func (srv *Server) AddReport(report model.IReport) {
 	srv.reportsLock.Lock()
 	defer srv.reportsLock.Unlock()
+
+	if len(report.GetReport().ReportId) == 0 {
+		panic("empty report id")
+	}
 
 	if srv.reports[report.GetReport().ReportId] != nil {
 		panic(fmt.Errorf("cannot add a report twice (%s)", report.GetReport().ReportId))

@@ -196,7 +196,7 @@ func (unit *unit) startAction(action *Action, supported []ActionOpCode) error {
 	}
 
 	cost := action.OpCode.GetCost(unit.this)
-	if player := unit.GetServer().GetEntityOwner(unit.id).(*Player); player != nil {
+	if player, ok := unit.GetServer().GetEntityOwner(unit.id).(*Player); ok {
 		var hadEnough bool
 		var had model.Resources
 		player.ModifyResources(func(res model.Resources) model.Resources {
@@ -253,5 +253,7 @@ func (unit *unit) tick() {
 	action.Finised.Store(true)
 
 	report := ApplyAction(action, unit.this)
-	unit.GetServer().AddReport(report)
+	if len(report.GetReport().ReportId) > 0 {
+		unit.GetServer().AddReport(report)
+	}
 }

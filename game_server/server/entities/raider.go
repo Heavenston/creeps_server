@@ -68,6 +68,8 @@ func (raider *RaiderUnit) Tick() {
 
 	raider.tick()
 
+	log.Info().Msg("raider tick")
+
 	position := raider.GetPosition()
 
 	// busy = do nothing
@@ -86,9 +88,9 @@ func (raider *RaiderUnit) Tick() {
 
 	if mathutils.AbsInt(diff.X) > mathutils.AbsInt(diff.Y) {
 		if diff.X < 0 {
-			newAction.OpCode = OpCodeMoveRight
-		} else {
 			newAction.OpCode = OpCodeMoveLeft
+		} else {
+			newAction.OpCode = OpCodeMoveRight
 		}
 	} else {
 		if diff.Y < 0 {
@@ -100,7 +102,7 @@ func (raider *RaiderUnit) Tick() {
 
 	err := raider.StartAction(newAction)
 	if err != nil {
-		log.Error().
+		log.Warn().
 			Any("action", newAction).
 			Err(err).
 			Msg("[RAIDER] Could not start action")
