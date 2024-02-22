@@ -21,7 +21,7 @@ export class TexturePack extends EventTarget {
       "/kenney_micro_roguelike/tree2.png",
     ],
     // Bush
-    "/kenney_micro_roguelike/bush.png",
+    "/bush.png",
     // Oil
     "/kenney_micro_roguelike/oil.png",
     // TownHall
