@@ -37,7 +37,7 @@ export class TexturePack extends EventTarget {
     // RaiderBorder
     null,
     // Road
-    null,
+    "/kenney_micro_roguelike/road.png",
   ];
   private unitsUrlTable: {[key: string]: string|string[]|undefined} = {
     "citizen": [
