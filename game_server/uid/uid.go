@@ -7,6 +7,7 @@ import (
 
 type Uid string
 
+// invalid Uid so impossible to have otherwise
 const ServerUid Uid = "_server"
 
 var alphabet string = "abcdefghijklmnopqstuvwxyzABCDEFGHIJKLMNOPQSTUVWXYZ"

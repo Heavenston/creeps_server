@@ -1,8 +1,6 @@
 package model
 
 import (
-	"reflect"
-
 	"creeps.heav.fr/geom"
 	"creeps.heav.fr/uid"
 )
@@ -29,7 +27,6 @@ type Message struct {
 
 type IReport interface {
 	GetReport() *Report
-	GetParameterType() reflect.Type
 }
 
 type Report struct {
@@ -43,10 +40,6 @@ type Report struct {
 
 func (r *Report) GetReport() *Report {
 	return r
-}
-
-func (r *Report) GetParameterType() reflect.Type {
-	return nil
 }
 
 type ErrorReport struct {
@@ -121,10 +114,6 @@ type MessageSendReport struct {
 	Recipient string `json:"recipient"`
 }
 
-func (r *MessageSendReport) GetParameterType() reflect.Type {
-	return reflect.TypeFor[MessageSendParameter]()
-}
-
 type MessageFetchReport struct {
 	Report
 	FetchedMessages []Message `json:"fetchedMessages"`
@@ -134,8 +123,4 @@ type FireReport struct {
 	Report
 	Target      geom.Point `json:"target"`
 	KilledUnits []Unit     `json:"killedUnits"`
-}
-
-func (r *FireReport) GetParameterType() reflect.Type {
-	return reflect.TypeFor[FireParameter]()
 }

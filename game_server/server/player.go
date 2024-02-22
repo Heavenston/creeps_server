@@ -4,13 +4,17 @@ import (
 	"sync"
 
 	"creeps.heav.fr/epita_api/model"
+	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server/terrain"
+	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
 	"github.com/rs/zerolog/log"
 )
 
 type Player struct {
+	OwnerEntity
+
 	server *Server
 
 	// locks everything not read only
@@ -24,7 +28,6 @@ type Player struct {
 	resources model.Resources
 
 	townHalls []Point
-	units     []IUnit
 
 	lastEnemySpawnTick int
 }
@@ -37,6 +40,8 @@ func NewPlayer(
 ) *Player {
 	player := new(Player)
 
+	player.ownedEntities = make(map[uid.Uid]IEntity)
+
 	player.server = server;
 	player.spawnPoint = spawnPoint
 	player.addr = addr
@@ -45,6 +50,10 @@ func NewPlayer(
 	player.lastEnemySpawnTick = server.Ticker().tickNumber
 
 	return player
+}
+
+func (player *Player) GetServer() *Server {
+	return player.server
 }
 
 func (player *Player) GetId() uid.Uid {
@@ -61,6 +70,21 @@ func (player *Player) GetAddr() string {
 
 func (player *Player) GetSpawnPoint() Point {
 	return player.spawnPoint
+}
+
+// for IEntity
+func (player *Player) GetAABB() AABB {
+	return AABB{}
+}
+
+// for IEntity
+func (player *Player) GetOwner() uid.Uid {
+	return uid.ServerUid
+}
+
+// for IEntity
+func (player *Player) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent] {
+	return nil
 }
 
 func (player *Player) GetResources() model.Resources {
@@ -139,61 +163,18 @@ func (player *Player) RemoveTownHall(p Point) bool {
 	return false
 }
 
-func (player *Player) GetUnits() []IUnit {
-	player.lock.RLock()
-	defer player.lock.RUnlock()
-
-	return player.units
-}
-
-func (player *Player) hasUnit(id uid.Uid) bool {
-	for _, unit := range player.units {
-		if unit.GetId() == id {
-			return true
-		}
-	}
-	return false
-}
-
-func (player *Player) HasUnit(id uid.Uid) bool {
-	player.lock.RLock()
-	defer player.lock.RUnlock()
-	return player.hasUnit(id)
-}
-
-// this is done by the server on RegisterUnit
-func (player *Player) AddUnit(p IUnit) {
-	player.lock.Lock()
-	defer player.lock.Unlock()
-
-	if player.hasUnit(p.GetId()) {
-		log.Warn().
-			Str("player_id", string(player.id)).
-			Str("unit_id", string(p.GetId())).
-			Msg("Attempted to add a unit twice to a player")
-		return
-	}
-
-	player.units = append(player.units, p)
-}
-
-// this is done by the server on RemoveUnit
-func (player *Player) RemoveUnit(p IUnit) bool {
-	player.lock.Lock()
-	defer player.lock.Unlock()
-
-	for i, unit := range player.units {
-		if unit.GetId() == p.GetId() {
-			player.units[i] = player.units[len(player.units)-1]
-			player.units = player.units[:len(player.units)-1]
-			return true
-		}
-	}
-	return false
+func (player *Player) Register() {
+	player.server.RegisterEntity(player)
+	player.server.events.Emit(&PlayerSpawnEvent{
+		Player: player,
+	})
 }
 
 func (player *Player) kill() {
-	player.server.RemovePlayer(player.id)
+	player.server.RemoveEntity(player.id)
+	player.server.events.Emit(&PlayerDespawnEvent{
+		Player: player,
+	})
 }
 
 // called each tick if enemy spawning is enabled
@@ -226,7 +207,16 @@ func (player *Player) Tick() {
 	player.lock.Lock()
 	defer player.lock.Unlock()
 
-	if len(player.units) == 0 || len(player.townHalls) == 0 {
+	hasCitizens := false
+	player.ForEachEntities(func(entity IEntity) (shouldStop bool) {
+		if unit, ok := entity.(IUnit); ok {
+			hasCitizens = unit.GetOpCode() == "citizen"
+			shouldStop = hasCitizens
+		}
+		return
+	})
+
+	if !hasCitizens || len(player.townHalls) == 0 {
 		player.kill();
 		return
 	}

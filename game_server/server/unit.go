@@ -4,9 +4,7 @@ import (
 	"fmt"
 
 	"creeps.heav.fr/epita_api/model"
-	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
-	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
 )
 
@@ -37,8 +35,7 @@ func (e NotEnoughResourcesError) Error() string {
 // every unit operation must be thread-safe atomic
 // implemented in the server/units package (avoids circular depedency)
 type IUnit interface {
-	GetServer() *Server
-	GetId() uid.Uid
+	IEntity
 	// returns an identifier of this kind of unit
 	GetOpCode() string
 	IsBusy() bool
@@ -48,8 +45,6 @@ type IUnit interface {
 	GetOwner() uid.Uid
 	GetPosition() Point
 	SetPosition(newPos Point)
-	GetAABB() AABB
-	MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent]
 	// atomically modifies the position of the unit
 	ModifyPosition(cb func(Point) Point) (Point, Point)
 	GetLastAction() *Action
@@ -62,7 +57,4 @@ type IUnit interface {
 	// atomically modifier the inventory
 	ModifyInventory(func(model.Resources) model.Resources)
 	SetInventory(newInv model.Resources)
-	// Ran each tick after being registered by the server
-	// only if GetAlive returns true
-	Tick()
 }

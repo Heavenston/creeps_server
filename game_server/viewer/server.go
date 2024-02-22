@@ -109,19 +109,19 @@ func (viewer *ViewerServer) handleClientSubscription(
 
 	sendTerrain()
 
-	units := viewer.Server.Units().GetAllIntersects(aabb)
-	for _, unit := range units {
-		sendUnit(unit)
+	for _, entity := range viewer.Server.Entities().GetAllIntersects(aabb) {
+		if unit, ok := entity.(server.IUnit); ok {
+			sendUnit(unit)
+		}
+		if player, ok := entity.(*server.Player); ok {
+			sendMessage("playerSpawn", playerSpawnContent {
+				Id: player.GetId(),
+				SpawnPosition: player.GetSpawnPoint(),
+				Username: player.GetUsername(),
+				Resources: player.GetResources(),
+			})
+		}
 	}
-
-	viewer.Server.ForEachPlayer(func(player *server.Player) {
-		sendMessage("playerSpawn", playerSpawnContent {
-			Id: player.GetId(),
-			SpawnPosition: player.GetSpawnPoint(),
-			Username: player.GetUsername(),
-			Resources: player.GetResources(),
-		})
-	})
 
 	for {
 		conn.chunksLock.RLock()
@@ -319,7 +319,6 @@ func (viewer *ViewerServer) Start() {
 
 	router := chi.NewRouter()
 	router.Use(middleware.RealIP)
-	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
 
 	router.HandleFunc("/websocket", func(w http.ResponseWriter, r *http.Request) {

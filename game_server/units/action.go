@@ -24,11 +24,16 @@ func observe(unit IUnit, into *model.ObserveReport) {
 		},
 	}
 
-	units := server.Units().GetAllIntersects(aabb)
-	into.Units = make([]model.Unit, 0, len(units))
-	for _, ounit := range units {
+	entities := server.Entities().GetAllIntersects(aabb)
+	into.Units = make([]model.Unit, 0, len(entities))
+	for _, oentity := range entities {
+		ounit, ok := oentity.(IUnit)
+		if !ok {
+			continue
+		}
+
 		playerUsername := "server"
-		if player := server.GetPlayerFromId(ounit.GetOwner()); player != nil {
+		if player := server.GetEntity(ounit.GetOwner()).(*Player); player != nil {
 			playerUsername = player.GetUsername()
 		}
 
@@ -40,7 +45,7 @@ func observe(unit IUnit, into *model.ObserveReport) {
 	}
 
 	tiles := server.Tilemap().ObserveRegion(aabb)
-	into.Tiles = make([]uint16, 0, len(units))
+	into.Tiles = make([]uint16, 0, len(tiles))
 	for _, tile := range tiles {
 		into.Tiles = append(into.Tiles, uint16(tile.Kind)<<10|uint16(tile.Value))
 	}
@@ -55,10 +60,11 @@ func refine(
 ) (report model.IReport) {
 	server := unit.GetServer()
 	ownerId := unit.GetOwner()
-	player := server.GetPlayerFromId(ownerId)
+	player := server.GetEntity(ownerId).(*Player)
 
 	if player == nil {
-		log.Fatal().Msg("no player no refine")
+		log.Warn().Any("ownerId", ownerId).Msg("no player no refine")
+		return
 	}
 
 	tile := unit.GetServer().Tilemap().GetTile(unit.GetPosition())
@@ -103,12 +109,13 @@ func build(
 ) (report model.IReport) {
 	server := unit.GetServer()
 	ownerId := unit.GetOwner()
-	player := server.GetPlayerFromId(ownerId)
 	tilemap := server.Tilemap()
 	position := unit.GetPosition()
+	player, ok := server.GetEntity(ownerId).(*Player)
 
-	if player == nil {
-		log.Fatal().Msg("no player no build")
+	if !ok {
+		log.Warn().Any("ownerId", ownerId).Msg("no player no refine")
+		return
 	}
 
 	tilemap.ModifyTile(position, func(t terrain.Tile) terrain.Tile {
@@ -149,10 +156,10 @@ func build(
 		if target == terrain.TileHousehold {
 			c1 := NewCitizenUnit(server, player.GetId())
 			c1.SetPosition(position)
-			server.RegisterUnit(c1)
+			c1.Register()
 			c2 := NewCitizenUnit(server, player.GetId())
 			c2.SetPosition(position)
-			server.RegisterUnit(c2)
+			c2.Register()
 
 			report = &model.BuildHouseHoldReport{
 				BuildReport: model.BuildReport{
@@ -189,10 +196,11 @@ func spawn[T IUnit](
 ) (report model.IReport) {
 	server := unit.GetServer()
 	ownerId := unit.GetOwner()
-	player := server.GetPlayerFromId(ownerId)
+	player, ok := server.GetEntity(ownerId).(*Player)
 
-	if player == nil {
-		log.Fatal().Msg("no player no spawn")
+	if !ok {
+		log.Warn().Any("ownerId", ownerId).Msg("no player no refine")
+		return
 	}
 
 	could := false
@@ -215,10 +223,10 @@ func spawn[T IUnit](
 	}
 
 	precreatedUnit.SetPosition(unit.GetPosition())
-	server.RegisterUnit(precreatedUnit)
+	server.RegisterEntity(precreatedUnit)
 
 	playerUsername := "server"
-	if player := unit.GetServer().GetPlayerFromId(precreatedUnit.GetId()); player != nil {
+	if player, ok := unit.GetServer().GetEntity(precreatedUnit.GetId()).(*Player); ok {
 		playerUsername = player.GetUsername()
 	}
 
@@ -237,7 +245,7 @@ func spawn[T IUnit](
 // called by unit in units/unit.go when the action is finished
 func ApplyAction(action *Action, unit IUnit) (report model.IReport) {
 	server := unit.GetServer()
-	player := server.GetPlayerFromId(unit.GetOwner())
+	player, _ := server.GetEntity(unit.GetOwner()).(*Player)
 
 	oldPosition := unit.GetPosition()
 

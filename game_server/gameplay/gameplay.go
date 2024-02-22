@@ -12,7 +12,7 @@ func InitPlayer(
 	srv *server.Server,
 	player *server.Player,
 ) (townhall Point, household Point, c1, c2 *units.CitizenUnit) {
-	srv.RegisterPlayer(player)
+	player.Register()
 
 	townhall = player.GetSpawnPoint()
 	household = player.GetSpawnPoint().Plus(0, 1)
@@ -30,10 +30,10 @@ func InitPlayer(
 
 	c1 = units.NewCitizenUnit(srv, player.GetId())
 	c1.SetPosition(household)
-	srv.RegisterUnit(c1)
+	c1.Register()
 	c2 = units.NewCitizenUnit(srv, player.GetId())
 	c2.SetPosition(household)
-	srv.RegisterUnit(c2)
+	c2.Register()
 
 	return
 }

@@ -67,7 +67,12 @@ func (unit *unit) SetDead() {
 		return
 	}
 
-	unit.server.RemoveUnit(unit.id)
+	unit.server.RemoveEntity(unit.id)
+
+	unit.server.Events().Emit(&server.UnitDespawnEvent{
+		Unit: unit.this,
+		AABB: unit.GetAABB(),
+	})
 }
 
 func (unit *unit) GetPosition() Point {
@@ -191,15 +196,10 @@ func (unit *unit) startAction(action *Action, supported []ActionOpCode) error {
 	}
 
 	cost := action.OpCode.GetCost(unit.this)
-	if unit.this.GetOwner() != uid.ServerUid {
-		owner := unit.GetServer().GetPlayerFromId(unit.this.GetOwner())
-		if owner == nil {
-			panic("could not find owner")
-		}
-
+	if player := unit.GetServer().GetEntityOwner(unit.id).(*Player); player != nil {
 		var hadEnough bool
 		var had model.Resources
-		owner.ModifyResources(func(res model.Resources) model.Resources {
+		player.ModifyResources(func(res model.Resources) model.Resources {
 			if res.EnoughFor(cost.Resources) < 1 {
 				hadEnough = false
 				had = res
@@ -219,6 +219,14 @@ func (unit *unit) startAction(action *Action, supported []ActionOpCode) error {
 	unit.lastAction.Store(action)
 
 	return nil
+}
+
+func (unit *unit) Register() {
+	unit.server.RegisterEntity(unit.this)
+	unit.server.Events().Emit(&server.UnitSpawnEvent{
+		Unit: unit.this,
+		AABB: unit.GetAABB(),
+	})
 }
 
 func (unit *unit) tick() {

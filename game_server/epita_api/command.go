@@ -63,7 +63,7 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    unit := h.api.Server.GetUnit(unitId)
+    unit := h.api.Server.GetEntity(unitId).(server.IUnit)
 
     if unit == nil || unit.GetOwner() != player.GetId() {
         sendError(

@@ -23,12 +23,13 @@ type Server struct {
 
 	events *spatialevents.SpatialEventProvider[IServerEvent]
 
-	units       *spatialmap.SpatialMap[IUnit]
-	playersLock sync.RWMutex
-	players     map[uid.Uid]*Player
-	reportsLock sync.RWMutex
+	entitiesLock       sync.RWMutex
+	entitiesSpatialmap *spatialmap.SpatialMap[IEntity]
+	entitiesMap        map[uid.Uid]IEntity
+
 	// reports older than (somevalue) gets removed by the creeps garbage collector
 	reports     map[uid.Uid]model.IReport
+	reportsLock sync.RWMutex
 
 	defaultPlayerResourcesLock sync.RWMutex
 	defaultPlayerResources     model.Resources
@@ -43,8 +44,9 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 
 	srv.events = spatialevents.NewSpatialEventProvider[IServerEvent]()
 
-	srv.units = spatialmap.NewSpatialMap[IUnit]()
-	srv.players = make(map[uid.Uid]*Player)
+	srv.entitiesSpatialmap = spatialmap.NewSpatialMap[IEntity]()
+	srv.entitiesMap = make(map[uid.Uid]IEntity)
+
 	srv.reports = make(map[uid.Uid]model.IReport)
 
 	srv.ticker = NewTicker(setup.TicksPerSeconds)
@@ -57,7 +59,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 
 	srv.spawnRand = *rand.New(rand.NewSource(256))
 
-	go (func (){
+	go (func() {
 		channel := make(chan IServerEvent)
 		srv.events.Subscribe(channel, AABB{})
 		for {
@@ -85,16 +87,15 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 }
 
 func (srv *Server) tick() {
-	units := srv.units.Copy()
+	srv.entitiesLock.Lock()
+	entites := make([]IEntity, 0, len(srv.entitiesMap))
+	for _, entity := range srv.entitiesMap {
+		entites = append(entites, entity)
+	}
+	srv.entitiesLock.Unlock()
 
-	units.ForEach(func (unit IUnit) {
-		if unit.GetAlive() {
-			unit.Tick()
-		}
-	})
-
-	for _, player := range srv.players {
-		player.Tick()
+	for _, entity := range srv.entitiesMap {
+		entity.Tick()
 	}
 }
 
@@ -108,8 +109,8 @@ func (srv *Server) Tilemap() *terrain.Tilemap {
 
 // returns the spatial map with all units, do NOT use it to add or remove
 // units, only use Server.RegisterUnit and Server.RemoveUnit for that
-func (srv *Server) Units() *spatialmap.SpatialMap[IUnit] {
-	return srv.units
+func (srv *Server) Entities() *spatialmap.SpatialMap[IEntity] {
+	return srv.entitiesSpatialmap
 }
 
 // returns the spatial map with all units, do NOT use it to add or remove
@@ -118,124 +119,141 @@ func (srv *Server) Events() *spatialevents.SpatialEventProvider[IServerEvent] {
 	return srv.events
 }
 
-func (srv *Server) RegisterUnit(unit IUnit) {
-	if unit.GetServer() != srv {
-		panic("Cannot register unit made for another server")
+// Do not call directly, use entity.Register(), otherwise events won't be 
+// emitted
+func (srv *Server) RegisterEntity(entity IEntity) {
+	if entity.GetServer() != srv {
+		panic("Cannot register entity made for another server")
 	}
 
-	srv.units.Add(unit)
+	srv.entitiesLock.Lock()
+	defer srv.entitiesLock.Unlock()
 
-	player := srv.GetPlayerFromId(unit.GetOwner())
-	if player != nil {
-		player.AddUnit(unit)
+	if srv.entitiesMap[entity.GetId()] != nil {
+		panic("cannot register two entities with the same id")
+	}
+	srv.entitiesSpatialmap.Add(entity)
+	srv.entitiesMap[entity.GetId()] = entity
+
+	ownerId := entity.GetOwner()
+	if ownerId == uid.ServerUid {
+		return
 	}
 
-	srv.events.Emit(&UnitSpawnEvent{
-		Unit: unit,
-		AABB: unit.GetAABB(),
-	})
+	ownerEntity := srv.entitiesMap[ownerId]
+	owner, isOwner := ownerEntity.(IOwnerEntity)
+	if !isOwner {
+		log.Warn().
+			Str("entity_id", string(entity.GetId())).
+			Any("owner_id", string(ownerId)).
+			Msg("registered entity has an invalid owner")
+		return
+	}
+
+	owner.AddEntity(entity)
 }
 
-func (srv *Server) RemoveUnit(id uid.Uid) IUnit {
-	unit := srv.units.RemoveFirst(func(unit IUnit) bool {
-		return unit.GetId() == id
+func (srv *Server) RemoveEntity(id uid.Uid) (entity IEntity) {
+	srv.entitiesLock.Lock()
+	defer srv.entitiesLock.Unlock()
+
+	entity = srv.entitiesMap[id]
+	if entity != nil {
+		log.Warn().
+			Str("id", string(id)).
+			Msg("Attempted to remove an entity that isn't registered")
+		return
+	}
+	delete(srv.entitiesMap, id)
+	srv.entitiesSpatialmap.RemoveFirst(func(e IEntity) bool {
+		return e.GetId() == id
 	})
 
-	if unit == nil {
-		return nil
-	}
-	u := *unit
-
-	player := srv.GetPlayerFromId(u.GetOwner())
-	if player != nil {
-		player.RemoveUnit(u)
+	ownerId := entity.GetOwner()
+	if ownerId == uid.ServerUid {
+		return
 	}
 
-	srv.events.Emit(&UnitDespawnEvent{
-		Unit: u,
-		AABB: u.GetAABB(),
-	})
+	ownerEntity := srv.entitiesMap[ownerId]
+	owner, isOwner := ownerEntity.(IOwnerEntity)
+	if !isOwner {
+		log.Warn().
+			Str("entity_id", string(entity.GetId())).
+			Any("owner_id", string(ownerId)).
+			Msg("removed entity has an invalid owner")
+		return
+	}
+
+	removed := owner.RemoveEntity(id)
+	if removed == nil {
+		log.Warn().
+			Str("entity_id", string(entity.GetId())).
+			Any("owner_id", string(ownerId)).
+			Msg("entity's owner did not have it registered")
+	}
+	return
+}
+
+func (srv *Server) GetEntity(id uid.Uid) IEntity {
+	srv.entitiesLock.RLock()
+	defer srv.entitiesLock.RUnlock()
 	
-	return u
+	return srv.entitiesMap[id]
 }
 
-func (srv *Server) GetUnit(id uid.Uid) IUnit {
-	units := srv.units.Copy()
-
-	found := units.Find(func (unit IUnit) bool {
-		return unit.GetId() == id
-	})
-
-	// unbox the unit
-	if found == nil {
+func (srv *Server) GetEntityOwner(id uid.Uid) IOwnerEntity {
+	srv.entitiesLock.RLock()
+	defer srv.entitiesLock.RUnlock()
+	
+	entity := srv.entitiesMap[id]
+	if entity == nil {
 		return nil
 	}
-	return *found
-}
 
-// You probably want to use gameplay.InitPlayer instead
-func (srv *Server) RegisterPlayer(player *Player) {
-	srv.playersLock.Lock()
-
-	present := srv.players[player.id]
-	if present == player {
-		panic("Player " + player.id + " already registred")
-	} else if present != nil {
-		panic("A player with id " + player.id + " is already registred")
-	}
-	srv.players[player.id] = player
-
-	srv.playersLock.Unlock()
-
-	srv.events.Emit(&PlayerSpawnEvent{
-		Player: player,
-	})
-}
-
-func (srv *Server) RemovePlayer(id uid.Uid) *Player {
-	srv.playersLock.Lock()
-
-	player := srv.players[id]
-	if player == nil {
-		srv.playersLock.Unlock()
+	ownerId := entity.GetOwner()
+	if ownerId == uid.ServerUid {
 		return nil
 	}
-	delete(srv.players, id)
-	srv.playersLock.Unlock()
 
-	srv.events.Emit(&PlayerDespawnEvent{
-		Player: player,
-	})
+	ownerEntity := srv.entitiesMap[ownerId]
+	owner, isOwner := ownerEntity.(IOwnerEntity)
+	if !isOwner {
+		log.Warn().
+			Str("entity_id", string(entity.GetId())).
+			Any("owner_id", string(ownerId)).
+			Msg("entity has an invalid owner")
+		return nil
+	}
 
-	return player
+	return owner
 }
 
-func (srv *Server) GetPlayerFromId(id uid.Uid) *Player {
-	srv.playersLock.RLock()
-	defer srv.playersLock.RUnlock()
+func (srv *Server) ForEachEntity(cb func(player IEntity) (shouldStop bool)) {
+	srv.entitiesLock.RLock()
+	defer srv.entitiesLock.RUnlock()
 
-	return srv.players[id]
+	for _, player := range srv.entitiesMap {
+		if cb(player) {
+			break
+		}
+	}
 }
 
 func (srv *Server) GetPlayerFromUsername(username string) *Player {
-	srv.playersLock.RLock()
-	defer srv.playersLock.RUnlock()
+	srv.entitiesLock.RLock()
+	defer srv.entitiesLock.RUnlock()
 
-	for _, player := range srv.players {
+	for _, entity := range srv.entitiesMap {
+		player, ok := entity.(*Player)
+		if !ok {
+			continue
+		}
 		if player.GetUsername() == username {
 			return player
 		}
 	}
+	
 	return nil
-}
-
-func (srv *Server) ForEachPlayer(cb func (player *Player)) {
-	srv.playersLock.RLock()
-	defer srv.playersLock.RUnlock()
-
-	for _, player := range srv.players {
-		cb(player);
-	}
 }
 
 func (srv *Server) AddReport(report model.IReport) {
@@ -280,7 +298,7 @@ func (srv *Server) GetDefaultPlayerResources() model.Resources {
 	return srv.defaultPlayerResources
 }
 
-// returns wether the given point is safe for player spawning 
+// returns wether the given point is safe for player spawning
 // also gives the average position of all graas tiles found
 // (used as an heuristic for which direction to go after)
 func (srv *Server) emptyProportion(point Point, freeAreaSide int) (bool, float64, float64) {
@@ -309,7 +327,7 @@ func (srv *Server) emptyProportion(point Point, freeAreaSide int) (bool, float64
 
 // Returns a point safe for spawning near the given point and true
 // or 0,0 and false it none could be found
-// 
+//
 // (yes kinda over engineered)
 func (srv *Server) findSpawnPointNear(from Point, freeAreaSide int) (Point, bool) {
 	visited := make(map[Point]bool)
@@ -344,6 +362,8 @@ func (srv *Server) FindPlayerSpawnPoint() Point {
 
 	srv.randLock.Lock()
 	defer srv.randLock.Unlock()
+	srv.entitiesLock.Lock()
+	defer srv.entitiesLock.Unlock()
 
 	log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] Looking for spawn point...")
 	for dist < 1_000_000_000 {
@@ -355,7 +375,11 @@ func (srv *Server) FindPlayerSpawnPoint() Point {
 			point, found := srv.findSpawnPointNear(center, 2)
 
 			playerNear := false
-			for _, player := range srv.players {
+			for _, entity := range srv.entitiesMap {
+				player, ok := entity.(*Player)
+				if !ok {
+					continue
+				}
 				if player.spawnPoint.Dist(point) < 75 {
 					playerNear = true
 					break
@@ -383,6 +407,8 @@ func (srv *Server) FindRaiderSpawnPoint(from Point) Point {
 
 	srv.randLock.Lock()
 	defer srv.randLock.Unlock()
+	srv.entitiesLock.Lock()
+	defer srv.entitiesLock.Unlock()
 
 	log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] Looking for spawn point...")
 	for dist < 1_000_000_000 {
@@ -394,7 +420,11 @@ func (srv *Server) FindRaiderSpawnPoint(from Point) Point {
 			point, found := srv.findSpawnPointNear(center, 2)
 
 			playerNear := false
-			for _, player := range srv.players {
+			for _, entity := range srv.entitiesMap {
+				player, ok := entity.(*Player)
+				if !ok {
+					continue
+				}
 				if player.spawnPoint.Dist(point) < 10 {
 					playerNear = true
 					break

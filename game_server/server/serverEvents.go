@@ -22,7 +22,6 @@ type IServerEvent interface {
 	GetAABB() AABB
 }
 
-// emitted by the server on the call of RegisterUnit
 type UnitSpawnEvent struct {
 	serverEventBase
 	Unit IUnit
@@ -33,7 +32,6 @@ func (event *UnitSpawnEvent) GetAABB() AABB {
 	return event.AABB
 }
 
-// emitted by the server on the call of RemoveUnit
 type UnitDespawnEvent struct {
 	serverEventBase
 	Unit IUnit
@@ -44,7 +42,6 @@ func (event *UnitDespawnEvent) GetAABB() AABB {
 	return event.AABB
 }
 
-// emitted by the units when setPosition is called
 type UnitMovedEvent struct {
 	serverEventBase
 	Unit IUnit
@@ -83,7 +80,6 @@ func (event *UnitUpgradedEvent) GetAABB() AABB {
 	return event.Unit.GetAABB()
 }
 
-// emitted by the server on the call of RegisterPlayer
 type PlayerSpawnEvent struct {
 	serverEventBase
 	Player *Player
@@ -94,7 +90,6 @@ func (event *PlayerSpawnEvent) GetAABB() AABB {
 	return AABB{}
 }
 
-// emitted by the server on the call of RemovePlayer
 type PlayerDespawnEvent struct {
 	serverEventBase
 	Player *Player
