@@ -53,16 +53,16 @@ func (res Resources) EnoughFor(other Resources) float64 {
 		if b == 0 {
 			return math.Inf(1)
 		}
-		return a/b
+		return a / b
 	}
 
 	return mathutils.Min(
-		div(float64(res.Rock),float64(other.Rock)),
-		div(float64(res.Wood),float64(other.Wood)),
-		div(float64(res.Food),float64(other.Food)),
-		div(float64(res.Oil),float64(other.Oil)),
-		div(float64(res.Copper),float64(other.Copper)),
-		div(float64(res.WoodPlank),float64(other.WoodPlank)),
+		div(float64(res.Rock), float64(other.Rock)),
+		div(float64(res.Wood), float64(other.Wood)),
+		div(float64(res.Food), float64(other.Food)),
+		div(float64(res.Oil), float64(other.Oil)),
+		div(float64(res.Copper), float64(other.Copper)),
+		div(float64(res.WoodPlank), float64(other.WoodPlank)),
 	)
 }
 
@@ -151,12 +151,14 @@ type CostsResponse struct {
 }
 
 type SetupResponse struct {
-	CitizenFeedingRate int        `json:"citizenFeedingRate"`
-	EnableEnemies      bool       `json:"enableEnemies"`
-	EnableGC           bool       `json:"enableGC"`
-	EnemyTickRate      int        `json:"enemyTickRate"`
+	CitizenFeedingRate int  `json:"citizenFeedingRate"`
+	EnableGC           bool `json:"enableGC"`
+	GcTickRate         int  `json:"gcTickRate"`
+	EnableEnemies      bool `json:"enableEnemies"`
+	EnemyTickRate      int  `json:"enemyTickRate"`
+	// disabled from json for epita compitibility
+	EnemyBaseTickRate  int        `json:"-"`
 	FoodGatherRate     int        `json:"foodGatherRate"`
-	GcTickRate         int        `json:"gcTickRate"`
 	MaxLoad            int        `json:"maxLoad"`
 	MaxMissesPerPlayer int        `json:"maxMissesPerPlayer"`
 	MaxMissesPerUnit   int        `json:"maxMissesPerUnit"`

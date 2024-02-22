@@ -283,14 +283,14 @@ func (srv *Server) GetDefaultPlayerResources() model.Resources {
 // returns wether the given point is safe for player spawning 
 // also gives the average position of all graas tiles found
 // (used as an heuristic for which direction to go after)
-func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
+func (srv *Server) emptyProportion(point Point, freeAreaSide int) (bool, float64, float64) {
 	count := 0.
 	grass_count := 0
 	sum_x := 0.
 	sum_y := 0.
 
-	for dx := -2; dx <= 2; dx++ {
-		for dy := -2; dy <= 2; dy++ {
+	for dx := -freeAreaSide; dx <= freeAreaSide; dx++ {
+		for dy := -freeAreaSide; dy <= freeAreaSide; dy++ {
 			np := point.Plus(dx, dy)
 
 			tile := srv.tilemap.GetTile(np)
@@ -311,13 +311,13 @@ func (srv *Server) emptyProportion(point Point) (bool, float64, float64) {
 // or 0,0 and false it none could be found
 // 
 // (yes kinda over engineered)
-func (srv *Server) findSpawnPointNear(from Point) (Point, bool) {
+func (srv *Server) findSpawnPointNear(from Point, freeAreaSide int) (Point, bool) {
 	visited := make(map[Point]bool)
 
 	for {
 		visited[from] = true
 
-		all, a_x, a_y := srv.emptyProportion(from)
+		all, a_x, a_y := srv.emptyProportion(from, freeAreaSide)
 		if all {
 			return from, true
 		}
@@ -338,8 +338,8 @@ func (srv *Server) findSpawnPointNear(from Point) (Point, bool) {
 	}
 }
 
-// Returns a safe spawn point
-func (srv *Server) FindSpawnPoint() Point {
+// Returns a safe player spawn point
+func (srv *Server) FindPlayerSpawnPoint() Point {
 	dist := 5
 
 	srv.randLock.Lock()
@@ -348,13 +348,54 @@ func (srv *Server) FindSpawnPoint() Point {
 	log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] Looking for spawn point...")
 	for dist < 1_000_000_000 {
 		for try := 0; try < 120; try++ {
-			center := Point{X: srv.spawnRand.Intn(dist*2) - dist, Y: srv.spawnRand.Intn(dist*2) - dist}
-
-			point, found := srv.findSpawnPointNear(center)
+			center := Point{
+				X: srv.spawnRand.Intn(dist*2) - dist,
+				Y: srv.spawnRand.Intn(dist*2) - dist,
+			}
+			point, found := srv.findSpawnPointNear(center, 2)
 
 			playerNear := false
 			for _, player := range srv.players {
 				if player.spawnPoint.Dist(point) < 75 {
+					playerNear = true
+					break
+				}
+			}
+			if playerNear {
+				continue
+			}
+
+			if found {
+				log.Trace().Any("point", point).Msg("[SPAWN_POINT] Found")
+				return point
+			}
+		}
+		log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] not found, increasing dist")
+		dist += dist / 2
+	}
+
+	panic("could not find spawn point")
+}
+
+// returns a valid spawn point for raider
+func (srv *Server) FindRaiderSpawnPoint(from Point) Point {
+	dist := 5
+
+	srv.randLock.Lock()
+	defer srv.randLock.Unlock()
+
+	log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] Looking for spawn point...")
+	for dist < 1_000_000_000 {
+		for try := 0; try < 120; try++ {
+			center := from.Add(Point{
+				X: srv.spawnRand.Intn(dist*2) - dist,
+				Y: srv.spawnRand.Intn(dist*2) - dist,
+			})
+			point, found := srv.findSpawnPointNear(center, 2)
+
+			playerNear := false
+			for _, player := range srv.players {
+				if player.spawnPoint.Dist(point) < 10 {
 					playerNear = true
 					break
 				}

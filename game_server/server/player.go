@@ -5,6 +5,7 @@ import (
 
 	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
+	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/uid"
 	"github.com/rs/zerolog/log"
 )
@@ -24,6 +25,8 @@ type Player struct {
 
 	townHalls []Point
 	units     []IUnit
+
+	lastEnemySpawnTick int
 }
 
 func NewPlayer(
@@ -39,6 +42,7 @@ func NewPlayer(
 	player.addr = addr
 	player.id = uid.GenUid()
 	player.username = username
+	player.lastEnemySpawnTick = server.Ticker().tickNumber
 
 	return player
 }
@@ -192,6 +196,32 @@ func (player *Player) kill() {
 	player.server.RemovePlayer(player.id)
 }
 
+// called each tick if enemy spawning is enabled
+func (player *Player) enemySpawnTick() {
+	currentTick := player.server.ticker.tickNumber
+
+	elapsed := currentTick - player.lastEnemySpawnTick
+	rate := player.server.setup.EnemyBaseTickRate
+
+	if elapsed <= rate {
+		return
+	}
+
+	player.lastEnemySpawnTick = currentTick
+
+	// finding spawn point can be costly so use another goroutine
+	go (func () {
+		point := player.server.FindRaiderSpawnPoint(player.GetSpawnPoint())
+
+		player.server.tilemap.SetTile(point, terrain.Tile {
+			Kind: terrain.TileRaiderCamp,
+			Value: 0,
+		})
+
+		log.Info().Any("point", point).Msg("Spawn base")
+	})()
+}
+
 func (player *Player) Tick() {
 	player.lock.Lock()
 	defer player.lock.Unlock()
@@ -199,5 +229,9 @@ func (player *Player) Tick() {
 	if len(player.units) == 0 || len(player.townHalls) == 0 {
 		player.kill();
 		return
+	}
+
+	if player.server.setup.EnableEnemies {
+		player.enemySpawnTick()
 	}
 }
