@@ -39,6 +39,17 @@ export class TexturePack extends EventTarget {
     // Road
     null,
   ];
+  private unitsUrlTable: {[key: string]: string|string[]|undefined} = {
+    "citizen": [
+      "/kenney_micro_roguelike/citizen_basic.png",
+    ],
+    "turret": [
+      "/kenney_micro_roguelike/red_robot.png",
+    ],
+    "raider": [
+      "/kenney_micro_roguelike/zombie.png",
+    ],
+  };
   private textureCache = new Map<string, "loading" | ImageBitmap>();
 
   public constructor() {
@@ -65,6 +76,32 @@ export class TexturePack extends EventTarget {
     this.loadingTexture = canvas.transferToImageBitmap();
   }
 
+  private getTexture(url: string): ImageBitmap {
+    const cached = this.textureCache.get(url);
+    if (cached instanceof ImageBitmap)
+      return cached;
+    if (cached == "loading")
+      return this.loadingTexture;
+
+    console.log("loading", url);
+    this.textureCache.set(url, "loading");
+    const image = new Image();
+    image.addEventListener("load", () => {
+      createImageBitmap(image).then(i => {
+        this.textureCache.set(url, i);
+        this.dispatchEvent(new Event("textureLoaded"));
+      }).catch(e => {
+        console.error(e);
+      });
+    });
+    image.addEventListener("error", e => {
+      console.error(`could not load image ${url}`, e);
+    });
+    image.src = url;
+
+    return this.defaultTexture;
+  }
+
   public getTileTexture(tileKind: number, tilePos: Vector2): ImageBitmap {
     const url = this.tilesUrlTable[tileKind];
     if (!url)
@@ -77,28 +114,23 @@ export class TexturePack extends EventTarget {
       realUrl = url;
     }
 
-    const cached = this.textureCache.get(realUrl);
-    if (cached instanceof ImageBitmap)
-      return cached;
-    if (cached == "loading")
-      return this.loadingTexture;
+    return this.getTexture(realUrl);
+  }
 
-    console.log("loading", url);
-    this.textureCache.set(realUrl, "loading");
-    const image = new Image();
-    image.addEventListener("load", () => {
-      createImageBitmap(image).then(i => {
-        this.textureCache.set(realUrl, i);
-        this.dispatchEvent(new Event("textureLoaded"));
-      }).catch(e => {
-        console.error(e);
-      });
-    });
-    image.addEventListener("error", e => {
-      console.error(`could not load image ${realUrl}`, e);
-    });
-    image.src = realUrl;
+  public getUnitTexture(opcode: string, unitId: string): ImageBitmap {
+    const url = this.unitsUrlTable[opcode];
+    if (!url)
+      return this.defaultTexture;
+    let realUrl: string;
+    if (Array.isArray(url)) {
+      let sum = 0;
+      for (let i = 0; i < unitId.length; i++)
+        sum += unitId.charCodeAt(i);
+      realUrl = url[sum % url.length];
+    }
+    else
+      realUrl = url;
 
-    return this.defaultTexture;
+    return this.getTexture(realUrl);
   }
 }

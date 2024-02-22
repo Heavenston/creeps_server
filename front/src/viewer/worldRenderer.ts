@@ -244,14 +244,9 @@ export class Renderer {
 
   private renderUnit(unit: api.UnitMessage) {
     const pos = vec(unit.content.position.x, unit.content.position.y);
-    if (unit.content.opCode == "turret") {
-      this.ctx.fillStyle = "magenta";
-      this.ctx.fillRect(pos.x + 0.125, pos.y + 0.125, 0.75, 0.75);
-    }
-    else {
-      this.ctx.fillStyle = "orange";
-      this.ctx.fillRect(pos.x + 0.25, pos.y + 0.25, 0.5, 0.5);
-    }
+
+    const texture = this.texturePack.getUnitTexture(unit.content.opCode, unit.content.unitId);
+    this.ctx.drawImage(texture, pos.x, pos.y, 1, 1);
   }
 
   public render(dt: number) {
