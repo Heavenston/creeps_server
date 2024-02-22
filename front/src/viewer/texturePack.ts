@@ -1,6 +1,6 @@
 import { Vector2 } from "~src/geom";
 
-export class TexturePack {
+export class TexturePack extends EventTarget {
   public readonly size: number;
   // color used as background of for all tiles
   public readonly fillColor: string = "#2c9c50";
@@ -40,6 +40,8 @@ export class TexturePack {
   private textureCache = new Map<string, "loading" | ImageBitmap>();
 
   public constructor() {
+    super();
+
     this.size = 8;
 
     const canvas = new OffscreenCanvas(8, 8);
@@ -81,6 +83,7 @@ export class TexturePack {
     image.addEventListener("load", () => {
       createImageBitmap(image).then(i => {
         this.textureCache.set(realUrl, i);
+        this.dispatchEvent(new Event("textureLoaded"));
       }).catch(e => {
         console.error(e);
       });

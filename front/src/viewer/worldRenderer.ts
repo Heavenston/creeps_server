@@ -155,6 +155,12 @@ export class Renderer {
       signal: this.eventAbort.signal,
     });
 
+    this.texturePack.addEventListener("textureLoaded", () => {
+      this.chunksCanvases = new WeakMap();
+    }, {
+      signal: this.eventAbort.signal,
+    });
+
     this.ctx = ctx;
   }
 
@@ -198,6 +204,9 @@ export class Renderer {
     ctx.imageSmoothingEnabled = false;
 
     this.chunksCanvases.set(chunk, canvas);
+
+    ctx.fillStyle = this.texturePack.fillColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let sx = 0; sx < map.Chunk.chunkSize; sx++) {
       for (let sy = 0; sy < map.Chunk.chunkSize; sy++) {
@@ -253,8 +262,7 @@ export class Renderer {
 
     this.ctx.resetTransform();
 
-    this.ctx.fillStyle = this.texturePack.fillColor;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.translate(
       this.canvas.width/2,
