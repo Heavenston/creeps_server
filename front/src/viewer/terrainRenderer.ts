@@ -9,6 +9,7 @@ export class TerrainRenderer implements IRenderer {
   private eventAbort = new AbortController();
 
   public chunksOnCamera: Vector2[] = [];
+  private chunksCurrentlyRendering: Set<map.Chunk> = new Set();
   private chunksCanvases: WeakMap<map.Chunk, OffscreenCanvas> = new WeakMap();
   private enableChunkBorder = false;
 
@@ -20,9 +21,6 @@ export class TerrainRenderer implements IRenderer {
     this.renderer = renderer;
 
     document.body.addEventListener("keydown", k => {
-      if (k.key == "r") {
-        this.chunksCanvases = new WeakMap();
-      }
       if (k.key == "c") {
         this.enableChunkBorder = !this.enableChunkBorder;
       }
@@ -38,7 +36,7 @@ export class TerrainRenderer implements IRenderer {
       if (!chunk)
         return;
       // force redraw
-      this.chunksCanvases.delete(chunk);
+      this.startRenderChunkCanvas(chunk);
     }, {
       signal: this.eventAbort.signal,
     });
@@ -51,13 +49,18 @@ export class TerrainRenderer implements IRenderer {
       if (!chunk)
         return;
       // force redraw
-      this.chunksCanvases.delete(chunk);
+      this.startRenderChunkCanvas(chunk);
     }, {
       signal: this.eventAbort.signal,
     });
 
     this.renderer.texturePack.addEventListener("textureLoaded", () => {
-      this.chunksCanvases = new WeakMap();
+      for (const chunkPos of this.chunksOnCamera)
+      {
+        const chunk = map.getChunk(chunkPos);
+        if (chunk != null)
+          this.startRenderChunkCanvas(chunk);
+      }
     }, {
       signal: this.eventAbort.signal,
     });
@@ -88,35 +91,42 @@ export class TerrainRenderer implements IRenderer {
     map.setSubscribed(chunksOnCamera)
   }
 
-  private renderChunkCanvas(chunk: map.Chunk): OffscreenCanvas {
-    const ts = this.renderer.texturePack.size;
-    const canvas = new OffscreenCanvas(
-      map.Chunk.chunkSize * ts,
-      map.Chunk.chunkSize * ts,
-    );
-    const ctx = canvas.getContext("2d");
-    if (ctx == undefined)
-      throw new Error("unsupported device");
-    ctx.imageSmoothingEnabled = false;
+  private startRenderChunkCanvas(chunk: map.Chunk) {
+    if (this.chunksCurrentlyRendering.has(chunk))
+      return;
+    this.chunksCurrentlyRendering.add(chunk);
+    // schedule tack for later to avoid taking time during the render
+    setTimeout(() => {
+      const ts = this.renderer.texturePack.size;
+      const canvas = new OffscreenCanvas(
+        map.Chunk.chunkSize * ts,
+        map.Chunk.chunkSize * ts,
+      );
+      const ctx = canvas.getContext("2d");
+      if (ctx == undefined)
+        throw new Error("unsupported device");
+      ctx.imageSmoothingEnabled = false;
 
-    this.chunksCanvases.set(chunk, canvas);
+      this.chunksCanvases.set(chunk, canvas);
 
-    ctx.fillStyle = this.renderer.texturePack.fillColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = this.renderer.texturePack.fillColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (let sx = 0; sx < map.Chunk.chunkSize; sx++) {
-      for (let sy = 0; sy < map.Chunk.chunkSize; sy++) {
-        const subTileCoord = vec(sx, sy);
-        const globalTileCoord = chunk.pos.times(map.Chunk.chunkSize).plus(subTileCoord);
+      for (let sx = 0; sx < map.Chunk.chunkSize; sx++) {
+        for (let sy = 0; sy < map.Chunk.chunkSize; sy++) {
+          const subTileCoord = vec(sx, sy);
+          const globalTileCoord = chunk.pos.times(map.Chunk.chunkSize).plus(subTileCoord);
 
-        const value = chunk.getTileKind(subTileCoord)
+          const value = chunk.getTileKind(subTileCoord)
 
-        const texture = this.renderer.texturePack.getTileTexture(value, globalTileCoord);
-        ctx.drawImage(texture, subTileCoord.x * ts, subTileCoord.y * ts);
+          const texture = this.renderer.texturePack.getTileTexture(value, globalTileCoord);
+          ctx.drawImage(texture, subTileCoord.x * ts, subTileCoord.y * ts);
+        }
       }
-    }
 
-    return canvas;
+      this.chunksCurrentlyRendering.delete(chunk);
+      this.chunksCanvases.set(chunk, canvas);
+    });
   }
 
   private renderChunk(pos: Vector2) {
@@ -129,7 +139,10 @@ export class TerrainRenderer implements IRenderer {
 
     let canvas = this.chunksCanvases.get(chunk);
     if (!canvas)
-      canvas = this.renderChunkCanvas(chunk);
+    {
+      this.startRenderChunkCanvas(chunk);
+      return;
+    }
 
     const drawpos = pos.times(map.Chunk.chunkSize);
     // console.log(pos, drawpos);
