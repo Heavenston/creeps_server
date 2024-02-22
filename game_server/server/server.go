@@ -354,7 +354,7 @@ func (srv *Server) FindSpawnPoint() Point {
 
 			playerNear := false
 			for _, player := range srv.players {
-				if player.spawnPoint.Dist(point) < 25 {
+				if player.spawnPoint.Dist(point) < 75 {
 					playerNear = true
 					break
 				}
