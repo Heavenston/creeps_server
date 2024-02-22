@@ -1,5 +1,12 @@
 import { Vector2 } from "~src/geom";
 
+function splitmix32(a: number) {
+    a |= 0; a = a + 0x9e3779b9 | 0;
+    let t = a ^ a >>> 16; t = Math.imul(t, 0x21f0aaad);
+        t = t ^ t >>> 15; t = Math.imul(t, 0x735a2d97);
+    return (t = t ^ t >>> 15) >>> 0;
+}
+
 export class TexturePack extends EventTarget {
   public readonly size: number;
   // color used as background of for all tiles
@@ -21,7 +28,10 @@ export class TexturePack extends EventTarget {
       "/kenney_micro_roguelike/tree2.png",
     ],
     // Bush
-    "/bush.png",
+    [
+      "/bush.png",
+      "/bush2.png",
+    ],
     // Oil
     "/kenney_micro_roguelike/oil.png",
     // TownHall
@@ -108,7 +118,9 @@ export class TexturePack extends EventTarget {
       return this.defaultTexture;
     let realUrl: string;
     if (Array.isArray(url)) {
-      realUrl = url[Math.abs(Math.abs(tilePos.x) ^ Math.abs(tilePos.y)) % url.length];
+      const a = splitmix32(tilePos.x);
+      const b = splitmix32(tilePos.y);
+      realUrl = url[Math.abs(a ^ b ^ 951274213) % url.length];
     }
     else {
       realUrl = url;
