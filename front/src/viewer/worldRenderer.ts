@@ -140,6 +140,19 @@ export class Renderer {
     });
 
     api.addEventListener("message", event => {
+      if (event.message.kind != "tileChange")      
+        return;
+      const chunkPos = map.global2ContainingChunkCoords(vec(event.message.content.tilePos));
+      const chunk = map.getChunk(chunkPos);
+      if (!chunk)
+        return;
+      // force redraw
+      this.chunksCanvases.delete(chunk);
+    }, {
+      signal: this.eventAbort.signal,
+    });
+
+    api.addEventListener("message", event => {
       if (event.message.kind != "unit")      
         return;
       this.lastUnitMessage.set(event.message.content.unitId, event.message);
@@ -253,6 +266,10 @@ export class Renderer {
 
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.drawImage(canvas, drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize);
+
+    // this.ctx.strokeStyle = "black";
+    // this.ctx.lineWidth = 0.1;
+    // this.ctx.strokeRect(drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize);
   }
 
   private renderUnit(unit: api.UnitMessage) {

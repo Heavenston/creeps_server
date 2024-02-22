@@ -31,6 +31,12 @@ type fullChunkContent struct {
 	Tiles []byte `json:"tiles"`
 }
 
+type tileChangeContent struct {
+	TilePos Point `json:"tilePos"`
+	Kind    byte  `json:"kind"`
+	Value   byte  `json:"value"`
+}
+
 // sent by the server when a unit spawned
 type unitContent struct {
 	OpCode   string  `json:"opCode"`

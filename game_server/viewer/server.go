@@ -118,14 +118,17 @@ func (viewer *ViewerServer) handleClientSubscription(
 		}
 
 		select {
-		case _, ok := (<-terrainChangeChannel):
+		case change, ok := (<-terrainChangeChannel):
 			if !ok {
 				log.Trace().Msg("terrain channel closed")
 				break
 			}
 
-			// TODO: Send parials chunk updates
-			sendTerrain()
+			sendMessage("tileChange", tileChangeContent {
+				TilePos: change.UpdatedPosition.Add(chunkPos.Times(terrain.ChunkSize)),
+				Kind: byte(change.NewValue.Kind),
+				Value: change.NewValue.Value,
+			})
 		case event, ok := (<-serverEventsChannel):
 			if !ok {
 				log.Trace().Msg("server events channel closed")

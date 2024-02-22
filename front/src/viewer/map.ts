@@ -27,6 +27,12 @@ export class Chunk {
     const index = this.getIndex(pos);
     return this.tiles[index+1];
   }
+
+  public updateTile(pos: Vector2, kind: number, value: number) {
+    const index = this.getIndex(pos);
+    this.tiles[index] = kind;
+    this.tiles[index+1] = value;
+  }
 }
 
 type VecKey = `${number}_${number}`;
@@ -53,6 +59,17 @@ api.addEventListener("message", event => {
     const content = event.message.content;
     const pos = vec(content.chunkPos);
     chunks.set(key(pos), new Chunk(content.tiles, pos));
+  }
+  if (event.message.kind == "tileChange") {
+    const content = event.message.content;
+    const tilePos = global2ChunkSubCoords(vec(content.tilePos));
+    const chunkPos = global2ContainingChunkCoords(vec(content.tilePos));
+    const chunk = chunks.get(key(chunkPos))
+    if (!chunk) {
+      console.warn("received tile for unkown chunk");
+      return
+    }
+    chunk.updateTile(tilePos, content.kind, content.value);
   }
 })
 

@@ -44,6 +44,15 @@ export type FullchunkMessage = {
   }
 }
 
+export type TileChangeMessage = {
+  kind: "tileChange",
+  content: {
+  	tilePos: { x: number, y: number },
+  	kind: number,
+  	value: number,
+  },
+}
+
 export type UnitMessage = {
   kind: "unit",
   content: {
@@ -90,6 +99,7 @@ export type PlayerDespawnMessage = {
 export type RecvMessage =
   | InitMessage
   | FullchunkMessage
+  | TileChangeMessage
   | UnitMessage
   | UnitMovementMessage
   | UnitDespawnedMessage
