@@ -1,9 +1,8 @@
-import { vec, Vector2 } from "~/src/geom"
+import { vec } from "~/src/geom"
 import * as api from "~/src/api"
-import * as map from "./map"
-import { Renderer } from "./worldRenderer";
+import { IRenderer, Renderer } from "./worldRenderer";
 
-export class OverlayRenderer {
+export class OverlayRenderer implements IRenderer {
   private readonly renderer: Renderer;
 
   private eventAbort = new AbortController();
