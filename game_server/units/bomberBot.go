@@ -28,7 +28,7 @@ func (bomberBot *BomberBotUnit) getUnit() *unit {
 }
 
 func (bomberBot *BomberBotUnit) GetOpCode() string {
-	return "bomberBot"
+	return "bomber-bot"
 }
 
 func (bomberBot *BomberBotUnit) GetUpgradeCosts() *model.CostResponse {
