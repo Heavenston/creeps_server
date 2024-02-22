@@ -9,6 +9,7 @@ import (
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
 	"creeps.heav.fr/server/terrain"
+	"creeps.heav.fr/uid"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/websocket"
@@ -25,6 +26,8 @@ type connection struct {
 	socket           *websocket.Conn
 	chunksLock       sync.RWMutex
 	subscribedChunks map[Point]bool
+	unitsLock        sync.RWMutex
+	knownUnits       map[uid.Uid]bool
 }
 
 func (viewer *ViewerServer) handleClientSubscription(
@@ -46,8 +49,9 @@ func (viewer *ViewerServer) handleClientSubscription(
 	aabb := AABB {
 		From: chunkPos.Times(terrain.ChunkSize),
 		Size: Point {
-			X: terrain.ChunkSize,
-			Y: terrain.ChunkSize,
+			// +1 seems to fix some missed events
+			X: terrain.ChunkSize+1,
+			Y: terrain.ChunkSize+1,
 		},
 	}
 	serverEventsHandle := viewer.Server.Events().Subscribe(serverEventsChannel, aabb)
@@ -84,7 +88,14 @@ func (viewer *ViewerServer) handleClientSubscription(
 		})
 	}
 
-	sendUnit := func(unit server.IUnit) {
+	sendUnit := func(unit server.IUnit) bool {
+		conn.unitsLock.Lock()
+		// get the lock for the entire duration to make sure we don't double send
+		defer conn.unitsLock.Unlock()
+
+		if conn.knownUnits[unit.GetId()] {
+			return false
+		}
 		sendMessage("unit", unitContent{
 			OpCode: unit.GetOpCode(),
 			UnitId: unit.GetId(),
@@ -92,6 +103,8 @@ func (viewer *ViewerServer) handleClientSubscription(
 			Position: unit.GetPosition(),
 			Upgraded: unit.IsUpgraded(),
 		})
+		conn.knownUnits[unit.GetId()] = true
+		return false
 	}
 
 	sendTerrain()
@@ -145,15 +158,19 @@ func (viewer *ViewerServer) handleClientSubscription(
 				})
 			}
 			if e, ok := event.(*server.UnitMovedEvent); ok {
-				sendMessage("unitMovement", unitMovementContent {
-					UnitId: e.Unit.GetId(),
-					New: e.To,
-				})
+				if !sendUnit(e.Unit) {
+					sendMessage("unitMovement", unitMovementContent {
+						UnitId: e.Unit.GetId(),
+						New: e.To,
+					})
+				}
 			}
 			if e, ok := event.(*server.UnitUpgradedEvent); ok {
-				sendMessage("unitUpgraded", unitUpgradedContent {
-					UnitId: e.Unit.GetId(),
-				})
+				if !sendUnit(e.Unit) {
+					sendMessage("unitUpgraded", unitUpgradedContent {
+						UnitId: e.Unit.GetId(),
+					})
+				}
 			}
 			if e, ok := event.(*server.PlayerSpawnEvent); ok {
 				sendMessage("playerSpawn", playerSpawnContent {
@@ -186,6 +203,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 	connection := connection{
 		socket:           conn,
 		subscribedChunks: make(map[Point]bool),
+		knownUnits:       make(map[uid.Uid]bool),
 	}
 
 	{
