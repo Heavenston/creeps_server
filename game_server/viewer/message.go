@@ -31,12 +31,17 @@ type fullChunkContent struct {
 	Tiles []byte `json:"tiles"`
 }
 
-// sent by the server when anything about a unit changed (including spawn)
+// sent by the server when a unit spawned
 type unitContent struct {
 	OpCode   string  `json:"opCode"`
 	UnitId   uid.Uid `json:"unitId"`
 	Owner    uid.Uid `json:"owner"`
 	Position Point   `json:"position"`
+}
+
+type unitMovementContent struct {
+	UnitId uid.Uid `json:"unitId"`
+	New    Point   `json:"new"`
 }
 
 // sent by the server

@@ -148,6 +148,19 @@ export class Renderer {
     });
 
     api.addEventListener("message", event => {
+      if (event.message.kind != "unitMovement")      
+        return;
+      const unit = this.lastUnitMessage.get(event.message.content.unitId);
+      if (!unit) {
+        console.warn("received unit movement for unkown unit ", event.message);
+        return;
+      }
+      unit.content.position = event.message.content.new;
+    }, {
+      signal: this.eventAbort.signal,
+    });
+
+    api.addEventListener("message", event => {
       if (event.message.kind != "unitDespawned")      
         return;
       this.lastUnitMessage.delete(event.message.content.unitId);

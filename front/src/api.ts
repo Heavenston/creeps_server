@@ -54,6 +54,14 @@ export type UnitMessage = {
   }
 }
 
+export type UnitMovementMessage = {
+  kind: "unitMovement",
+  content: {
+    unitId: string,
+    "new": { x: number, y: number },
+  }
+}
+
 export type UnitDespawnedMessage = {
   kind: "unitDespawned",
   content: {
@@ -83,6 +91,7 @@ export type RecvMessage =
   | InitMessage
   | FullchunkMessage
   | UnitMessage
+  | UnitMovementMessage
   | UnitDespawnedMessage
   | PlayerSpawnMessage
   | PlayerDespawnMessage;

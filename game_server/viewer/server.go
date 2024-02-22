@@ -141,7 +141,10 @@ func (viewer *ViewerServer) handleClientSubscription(
 				})
 			}
 			if e, ok := event.(*server.UnitMovedEvent); ok {
-				sendUnit(e.Unit)
+				sendMessage("unitMovement", unitMovementContent {
+					UnitId: e.Unit.GetId(),
+					New: e.To,
+				})
 			}
 			if e, ok := event.(*server.PlayerSpawnEvent); ok {
 				sendMessage("playerSpawn", playerSpawnContent {
