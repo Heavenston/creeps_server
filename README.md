@@ -24,7 +24,7 @@ A web server is opened at port `1234`, while the epita-compatible creeps
 - [x] Map generation (not at all like the real one)
 - [ ] Game viewer
 	- [x] Load chunks and units from the server
-	- [ ] Render textures (its only colors rn)
+	- [x] Render textures !
 	- [ ] TEXTURE PACKKKKS
 - [ ] Actions
 	- [x] Movements
