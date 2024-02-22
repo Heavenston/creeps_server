@@ -2,6 +2,7 @@ import { vec, Vector2 } from "~/src/geom"
 import * as api from "~/src/api"
 import * as map from "./map"
 import { OverlayRenderer } from "./overlayRenderer";
+import { TexturePack } from "./texturePack";
 
 export class Renderer {
   public readonly canvas: HTMLCanvasElement;
@@ -19,6 +20,7 @@ export class Renderer {
 
   public chunksOnCamera: Vector2[] = [];
   private chunksCanvases: WeakMap<map.Chunk, OffscreenCanvas> = new WeakMap();
+  private texturePack = new TexturePack();
 
   private lastUnitMessage: Map<string, api.UnitMessage> = new Map();
 
@@ -116,6 +118,7 @@ export class Renderer {
 
     document.body.addEventListener("keydown", k => {
       if (k.key == "r") {
+        this.chunksCanvases = new WeakMap();
         this.cameraPos = vec(0, 0);
         this.cameraScale = 25;
       }
@@ -184,7 +187,11 @@ export class Renderer {
   }
 
   private renderChunkCanvas(chunk: map.Chunk): OffscreenCanvas {
-    const canvas = new OffscreenCanvas(map.Chunk.chunkSize, map.Chunk.chunkSize);
+    const ts = this.texturePack.size;
+    const canvas = new OffscreenCanvas(
+      map.Chunk.chunkSize * ts,
+      map.Chunk.chunkSize * ts,
+    );
     const ctx = canvas.getContext("2d");
     if (ctx == undefined)
       throw new Error("unsupported device");
@@ -195,39 +202,12 @@ export class Renderer {
     for (let sx = 0; sx < map.Chunk.chunkSize; sx++) {
       for (let sy = 0; sy < map.Chunk.chunkSize; sy++) {
         const subTileCoord = vec(sx, sy);
+        const globalTileCoord = chunk.pos.times(map.Chunk.chunkSize).plus(subTileCoord);
 
         const value = chunk.getTileKind(subTileCoord)
 
-        let style: string;
-        switch (value) {
-        case 0:
-          style = "green";
-          break;
-        case 1:
-          style = "blue";
-          break;
-        case 2:
-          style = "gray";
-          break;
-        case 3:
-          style = "lime";
-          break;
-        case 4:
-          style = "red";
-          break;
-        case 5:
-          style = "black";
-          break;
-        default:
-          style = "yellow";
-          break;
-        }
-
-        ctx.fillStyle = style;
-        ctx.fillRect(
-          subTileCoord.x, subTileCoord.y,
-          1, 1,
-        );
+        const texture = this.texturePack.getTileTexture(value, globalTileCoord);
+        ctx.drawImage(texture, subTileCoord.x * ts, subTileCoord.y * ts);
       }
     }
 
@@ -250,10 +230,7 @@ export class Renderer {
     // console.log(pos, drawpos);
 
     this.ctx.imageSmoothingEnabled = false;
-    this.ctx.drawImage(canvas, drawpos.x, drawpos.y);
-    // this.ctx.strokeStyle = "black"
-    // this.ctx.lineWidth = 5 / this.cameraScale;
-    // this.ctx.strokeRect(drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize)
+    this.ctx.drawImage(canvas, drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize);
   }
 
   private renderUnit(unit: api.UnitMessage) {
@@ -276,7 +253,8 @@ export class Renderer {
 
     this.ctx.resetTransform();
 
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = this.texturePack.fillColor;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.translate(
       this.canvas.width/2,
