@@ -11,6 +11,11 @@ export function getInitMessage(): InitMessage | null {
   return initMessage;
 }
 
+export type Point = {
+  x: number,
+  y: number,
+}
+
 export type InitMessage = {
   kind: "init",
   content: {
@@ -25,21 +30,21 @@ export type InitMessage = {
 export type SubscribeMessage = {
   kind: "subscribe",
   content: {
-    chunkPos: { x: number, y: number }
+    chunkPos: Point
   }
 }
 
 export type UnsubscribeMessage = {
   kind: "unsubscribe",
   content: {
-    chunkPos: { x: number, y: number }
+    chunkPos: Point
   }
 }
 
 export type FullchunkMessage = {
   kind: "fullchunk",
   content: {
-    chunkPos: { x: number, y: number },
+    chunkPos: Point,
     tiles: string,
   }
 }
@@ -47,7 +52,7 @@ export type FullchunkMessage = {
 export type TileChangeMessage = {
   kind: "tileChange",
   content: {
-  	tilePos: { x: number, y: number },
+  	tilePos: Point,
   	kind: number,
   	value: number,
   },
@@ -59,7 +64,7 @@ export type UnitMessage = {
     opCode: string,
     unitId: string,
     owner: string,
-    position: { x: number, y: number },
+    position: Point,
   }
 }
 
@@ -67,7 +72,7 @@ export type UnitMovementMessage = {
   kind: "unitMovement",
   content: {
     unitId: string,
-    "new": { x: number, y: number },
+    "new": Point,
   }
 }
 
@@ -82,7 +87,7 @@ export type PlayerSpawnMessage = {
   kind: "playerSpawn",
   content: {
   	id: string,
-  	spawnPosition: { x: number, y: number },
+  	spawnPosition: Point,
   	username: string,
     // TODO: Describe
   	resources: unknown,
