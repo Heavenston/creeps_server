@@ -22,12 +22,17 @@ type ViewerServer struct {
 }
 
 type connection struct {
-	socketLock       sync.Mutex
-	socket           *websocket.Conn
+	socketLock sync.Mutex
+	socket     *websocket.Conn
+
 	chunksLock       sync.RWMutex
 	subscribedChunks map[Point]bool
-	unitsLock        sync.RWMutex
-	knownUnits       map[uid.Uid]bool
+
+	unitsLock  sync.RWMutex
+	knownUnits map[uid.Uid]bool
+
+	playersLock  sync.RWMutex
+	knownPlayers map[uid.Uid]bool
 }
 
 func (viewer *ViewerServer) handleClientSubscription(
@@ -46,12 +51,12 @@ func (viewer *ViewerServer) handleClientSubscription(
 	defer terrainCancelHandle.Cancel()
 
 	serverEventsChannel := make(chan server.IServerEvent, 64)
-	aabb := AABB {
+	aabb := AABB{
 		From: chunkPos.Times(terrain.ChunkSize),
-		Size: Point {
+		Size: Point{
 			// +1 seems to fix some missed events
-			X: terrain.ChunkSize+1,
-			Y: terrain.ChunkSize+1,
+			X: terrain.ChunkSize + 1,
+			Y: terrain.ChunkSize + 1,
 		},
 	}
 	serverEventsHandle := viewer.Server.Events().Subscribe(serverEventsChannel, aabb)
@@ -97,13 +102,31 @@ func (viewer *ViewerServer) handleClientSubscription(
 			return false
 		}
 		sendMessage("unit", unitContent{
-			OpCode: unit.GetOpCode(),
-			UnitId: unit.GetId(),
-			Owner: unit.GetOwner(),
+			OpCode:   unit.GetOpCode(),
+			UnitId:   unit.GetId(),
+			Owner:    unit.GetOwner(),
 			Position: unit.GetPosition(),
 			Upgraded: unit.IsUpgraded(),
 		})
 		conn.knownUnits[unit.GetId()] = true
+		return false
+	}
+
+	sendPlayer := func(player *server.Player) bool {
+		conn.playersLock.Lock()
+		// get the lock for the entire duration to make sure we don't double send
+		defer conn.playersLock.Unlock()
+
+		if conn.knownPlayers[player.GetId()] {
+			return false
+		}
+		sendMessage("playerSpawn", playerSpawnContent{
+			Id:            player.GetId(),
+			SpawnPosition: player.GetSpawnPoint(),
+			Username:      player.GetUsername(),
+			Resources:     player.GetResources(),
+		})
+		conn.knownPlayers[player.GetId()] = true
 		return false
 	}
 
@@ -114,12 +137,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 			sendUnit(unit)
 		}
 		if player, ok := entity.(*server.Player); ok {
-			sendMessage("playerSpawn", playerSpawnContent {
-				Id: player.GetId(),
-				SpawnPosition: player.GetSpawnPoint(),
-				Username: player.GetUsername(),
-				Resources: player.GetResources(),
-			})
+			sendPlayer(player)
 		}
 	}
 
@@ -138,10 +156,10 @@ func (viewer *ViewerServer) handleClientSubscription(
 				break
 			}
 
-			sendMessage("tileChange", tileChangeContent {
+			sendMessage("tileChange", tileChangeContent{
 				TilePos: change.UpdatedPosition.Add(chunkPos.Times(terrain.ChunkSize)),
-				Kind: byte(change.NewValue.Kind),
-				Value: change.NewValue.Value,
+				Kind:    byte(change.NewValue.Kind),
+				Value:   change.NewValue.Value,
 			})
 		case event, ok := (<-serverEventsChannel):
 			if !ok {
@@ -153,37 +171,38 @@ func (viewer *ViewerServer) handleClientSubscription(
 				sendUnit(e.Unit)
 			}
 			if e, ok := event.(*server.UnitDespawnEvent); ok {
-				sendMessage("unitDespawned", unitDespawnContent {
+				sendMessage("unitDespawned", unitDespawnContent{
 					UnitId: e.Unit.GetId(),
 				})
+				conn.unitsLock.Lock()
+				delete(conn.knownUnits, e.Unit.GetId())
+				conn.unitsLock.Unlock()
 			}
 			if e, ok := event.(*server.UnitMovedEvent); ok {
 				if !sendUnit(e.Unit) {
-					sendMessage("unitMovement", unitMovementContent {
+					sendMessage("unitMovement", unitMovementContent{
 						UnitId: e.Unit.GetId(),
-						New: e.To,
+						New:    e.To,
 					})
 				}
 			}
 			if e, ok := event.(*server.UnitUpgradedEvent); ok {
 				if !sendUnit(e.Unit) {
-					sendMessage("unitUpgraded", unitUpgradedContent {
+					sendMessage("unitUpgraded", unitUpgradedContent{
 						UnitId: e.Unit.GetId(),
 					})
 				}
 			}
 			if e, ok := event.(*server.PlayerSpawnEvent); ok {
-				sendMessage("playerSpawn", playerSpawnContent {
-					Id: e.Player.GetId(),
-					SpawnPosition: e.Player.GetSpawnPoint(),
-					Username: e.Player.GetUsername(),
-					Resources: e.Player.GetResources(),
-				})
+				sendPlayer(e.Player)
 			}
 			if e, ok := event.(*server.PlayerDespawnEvent); ok {
-				sendMessage("playerDespawn", playerDespawnContent {
+				sendMessage("playerDespawn", playerDespawnContent{
 					Id: e.Player.GetId(),
 				})
+				conn.playersLock.Lock()
+				delete(conn.knownPlayers, e.Player.GetId())
+				conn.playersLock.Unlock()
 			}
 		// makes sure at lease once every 30s we check if we are still subed to
 		// the chunk
@@ -204,6 +223,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 		socket:           conn,
 		subscribedChunks: make(map[Point]bool),
 		knownUnits:       make(map[uid.Uid]bool),
+		knownPlayers:     make(map[uid.Uid]bool),
 	}
 
 	{
@@ -314,7 +334,7 @@ func (viewer *ViewerServer) Start() {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool { return true; },
+		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
 
 	router := chi.NewRouter()
