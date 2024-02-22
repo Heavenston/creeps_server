@@ -6,9 +6,10 @@ import (
 	"creeps.heav.fr/epita_api/model"
 	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
+	. "creeps.heav.fr/server"
+	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
-	. "creeps.heav.fr/server"
 	"github.com/rs/zerolog/log"
 )
 
@@ -211,7 +212,13 @@ func (player *Player) Tick() {
 		return
 	})
 
-	if !hasCitizens || len(player.townHalls) == 0 {
+	hasTownhalls := false
+	for _, th := range player.townHalls {
+		hasTownhalls = hasTownhalls ||
+			player.server.Tilemap().GetTile(th).Kind == terrain.TileTownHall
+	}
+
+	if !hasCitizens || !hasTownhalls {
 		player.Unregister();
 		return
 	}

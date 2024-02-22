@@ -7,6 +7,7 @@ import (
 	. "creeps.heav.fr/geom"
 	mathutils "creeps.heav.fr/math_utils"
 	. "creeps.heav.fr/server"
+	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/uid"
 	"github.com/rs/zerolog/log"
 )
@@ -68,9 +69,37 @@ func (raider *RaiderUnit) Tick() {
 
 	raider.tick()
 
-	log.Info().Msg("raider tick")
-
 	position := raider.GetPosition()
+
+	foundAndDestroy := false
+	raider.server.Tilemap().ModifyTile(position, func(t terrain.Tile) terrain.Tile {
+		destroy := t.Kind == terrain.TileRoad ||
+				   t.Kind == terrain.TileHousehold ||
+				   t.Kind == terrain.TileSawMill ||
+				   t.Kind == terrain.TileTownHall ||
+				   t.Kind == terrain.TileSmeltery
+		foundAndDestroy = foundAndDestroy || destroy
+		if destroy {
+			t.Kind = terrain.TileGrass
+			t.Value = 0
+		}
+		return t
+	})
+
+	for _, entity := range raider.server.Entities().GetAllIntersects(raider.GetAABB()) {
+		_, isC := entity.(*CitizenUnit)
+		_, isT := entity.(*TurretUnit)
+		_, isB := entity.(*BomberBotUnit)
+		if isC || isT || isB {
+			foundAndDestroy = true
+			entity.Unregister()
+		}
+	}
+
+	if foundAndDestroy {
+		raider.SetDead()
+		return
+	}
 
 	// busy = do nothing
 	if action := raider.GetLastAction(); action != nil && !action.Finised.Load() {
