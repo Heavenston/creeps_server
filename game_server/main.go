@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"os"
 	"time"
 
@@ -36,7 +37,11 @@ func main() {
 		ServerId:           "heavenstone_server",
 		TicksPerSeconds:    5,
 		TrackAchievements:  false,
-		WorldDimension:     Point{},
+		WorldDimension:     Point{
+			// big value but leave two bits to avoid any overflow anywhere
+			X: math.MaxInt32 >> 2,
+			Y: math.MaxInt32 >> 2,
+		},
 		FoodGatherRate:     5,
 		OilGatherRate:      5,
 		RockGatherRate:     5,
