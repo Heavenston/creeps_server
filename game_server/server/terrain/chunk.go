@@ -108,11 +108,13 @@ func (chunk *TilemapChunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 	*tileRef = newValue
 	chunk.tileslock.Unlock()
 
-	chunk.UpdatedEventProvider.Emit(TilemapUpdateEvent{
-		UpdatedPosition: subcoord,
-		PreviousValue: prevValue,
-		NewValue: newValue,
-	})
+	if newValue != prevValue {
+		chunk.UpdatedEventProvider.Emit(TilemapUpdateEvent{
+			UpdatedPosition: subcoord,
+			PreviousValue: prevValue,
+			NewValue: newValue,
+		})
+	}
 
 	return prevValue
 }
