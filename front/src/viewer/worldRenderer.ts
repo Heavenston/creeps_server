@@ -24,6 +24,7 @@ export class Renderer {
   private enableChunkBorder = false;
 
   private lastUnitMessage: Map<string, api.UnitMessage> = new Map();
+  private unitsPositions: Map<string, Vector2> = new Map();
 
   private overlayRenderer = new OverlayRenderer(this);
 
@@ -180,6 +181,7 @@ export class Renderer {
     api.addEventListener("message", event => {
       if (event.message.kind != "unitDespawned")      
         return;
+      this.unitsPositions.delete(event.message.content.unitId);
       this.lastUnitMessage.delete(event.message.content.unitId);
     }, {
       signal: this.eventAbort.signal,
@@ -195,9 +197,22 @@ export class Renderer {
   }
 
   private lastChunkUpadeCameraPos = vec(-5888888, -588888);
-  private update(_dt: number) {
-    // this.cameraPos = vec(this.canvas.width, this.canvas.height).times(0.5);
+  private update(dt: number) {
+    // units position interpolation
+    for (const unitId of this.lastUnitMessage.keys()) {
+      const unit = this.lastUnitMessage.get(unitId);
+      if (!unit)
+        continue;
+      let pos = this.unitsPositions.get(unitId);
+      if (!pos) {
+        pos = vec(unit.content.position);
+        this.unitsPositions.set(unitId, pos);
+      }
 
+      pos.lerp(40 * dt, vec(unit.content.position));
+    }
+
+    // loaded chunks update
     if (this.lastChunkUpadeCameraPos.x == this.cameraPos.x && this.lastChunkUpadeCameraPos.y == this.cameraPos.y)
       return;
     this.lastChunkUpadeCameraPos = vec(this.cameraPos);
@@ -215,10 +230,6 @@ export class Renderer {
       }
     }
 
-    // console.log("----");
-    // for (const c of chunksOnCamera)
-    //   console.log(c);
-    // console.log("----");
     map.setSubscribed(chunksOnCamera)
   }
 
@@ -279,7 +290,8 @@ export class Renderer {
   }
 
   private renderUnit(unit: api.UnitMessage) {
-    const pos = vec(unit.content.position.x, unit.content.position.y);
+    const pos = this.unitsPositions.get(unit.content.unitId)
+      ?? vec(unit.content.position);
 
     const texture = this.texturePack.getUnitTexture(unit.content.opCode, unit.content.unitId);
     this.ctx.drawImage(texture, pos.x, pos.y, 1, 1);

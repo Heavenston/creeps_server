@@ -125,4 +125,15 @@ export class Vector2 {
   public mapped(cb: (x:number) => number): Vector2 {
     return vec(cb(this.x), cb(this.y));
   }
+
+  public zipWith(cb: (a:number, b:number) => number, other: Vector2) {
+    const nx = cb(this.x, other.x);
+    const ny = cb(this.y, other.y);
+    this.x = nx;
+    this.y = ny;
+  }
+
+  public lerp(p: number, other: Vector2) {
+    this.zipWith((a, b) => b * p + a * (1 - p), other);
+  }
 }

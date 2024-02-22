@@ -36,7 +36,7 @@ import { Renderer } from "./worldRenderer"
       return;
     this.animationFrameId = -1;
 
-    this.worldRenderer?.render(this.lastTime - time);
+    this.worldRenderer?.render((time - this.lastTime) / 1000);
     this.lastTime = time;
 
     if (this.animationFrameId != -1)
