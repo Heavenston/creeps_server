@@ -7,7 +7,9 @@ import (
 
 	"creeps.heav.fr/epita_api/model"
 	"creeps.heav.fr/gameplay"
+	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
+	"creeps.heav.fr/server/entities"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
@@ -22,8 +24,20 @@ func (h *initHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	username := chi.URLParam(r, "username")
 
-	spawnPoint := h.api.Server.FindPlayerSpawnPoint()
-	player := server.NewPlayer(h.api.Server, username, addr, spawnPoint)
+	spawnPoint := h.api.Server.FindSpawnPoint(Point{}, 2, func(p Point) bool {
+		found := false
+		h.api.Server.ForEachEntity(func(entity server.IEntity) (shouldStop bool) {
+			eplayer, ok := entity.(*entities.Player)
+			if !ok {
+				return
+			}
+			found = eplayer.GetSpawnPoint().Dist(p) < 15
+			shouldStop = found
+			return
+		})
+		return !found
+	})
+	player := entities.NewPlayer(h.api.Server, username, addr, spawnPoint)
 	player.SetResources(h.api.Server.GetDefaultPlayerResources())
 	townhall, household, c1, c2 := gameplay.InitPlayer(h.api.Server, player)
 

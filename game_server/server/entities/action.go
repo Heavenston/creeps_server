@@ -1,4 +1,4 @@
-package units
+package entities
 
 import (
 	"fmt"
@@ -24,9 +24,9 @@ func observe(unit IUnit, into *model.ObserveReport) {
 		},
 	}
 
-	entities := server.Entities().GetAllIntersects(aabb)
-	into.Units = make([]model.Unit, 0, len(entities))
-	for _, oentity := range entities {
+	ents := server.Entities().GetAllIntersects(aabb)
+	into.Units = make([]model.Unit, 0, len(ents))
+	for _, oentity := range ents {
 		ounit, ok := oentity.(IUnit)
 		if !ok {
 			continue

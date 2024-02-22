@@ -68,18 +68,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 				break
 			}
 
-			if e, ok := event.(*UnitSpawnEvent); ok {
-				log.Debug().Any("event", e).Msg("Unit spawn server event")
-			}
-			if e, ok := event.(*UnitDespawnEvent); ok {
-				log.Debug().Any("event", e).Msg("Unit despawn server event")
-			}
-			if e, ok := event.(*PlayerDespawnEvent); ok {
-				log.Debug().Any("event", e).Msg("Player despawn server event")
-			}
-			if e, ok := event.(*PlayerSpawnEvent); ok {
-				log.Debug().Any("event", e).Msg("Player spawn server event")
-			}
+			log.Debug().Any("event", event).Msg("Server event")
 		}
 	})()
 
@@ -201,6 +190,19 @@ func (srv *Server) GetEntity(id uid.Uid) IEntity {
 	return srv.entitiesMap[id]
 }
 
+func (srv *Server) FindEntity(pred func (e IEntity) bool) IEntity {
+	srv.entitiesLock.RLock()
+	defer srv.entitiesLock.RUnlock()
+
+	for _, e := range srv.entitiesMap {
+		if (pred(e)) {
+			return e
+		}
+	}
+	
+	return nil
+}
+
 func (srv *Server) GetEntityOwner(id uid.Uid) IOwnerEntity {
 	srv.entitiesLock.RLock()
 	defer srv.entitiesLock.RUnlock()
@@ -237,23 +239,6 @@ func (srv *Server) ForEachEntity(cb func(player IEntity) (shouldStop bool)) {
 			break
 		}
 	}
-}
-
-func (srv *Server) GetPlayerFromUsername(username string) *Player {
-	srv.entitiesLock.RLock()
-	defer srv.entitiesLock.RUnlock()
-
-	for _, entity := range srv.entitiesMap {
-		player, ok := entity.(*Player)
-		if !ok {
-			continue
-		}
-		if player.GetUsername() == username {
-			return player
-		}
-	}
-	
-	return nil
 }
 
 func (srv *Server) AddReport(report model.IReport) {
@@ -356,85 +341,25 @@ func (srv *Server) findSpawnPointNear(from Point, freeAreaSide int) (Point, bool
 	}
 }
 
-// Returns a safe player spawn point
-func (srv *Server) FindPlayerSpawnPoint() Point {
+// Returns a safe spawn point with graas tile in the given cube "radius"
+// also only consider a point if filter returns true
+// reentry will deadlock but all other functions of server are available
+func (srv *Server) FindSpawnPoint(start Point, freeAreaSide int, filter func(p Point) bool) Point {
 	dist := 5
 
 	srv.randLock.Lock()
 	defer srv.randLock.Unlock()
-	srv.entitiesLock.Lock()
-	defer srv.entitiesLock.Unlock()
 
 	log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] Looking for spawn point...")
 	for dist < 1_000_000_000 {
 		for try := 0; try < 120; try++ {
-			center := Point{
-				X: srv.spawnRand.Intn(dist*2) - dist,
-				Y: srv.spawnRand.Intn(dist*2) - dist,
-			}
-			point, found := srv.findSpawnPointNear(center, 2)
-
-			playerNear := false
-			for _, entity := range srv.entitiesMap {
-				player, ok := entity.(*Player)
-				if !ok {
-					continue
-				}
-				if player.spawnPoint.Dist(point) < 75 {
-					playerNear = true
-					break
-				}
-			}
-			if playerNear {
-				continue
-			}
-
-			if found {
-				log.Trace().Any("point", point).Msg("[SPAWN_POINT] Found")
-				return point
-			}
-		}
-		log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] not found, increasing dist")
-		dist += dist / 2
-	}
-
-	panic("could not find spawn point")
-}
-
-// returns a valid spawn point for raider
-func (srv *Server) FindRaiderSpawnPoint(from Point) Point {
-	dist := 5
-
-	srv.randLock.Lock()
-	defer srv.randLock.Unlock()
-	srv.entitiesLock.Lock()
-	defer srv.entitiesLock.Unlock()
-
-	log.Trace().Int("dist", dist).Msg("[SPAWN_POINT] Looking for spawn point...")
-	for dist < 1_000_000_000 {
-		for try := 0; try < 120; try++ {
-			center := from.Add(Point{
+			center := start.Add(Point{
 				X: srv.spawnRand.Intn(dist*2) - dist,
 				Y: srv.spawnRand.Intn(dist*2) - dist,
 			})
 			point, found := srv.findSpawnPointNear(center, 2)
 
-			playerNear := false
-			for _, entity := range srv.entitiesMap {
-				player, ok := entity.(*Player)
-				if !ok {
-					continue
-				}
-				if player.spawnPoint.Dist(point) < 10 {
-					playerNear = true
-					break
-				}
-			}
-			if playerNear {
-				continue
-			}
-
-			if found {
+			if found && filter(point) {
 				log.Trace().Any("point", point).Msg("[SPAWN_POINT] Found")
 				return point
 			}

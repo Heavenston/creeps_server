@@ -8,11 +8,11 @@ import (
 )
 
 // utility struct embedded into all server events to auto-implement the functions
-type serverEventBase struct {
+type ServerEventBase struct {
 	
 }
 
-func (event *serverEventBase) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent] {
+func (event *ServerEventBase) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent] {
 	return nil
 }
 
@@ -23,7 +23,7 @@ type IServerEvent interface {
 }
 
 type UnitSpawnEvent struct {
-	serverEventBase
+	ServerEventBase
 	Unit IUnit
 	AABB AABB
 }
@@ -33,7 +33,7 @@ func (event *UnitSpawnEvent) GetAABB() AABB {
 }
 
 type UnitDespawnEvent struct {
-	serverEventBase
+	ServerEventBase
 	Unit IUnit
 	AABB AABB
 }
@@ -43,7 +43,7 @@ func (event *UnitDespawnEvent) GetAABB() AABB {
 }
 
 type UnitMovedEvent struct {
-	serverEventBase
+	ServerEventBase
 	Unit IUnit
 	From Point
 	To   Point
@@ -72,30 +72,10 @@ func (event *UnitMovedEvent) GetAABB() AABB {
 
 // emitted by the units when setUpgraded is called
 type UnitUpgradedEvent struct {
-	serverEventBase
+	ServerEventBase
 	Unit IUnit
 }
 
 func (event *UnitUpgradedEvent) GetAABB() AABB {
 	return event.Unit.GetAABB()
-}
-
-type PlayerSpawnEvent struct {
-	serverEventBase
-	Player *Player
-}
-
-func (event *PlayerSpawnEvent) GetAABB() AABB {
-	// empty aabb = covers all map
-	return AABB{}
-}
-
-type PlayerDespawnEvent struct {
-	serverEventBase
-	Player *Player
-}
-
-func (event *PlayerDespawnEvent) GetAABB() AABB {
-	// empty aabb = covers all map
-	return AABB{}
 }

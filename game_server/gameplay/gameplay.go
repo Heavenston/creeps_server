@@ -1,17 +1,17 @@
 package gameplay
 
 import (
-	"creeps.heav.fr/server"
-	"creeps.heav.fr/server/terrain"
-	"creeps.heav.fr/units"
 	. "creeps.heav.fr/geom"
+	"creeps.heav.fr/server"
+	"creeps.heav.fr/server/entities"
+	"creeps.heav.fr/server/terrain"
 )
 
 // Spawns the given player town hall and everything it needs
 func InitPlayer(
 	srv *server.Server,
-	player *server.Player,
-) (townhall Point, household Point, c1, c2 *units.CitizenUnit) {
+	player *entities.Player,
+) (townhall Point, household Point, c1, c2 *entities.CitizenUnit) {
 	player.Register()
 
 	townhall = player.GetSpawnPoint()
@@ -28,10 +28,10 @@ func InitPlayer(
 
 	player.AddTownHall(townhall)
 
-	c1 = units.NewCitizenUnit(srv, player.GetId())
+	c1 = entities.NewCitizenUnit(srv, player.GetId())
 	c1.SetPosition(household)
 	c1.Register()
-	c2 = units.NewCitizenUnit(srv, player.GetId())
+	c2 = entities.NewCitizenUnit(srv, player.GetId())
 	c2.SetPosition(household)
 	c2.Register()
 

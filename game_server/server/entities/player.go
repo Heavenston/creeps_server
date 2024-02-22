@@ -1,4 +1,4 @@
-package server
+package entities
 
 import (
 	"sync"
@@ -6,9 +6,9 @@ import (
 	"creeps.heav.fr/epita_api/model"
 	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
-	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/spatialmap"
 	"creeps.heav.fr/uid"
+	. "creeps.heav.fr/server"
 	"github.com/rs/zerolog/log"
 )
 
@@ -40,14 +40,14 @@ func NewPlayer(
 ) *Player {
 	player := new(Player)
 
-	player.ownedEntities = make(map[uid.Uid]IEntity)
+	player.OwnerEntity.InitOwnedEntities()
 
 	player.server = server;
 	player.spawnPoint = spawnPoint
 	player.addr = addr
 	player.id = uid.GenUid()
 	player.username = username
-	player.lastEnemySpawnTick = server.Ticker().tickNumber
+	player.lastEnemySpawnTick = server.Ticker().GetTickNumber()
 
 	return player
 }
@@ -74,7 +74,9 @@ func (player *Player) GetSpawnPoint() Point {
 
 // for IEntity
 func (player *Player) GetAABB() AABB {
-	return AABB{}
+	return AABB{
+		From: player.spawnPoint,
+	}
 }
 
 // for IEntity
@@ -165,24 +167,24 @@ func (player *Player) RemoveTownHall(p Point) bool {
 
 func (player *Player) Register() {
 	player.server.RegisterEntity(player)
-	player.server.events.Emit(&PlayerSpawnEvent{
+	player.server.Events().Emit(&PlayerSpawnEvent{
 		Player: player,
 	})
 }
 
-func (player *Player) kill() {
+func (player *Player) Unregister() {
 	player.server.RemoveEntity(player.id)
-	player.server.events.Emit(&PlayerDespawnEvent{
+	player.server.Events().Emit(&PlayerDespawnEvent{
 		Player: player,
 	})
 }
 
 // called each tick if enemy spawning is enabled
 func (player *Player) enemySpawnTick() {
-	currentTick := player.server.ticker.tickNumber
+	currentTick := player.server.Ticker().GetTickNumber()
 
 	elapsed := currentTick - player.lastEnemySpawnTick
-	rate := player.server.setup.EnemyBaseTickRate
+	rate := player.server.GetSetup().EnemyBaseTickRate
 
 	if elapsed <= rate {
 		return
@@ -192,14 +194,7 @@ func (player *Player) enemySpawnTick() {
 
 	// finding spawn point can be costly so use another goroutine
 	go (func () {
-		point := player.server.FindRaiderSpawnPoint(player.GetSpawnPoint())
-
-		player.server.tilemap.SetTile(point, terrain.Tile {
-			Kind: terrain.TileRaiderCamp,
-			Value: 0,
-		})
-
-		log.Info().Any("point", point).Msg("Spawn base")
+		NewRaid(player.server, player.id).Register()
 	})()
 }
 
@@ -217,11 +212,11 @@ func (player *Player) Tick() {
 	})
 
 	if !hasCitizens || len(player.townHalls) == 0 {
-		player.kill();
+		player.Unregister();
 		return
 	}
 
-	if player.server.setup.EnableEnemies {
+	if player.server.GetSetup().EnableEnemies {
 		player.enemySpawnTick()
 	}
 }

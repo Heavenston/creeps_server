@@ -1,4 +1,4 @@
-package units
+package entities
 
 import (
 	"sync"
@@ -227,6 +227,10 @@ func (unit *unit) Register() {
 		Unit: unit.this,
 		AABB: unit.GetAABB(),
 	})
+}
+
+func (unit *unit) Unregister() {
+	unit.SetDead()
 }
 
 func (unit *unit) tick() {

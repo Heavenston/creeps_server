@@ -9,6 +9,7 @@ import (
 
 	"creeps.heav.fr/epita_api/model"
 	"creeps.heav.fr/server"
+	"creeps.heav.fr/server/entities"
 	"creeps.heav.fr/uid"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
@@ -47,7 +48,12 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         Str("login", login).Str("unitId", unitIdStr).Str("opcode", opcode).
         Msg("Command post")
 
-    player := h.api.Server.GetPlayerFromUsername(login)
+    player := h.api.Server.FindEntity(func(e server.IEntity) bool {
+        if p, ok := e.(*entities.Player); ok {
+            return p.GetUsername() == login 
+        }
+        return false
+    }).(*entities.Player)
 
     if player == nil || player.GetAddr() != addr {
         log.Trace().

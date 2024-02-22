@@ -1,4 +1,4 @@
-package units
+package entities
 
 import (
 	"sync"
@@ -14,10 +14,13 @@ import (
 type RaiderUnit struct {
 	unit
 	lock   sync.RWMutex
+
+	owner uid.Uid
+
 	target Point
 }
 
-func NewRaiderUnit(server *Server, target Point) *RaiderUnit {
+func NewRaiderUnit(server *Server, owner uid.Uid, target Point) *RaiderUnit {
 	raider := new(RaiderUnit)
 	raider.unitInit(server)
 	raider.target = target

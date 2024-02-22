@@ -22,6 +22,7 @@ type IEntity interface {
 	// if there is no real owner use uid.ServerId
 	GetOwner() uid.Uid
 
+	Unregister()
 	Register()
 	
 	// Ran each tick after being registered by the server
@@ -42,6 +43,10 @@ type IOwnerEntity interface {
 type OwnerEntity struct {
 	entitesLock   sync.RWMutex
 	ownedEntities map[uid.Uid]IEntity
+}
+
+func (e *OwnerEntity) InitOwnedEntities() {
+	e.ownedEntities = make(map[uid.Uid]IEntity)
 }
 
 func (e *OwnerEntity) ForEachEntities(cb func (entity IEntity) (shouldStop bool)) {

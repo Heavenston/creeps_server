@@ -8,6 +8,7 @@ import (
 
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
+	"creeps.heav.fr/server/entities"
 	"creeps.heav.fr/server/terrain"
 	"creeps.heav.fr/uid"
 	"github.com/go-chi/chi/v5"
@@ -112,7 +113,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 		return false
 	}
 
-	sendPlayer := func(player *server.Player) bool {
+	sendPlayer := func(player *entities.Player) bool {
 		conn.playersLock.Lock()
 		// get the lock for the entire duration to make sure we don't double send
 		defer conn.playersLock.Unlock()
@@ -136,7 +137,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 		if unit, ok := entity.(server.IUnit); ok {
 			sendUnit(unit)
 		}
-		if player, ok := entity.(*server.Player); ok {
+		if player, ok := entity.(*entities.Player); ok {
 			sendPlayer(player)
 		}
 	}
@@ -193,10 +194,10 @@ func (viewer *ViewerServer) handleClientSubscription(
 					})
 				}
 			}
-			if e, ok := event.(*server.PlayerSpawnEvent); ok {
+			if e, ok := event.(*entities.PlayerSpawnEvent); ok {
 				sendPlayer(e.Player)
 			}
-			if e, ok := event.(*server.PlayerDespawnEvent); ok {
+			if e, ok := event.(*entities.PlayerDespawnEvent); ok {
 				sendMessage("playerDespawn", playerDespawnContent{
 					Id: e.Player.GetId(),
 				})
