@@ -44,7 +44,7 @@ func (turret *TurretUnit) ObserveDistance() int {
 		// FIXME: Is it correct ?
 		return 7
 	}
-	return 6
+	return 5
 }
 
 func (turret *TurretUnit) StartAction(action *Action) error {

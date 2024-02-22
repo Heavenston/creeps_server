@@ -89,8 +89,8 @@ func (citizen *CitizenUnit) Tick() {
 
 	server := citizen.server
 	ticker := server.Ticker()
-	player := server.GetEntity(citizen.GetOwner()).(*Player)
-	if player == nil {
+	player, ok := server.GetEntity(citizen.GetOwner()).(*Player)
+	if !ok {
 		log.Error().
 			Msg("[CITIZEN] Could not find owner player (code kms initiated)")
 		citizen.SetDead()

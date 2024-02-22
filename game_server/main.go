@@ -30,7 +30,7 @@ func main() {
 		EnableGC:           false,
 		GcTickRate:         50,
 		EnableEnemies:      true,
-		EnemyTickRate:      20,
+		EnemyTickRate:      3,
 		EnemyBaseTickRate:  150,
 		MaxLoad:            40,
 		MaxMissesPerPlayer: 200,

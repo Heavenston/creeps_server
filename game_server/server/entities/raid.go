@@ -101,10 +101,11 @@ func (raid *Raid) Register() {
 }
 
 func (raid *Raid) Unregister() {
-	raid.ForEachEntities(func(entity IEntity) (shouldStop bool) {
+	// we need to copy as unregister removes the entity from the raid list
+	// blocking the entity list
+	for _, entity := range raid.CopyEntityList() {
 		entity.Unregister()
-		return
-	})
+	}
 
 	raid.server.Tilemap().SetTile(raid.campPosition, terrain.Tile {
 		Kind: terrain.TileGrass,
@@ -135,7 +136,10 @@ func (raid *Raid) Tick() {
 	raider.SetPosition(raid.campPosition)
 	raider.Register()
 
-	log.Info().Any("id", raider.GetId()).
+	log.Info().
+		Any("raid_id", raid.GetId()).
+		Int("owned_entities", raid.OwnedEntityCount()).
+		Any("raider_id", raider.GetId()).
 		Any("pos", raider.GetPosition()).
 		Msg("Spawned new raider")
 }

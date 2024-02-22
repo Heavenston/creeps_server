@@ -446,15 +446,51 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 			NewTurretUnit(server, unit.GetOwner()),
 		)
 	case OpCodeFireTurret:
+		parameter := action.Parameter.(model.FireParameter)
+
+		distance := parameter.Destination.Sub(oldPosition)
+
+		if mathutils.Max(distance.X, distance.Y) > unit.ObserveDistance() {
+			report = &model.ErrorReport{
+				ErrorCode: "out-of-range",
+				Error: "You are reaching too far !!",
+			}
+			break
+		}
+
+		if parameter.Destination == oldPosition {
+			report = &model.ErrorReport{
+				ErrorCode: "turret-minimum-range",
+				Error: "Literally 1969, you cannot shoot yourself",
+			}
+			break
+		}
+
+		killed := make([]model.Unit, 0)
+
+		entities := server.Entities().GetAllIntersects(AABB{
+			From: parameter.Destination,
+			Size: Point{ X: 1, Y: 1 },
+		})
+		for _, entity := range entities {
+			unit, ok := entity.(IUnit)
+			if !ok {
+				continue
+			}
+			killed = append(killed, model.Unit{
+				OpCode: unit.GetOpCode(),
+				Player: string(unit.GetOwner()),
+				Position: unit.GetPosition(),
+			})
+			entity.Unregister()
+		}
+
 		report = &model.FireReport{
-			Target: Point{},
-			KilledUnits: []model.Unit{},
+			Target: parameter.Destination,
+			KilledUnits: killed,
 		}
 	case OpCodeFireBomberBot:
-		report = &model.FireReport{
-			Target: Point{},
-			KilledUnits: []model.Unit{},
-		}
+		panic("uniplemented")
 	}
 
 	report.GetReport().ReportId = action.ReportId

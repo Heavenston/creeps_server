@@ -32,10 +32,12 @@ type IEntity interface {
 // embed the OwnerEntity helper struct instead of implementing it again
 type IOwnerEntity interface {
 	IEntity
+	CopyEntityList() map[uid.Uid]IEntity
 	ForEachEntities(func (entity IEntity) (shouldStop bool))
 	HasEntity(id uid.Uid) bool
 	AddEntity(entity IEntity)
 	RemoveEntity(id uid.Uid) IEntity
+	OwnedEntityCount() int
 }
 
 // helper struct that implements methods needed for IOwnerEntity
@@ -47,6 +49,17 @@ type OwnerEntity struct {
 
 func (e *OwnerEntity) InitOwnedEntities() {
 	e.ownedEntities = make(map[uid.Uid]IEntity)
+}
+
+func (e *OwnerEntity) CopyEntityList() map[uid.Uid]IEntity {
+	e.entitesLock.RLock()
+	defer e.entitesLock.RUnlock()
+
+	copy := make(map[uid.Uid]IEntity, len(e.ownedEntities))
+	for k, v := range e.ownedEntities {
+		copy[k] = v
+	}
+	return copy
 }
 
 func (e *OwnerEntity) ForEachEntities(cb func (entity IEntity) (shouldStop bool)) {
@@ -88,4 +101,8 @@ func (e *OwnerEntity) RemoveEntity(id uid.Uid) IEntity {
 	entity := e.ownedEntities[id]
 	delete(e.ownedEntities, id)
 	return entity
+}
+
+func (f *OwnerEntity) OwnedEntityCount() int {
+	return len(f.ownedEntities)
 }

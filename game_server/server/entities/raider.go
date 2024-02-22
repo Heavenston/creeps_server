@@ -24,8 +24,11 @@ type RaiderUnit struct {
 func NewRaiderUnit(server *Server, owner uid.Uid, target Point) *RaiderUnit {
 	raider := new(RaiderUnit)
 	raider.unitInit(server)
-	raider.target = target
 	raider.this = raider
+
+	raider.target = target
+	raider.owner = owner
+
 	return raider
 }
 
@@ -43,7 +46,7 @@ func (raider *RaiderUnit) GetUpgradeCosts() *model.CostResponse {
 }
 
 func (raider *RaiderUnit) GetOwner() uid.Uid {
-	return uid.ServerUid
+	return raider.owner
 }
 
 func (raider *RaiderUnit) GetTarget() Point {

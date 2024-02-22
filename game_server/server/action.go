@@ -1,6 +1,7 @@
 package server
 
 import (
+	"reflect"
 	"sync/atomic"
 
 	"creeps.heav.fr/epita_api/model"
@@ -99,10 +100,23 @@ func (opcode ActionOpCode) MoveDirection() Point {
 	}
 }
 
+func (opcode ActionOpCode) ParameterType() reflect.Type {
+	switch opcode {
+	case OpCodeFireTurret:
+		return reflect.TypeFor[model.FireParameter]()
+	case OpCodeFireBomberBot:
+		return reflect.TypeFor[model.FireParameter]()
+	default:
+		return nil
+	}
+}
+
 // every value is read only except
 type Action struct {
 	OpCode        ActionOpCode
 	StartedAtTick int
 	ReportId      uid.Uid
 	Finised       atomic.Bool
+	// Contains the type returned by OpCode.ParameterType()
+	Parameter     any
 }

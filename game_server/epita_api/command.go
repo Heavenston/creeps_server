@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"creeps.heav.fr/epita_api/model"
@@ -25,11 +27,12 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     login := chi.URLParam(r, "login")
     unitIdStr := chi.URLParam(r, "unitId")
     unitId := uid.Uid(unitIdStr)
-    opcode := chi.URLParam(r, "opcode")
+    strOpcode := chi.URLParam(r, "opcode")
+    opcode := server.ActionOpCode(strOpcode)
 
     sendError := func(code string, mess string) {
         bytes, err := json.Marshal(model.CommandResponse {
-            OpCode: opcode,
+            OpCode: strOpcode,
             Login: login,
             UnitId: &unitId,
             ReportId: nil,
@@ -39,16 +42,16 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         errors.Unwrap(err)
         w.Write(bytes)
         log.Trace().
-            Str("login", login).Str("unitId", unitIdStr).Str("opcode", opcode).
+            Str("login", login).Str("unitId", unitIdStr).Str("opcode", strOpcode).
             Str("code", code).Str("mess", mess).
             Msg("Command failed")
     }
 
     log.Debug().
-        Str("login", login).Str("unitId", unitIdStr).Str("opcode", opcode).
+        Str("login", login).Str("unitId", unitIdStr).Str("opcode", strOpcode).
         Msg("Command post")
 
-    player := h.api.Server.FindEntity(func(e server.IEntity) bool {
+    player, _ := h.api.Server.FindEntity(func(e server.IEntity) bool {
         if p, ok := e.(*entities.Player); ok {
             return p.GetUsername() == login 
         }
@@ -69,7 +72,7 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    unit := h.api.Server.GetEntity(unitId).(server.IUnit)
+    unit, _ := h.api.Server.GetEntity(unitId).(server.IUnit)
 
     if unit == nil || unit.GetOwner() != player.GetId() {
         sendError(
@@ -86,7 +89,25 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     newAction := new(server.Action)
     newAction.ReportId = uid.GenUid() 
-    newAction.OpCode = server.ActionOpCode(opcode)
+    newAction.OpCode = opcode
+
+    paramType := opcode.ParameterType()
+    if paramType != nil {
+        body, err := io.ReadAll(r.Body)
+        if err != nil {
+            sendError("invalidparameter", "Cannot read the body")
+            log.Warn().Err(err).Msg("Error while reading request body")
+            return
+        }
+
+        paramValue := reflect.New(paramType)
+        err = json.Unmarshal(body, paramValue.Interface())
+        if err != nil {
+            sendError("invalidparameter", "Cannot deserialize the body")
+            return
+        }
+        newAction.Parameter = reflect.Indirect(paramValue).Interface()
+    }
 
     err := unit.StartAction(newAction)
 
@@ -115,7 +136,7 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 
     response := model.CommandResponse {
-        OpCode: opcode,
+        OpCode: strOpcode,
         ReportId: &newAction.ReportId,
         Login: login,
         UnitId: &unitId,
