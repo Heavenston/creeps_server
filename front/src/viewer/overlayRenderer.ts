@@ -41,7 +41,7 @@ export class OverlayRenderer {
     const ctx = this.renderer.ctx;
 
     for (const player of this.players.values()) {
-      const sp = player.content.spawnPosition;
+      const sp = vec(player.content.spawnPosition).plus(0.5);
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
