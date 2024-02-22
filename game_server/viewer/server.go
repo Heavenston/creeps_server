@@ -90,6 +90,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 			UnitId: unit.GetId(),
 			Owner: unit.GetOwner(),
 			Position: unit.GetPosition(),
+			Upgraded: unit.IsUpgraded(),
 		})
 	}
 
@@ -147,6 +148,11 @@ func (viewer *ViewerServer) handleClientSubscription(
 				sendMessage("unitMovement", unitMovementContent {
 					UnitId: e.Unit.GetId(),
 					New: e.To,
+				})
+			}
+			if e, ok := event.(*server.UnitUpgradedEvent); ok {
+				sendMessage("unitUpgraded", unitUpgradedContent {
+					UnitId: e.Unit.GetId(),
 				})
 			}
 			if e, ok := event.(*server.PlayerSpawnEvent); ok {

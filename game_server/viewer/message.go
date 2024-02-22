@@ -43,11 +43,16 @@ type unitContent struct {
 	UnitId   uid.Uid `json:"unitId"`
 	Owner    uid.Uid `json:"owner"`
 	Position Point   `json:"position"`
+	Upgraded bool    `json:"upgraded"`
 }
 
 type unitMovementContent struct {
 	UnitId uid.Uid `json:"unitId"`
 	New    Point   `json:"new"`
+}
+
+type unitUpgradedContent struct {
+	UnitId uid.Uid `json:"unitId"`
 }
 
 // sent by the server

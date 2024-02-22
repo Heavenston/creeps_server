@@ -18,31 +18,35 @@ export class UnitRenderer implements IRenderer {
     this.renderer = renderer;
 
     api.addEventListener("message", event => {
-      if (event.message.kind != "unit")      
-        return;
-      this.lastUnitMessage.set(event.message.content.unitId, event.message);
-    }, {
-      signal: this.eventAbort.signal,
-    });
-
-    api.addEventListener("message", event => {
-      if (event.message.kind != "unitMovement")      
-        return;
-      const unit = this.lastUnitMessage.get(event.message.content.unitId);
-      if (!unit) {
-        console.warn("received unit movement for unkown unit ", event.message);
-        return;
+      switch (event.message.kind) {
+        case "unit": {
+          this.lastUnitMessage.set(event.message.content.unitId, event.message);
+          break;
+        }
+        case "unitDespawned": {
+          this.unitsPositions.delete(event.message.content.unitId);
+          this.lastUnitMessage.delete(event.message.content.unitId);
+          break;
+        }
+        case "unitMovement": {
+          const unit = this.lastUnitMessage.get(event.message.content.unitId);
+          if (!unit) {
+            console.warn("received unit movement for unkown unit ", event.message);
+            break;
+          }
+          unit.content.position = event.message.content.new;
+          break;
+        }
+        case "unitUpgraded": {
+          const unit = this.lastUnitMessage.get(event.message.content.unitId);
+          if (!unit) {
+            console.warn("received unit upgrade for unkown unit ", event.message);
+            break;
+          }
+          unit.content.upgraded = true;
+          break;
+        }
       }
-      unit.content.position = event.message.content.new;
-    }, {
-      signal: this.eventAbort.signal,
-    });
-
-    api.addEventListener("message", event => {
-      if (event.message.kind != "unitDespawned")      
-        return;
-      this.unitsPositions.delete(event.message.content.unitId);
-      this.lastUnitMessage.delete(event.message.content.unitId);
     }, {
       signal: this.eventAbort.signal,
     });
@@ -67,7 +71,11 @@ export class UnitRenderer implements IRenderer {
     const pos = this.unitsPositions.get(unit.content.unitId)
       ?? vec(unit.content.position);
 
-    const texture = this.renderer.texturePack.getUnitTexture(unit.content.opCode, unit.content.unitId);
+    const texture = this.renderer.texturePack.getUnitTexture(
+      unit.content.opCode,
+      unit.content.unitId,
+      unit.content.upgraded,
+    );
     this.renderer.ctx.drawImage(texture, pos.x, pos.y, 1, 1);
   }
 

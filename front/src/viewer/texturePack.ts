@@ -63,7 +63,14 @@ export class TexturePack extends EventTarget {
     "/kenney_micro_roguelike/road.png",
   ];
   private unitsUrlTable: {[key: string]: string|string[]|undefined} = {
-    "citizen": "/kenney_micro_roguelike/citizen_basic.png",
+    "citizen": [
+      "/kenney_micro_roguelike/citizen_basic.png",
+      "/kenney_micro_roguelike/citizen_woman.png",
+    ],
+    "citizen:upgraded": [
+      "/kenney_micro_roguelike/citizen_adventurer.png",
+      "/kenney_micro_roguelike/citizen_woman2.png",
+    ],
     "turret": "/kenney_micro_roguelike/red_robot.png",
     "raider": "/kenney_micro_roguelike/zombie.png",
     "bomber-bot": [
@@ -140,8 +147,10 @@ export class TexturePack extends EventTarget {
     return this.getTexture(realUrl);
   }
 
-  public getUnitTexture(opcode: string, unitId: string): ImageBitmap {
-    const url = this.unitsUrlTable[opcode];
+  public getUnitTexture(opcode: string, unitId: string, upgraded: boolean): ImageBitmap {
+    let url = this.unitsUrlTable[opcode];
+    if (upgraded && this.unitsUrlTable[opcode + ":upgraded"])
+      url = this.unitsUrlTable[opcode + ":upgraded"];
     if (!url)
       return this.defaultTexture;
     let realUrl: string;

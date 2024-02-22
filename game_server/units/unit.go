@@ -126,8 +126,19 @@ func (unit *unit) IsUpgraded() bool {
 	return unit.upgraded.Load()
 }
 
-func (unit *unit) SetUpgraded(new bool) {
-	unit.upgraded.Store(new)
+func (unit *unit) SetUpgraded() {
+	was := unit.upgraded.Swap(true)
+	if was {
+		return;
+	}
+
+	if unit.server == nil {
+		return
+	}
+
+	unit.server.Events().Emit(&server.UnitUpgradedEvent{
+		Unit: unit.this,
+	})
 }
 
 func (unit *unit) ObserveDistance() int {

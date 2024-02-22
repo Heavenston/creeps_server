@@ -73,6 +73,16 @@ func (event *UnitMovedEvent) GetAABB() AABB {
 	}
 }
 
+// emitted by the units when setUpgraded is called
+type UnitUpgradedEvent struct {
+	serverEventBase
+	Unit IUnit
+}
+
+func (event *UnitUpgradedEvent) GetAABB() AABB {
+	return event.Unit.GetAABB()
+}
+
 // emitted by the server on the call of RegisterPlayer
 type PlayerSpawnEvent struct {
 	serverEventBase
