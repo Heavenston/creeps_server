@@ -17,7 +17,13 @@ export class TexturePack extends EventTarget {
 
   private tilesUrlTable: (string|string[]|null)[] = [
     // Grass
-    "/kenney_micro_roguelike/grass1.png",
+    [
+      "/kenney_micro_roguelike/grass1.png",
+      "/kenney_micro_roguelike/grass2.png",
+      "/kenney_micro_roguelike/grass3.png",
+      "/kenney_micro_roguelike/grass4.png",
+      "/kenney_micro_roguelike/grass5.png",
+    ],
     // Water
     "/kenney_micro_roguelike/water.png",
     // Stone
