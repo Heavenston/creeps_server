@@ -54,15 +54,10 @@ export class TexturePack extends EventTarget {
     "/kenney_micro_roguelike/road.png",
   ];
   private unitsUrlTable: {[key: string]: string|string[]|undefined} = {
-    "citizen": [
-      "/kenney_micro_roguelike/citizen_basic.png",
-    ],
-    "turret": [
-      "/kenney_micro_roguelike/red_robot.png",
-    ],
-    "raider": [
-      "/kenney_micro_roguelike/zombie.png",
-    ],
+    "citizen": "/kenney_micro_roguelike/citizen_basic.png",
+    "turret": "/kenney_micro_roguelike/red_robot.png",
+    "raider": "/kenney_micro_roguelike/zombie.png",
+    "bomber-bot": undefined,
   };
   private textureCache = new Map<string, "loading" | ImageBitmap>();
 
