@@ -45,9 +45,12 @@ export class TexturePack extends EventTarget {
     // Smeltery
     null,
     // SawMill
-    null,
+    "/sawmill.png",
     // RaiderCamp
-    null,
+    [
+      "/raidercamp1.png",
+      "/raidercamp2.png",
+    ],
     // RaiderBorder
     null,
     // Road
@@ -57,7 +60,10 @@ export class TexturePack extends EventTarget {
     "citizen": "/kenney_micro_roguelike/citizen_basic.png",
     "turret": "/kenney_micro_roguelike/red_robot.png",
     "raider": "/kenney_micro_roguelike/zombie.png",
-    "bomber-bot": undefined,
+    "bomber-bot": [
+      "/bomberbot1.png",
+      "/bomberbot2.png",
+    ],
   };
   private textureCache = new Map<string, "loading" | ImageBitmap>();
 
