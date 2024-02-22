@@ -21,6 +21,7 @@ export class Renderer {
   public chunksOnCamera: Vector2[] = [];
   private chunksCanvases: WeakMap<map.Chunk, OffscreenCanvas> = new WeakMap();
   private texturePack = new TexturePack();
+  private enableChunkBorder = false;
 
   private lastUnitMessage: Map<string, api.UnitMessage> = new Map();
 
@@ -121,6 +122,9 @@ export class Renderer {
         this.chunksCanvases = new WeakMap();
         this.cameraPos = vec(0, 0);
         this.cameraScale = 25;
+      }
+      if (k.key == "c") {
+        this.enableChunkBorder = !this.enableChunkBorder;
       }
     }, {
       signal: this.eventAbort.signal,
@@ -267,9 +271,11 @@ export class Renderer {
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.drawImage(canvas, drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize);
 
-    // this.ctx.strokeStyle = "black";
-    // this.ctx.lineWidth = 0.1;
-    // this.ctx.strokeRect(drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize);
+    if (this.enableChunkBorder) {
+      this.ctx.strokeStyle = "black";
+      this.ctx.lineWidth = 0.1;
+      this.ctx.strokeRect(drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize);
+    }
   }
 
   private renderUnit(unit: api.UnitMessage) {
