@@ -21,7 +21,11 @@ export class TexturePack extends EventTarget {
     // Water
     "/kenney_micro_roguelike/water.png",
     // Stone
-    "/tinyranch/rock1.png",
+    [
+      "/tinyranch/rock1.png",
+      "/tinyranch/rock2.png",
+      "/tinyranch/rock3.png",
+    ],
     // Tree
     [
       "/kenney_micro_roguelike/tree1.png",
