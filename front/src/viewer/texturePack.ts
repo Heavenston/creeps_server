@@ -6,7 +6,9 @@ export class TexturePack extends EventTarget {
   public readonly fillColor: string = "#2c9c50";
 
   private defaultTexture: ImageBitmap;
-  private urlTable: (string|string[]|null)[] = [
+  private loadingTexture: ImageBitmap;
+
+  private tilesUrlTable: (string|string[]|null)[] = [
     // Grass
     "/kenney_micro_roguelike/grass1.png",
     // Water
@@ -57,10 +59,14 @@ export class TexturePack extends EventTarget {
     ctx.fillRect(4, 0, 4, 4);
 
     this.defaultTexture = canvas.transferToImageBitmap();
+
+    ctx.clearRect(0, 0, 8, 8);
+
+    this.loadingTexture = canvas.transferToImageBitmap();
   }
 
   public getTileTexture(tileKind: number, tilePos: Vector2): ImageBitmap {
-    const url = this.urlTable[tileKind];
+    const url = this.tilesUrlTable[tileKind];
     if (!url)
       return this.defaultTexture;
     let realUrl: string;
@@ -75,7 +81,7 @@ export class TexturePack extends EventTarget {
     if (cached instanceof ImageBitmap)
       return cached;
     if (cached == "loading")
-      return this.defaultTexture;
+      return this.loadingTexture;
 
     console.log("loading", url);
     this.textureCache.set(realUrl, "loading");
