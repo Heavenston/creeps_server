@@ -49,7 +49,7 @@ export class TexturePack extends EventTarget {
     // Household
     "/kenney_micro_roguelike/house.png",
     // Smeltery
-    null,
+    "/smeltery.png",
     // SawMill
     "/sawmill.png",
     // RaiderCamp
