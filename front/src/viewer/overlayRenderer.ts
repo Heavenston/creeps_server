@@ -45,11 +45,11 @@ export class OverlayRenderer implements IRenderer {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
       ctx.lineWidth = 3 / this.renderer.cameraScale;
       ctx.strokeText(player.content.username, sp.x, sp.y);
       ctx.font = `${18 / this.renderer.cameraScale}px arial`;
-      ctx.fillStyle = "rgba(255, 255, 255, 1)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
       ctx.fillText(player.content.username, sp.x, sp.y);
     }
   }
