@@ -72,6 +72,17 @@ func (raider *RaiderUnit) Tick() {
 
 	raider.tick()
 
+	owner := raider.server.GetEntityOwner(raider.id)
+	if owner == nil {
+		log.Warn().
+			Str("raider_id", string(raider.id)).
+			Str("owner_id", string(raider.owner)).
+			Any("target", raider.target).
+			Msg("RAIDER: Could not find my owner so imma kms")
+		raider.Unregister()
+		return
+	}
+
 	position := raider.GetPosition()
 
 	foundAndDestroy := false
