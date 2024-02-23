@@ -127,7 +127,7 @@ export class TexturePack extends EventTarget {
     });
     image.src = url;
 
-    return this.defaultTexture;
+    return this.loadingTexture;
   }
 
   public getTileTexture(tileKind: number, tilePos: Vector2): ImageBitmap {
