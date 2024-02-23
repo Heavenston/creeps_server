@@ -69,7 +69,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 				break
 			}
 
-			log.Debug().
+			log.Trace().
 				Str("type", reflect.TypeOf(event).String()).
 				Any("event", event).
 				Msg("Server event")
