@@ -171,11 +171,15 @@ func (srv *Server) RemoveEntity(id uid.Uid) (entity IEntity) {
 	}
 
 	ownerEntity := srv.entitiesMap[ownerId]
+	if ownerEntity == nil {
+		return
+	}
 	owner, isOwner := ownerEntity.(IOwnerEntity)
 	if !isOwner {
 		log.Warn().
 			Str("entity_type", reflect.TypeOf(entity).String()).
 			Str("entity_id", string(entity.GetId())).
+			Any("owner_type", reflect.TypeOf(owner).String()).
 			Any("owner_id", string(ownerId)).
 			Msg("removed entity has an invalid owner")
 		return

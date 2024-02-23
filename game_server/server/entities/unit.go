@@ -58,12 +58,14 @@ func (unit *unit) GetAlive() bool {
 }
 
 func (unit *unit) SetDead() {
-	if !unit.alive.Swap(false) {
-		// was already dead
-		return
+	if asOwner, ok := unit.this.(IOwnerEntity); ok {
+		for _, child := range asOwner.CopyEntityList() {
+			child.Unregister()
+		}
 	}
 
-	if unit.server == nil {
+	if !unit.alive.Swap(false) {
+		// was already dead
 		return
 	}
 

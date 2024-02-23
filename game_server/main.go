@@ -22,6 +22,7 @@ func main() {
 	log.Logger = zerolog.New(cw).With().
 		Timestamp().
 		Logger()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	generator := NewChunkGenerator(time.Now().UnixMilli())
 	tilemap := NewTilemap(generator)

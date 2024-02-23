@@ -118,6 +118,11 @@ func (raid *Raid) Unregister() {
 func (raid *Raid) Tick() {
 	var player, ok = raid.server.GetEntity(raid.ownerPlayerId).(*Player)
 	if !ok || player == nil {
+		log.Info().
+			Any("player_id", raid.ownerPlayerId).
+			Any("raid_id", raid.GetId()).
+			Int("owned_entities", raid.OwnedEntityCount()).
+			Msg("Raid finished (no player anymore)")
 		// player is dead ?
 		raid.Unregister()
 		return
@@ -135,11 +140,4 @@ func (raid *Raid) Tick() {
 	raider := NewRaiderUnit(raid.server, raid.id, raid.targetPosition)
 	raider.SetPosition(raid.campPosition)
 	raider.Register()
-
-	log.Info().
-		Any("raid_id", raid.GetId()).
-		Int("owned_entities", raid.OwnedEntityCount()).
-		Any("raider_id", raider.GetId()).
-		Any("pos", raider.GetPosition()).
-		Msg("Spawned new raider")
 }

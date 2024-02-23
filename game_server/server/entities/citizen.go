@@ -91,7 +91,9 @@ func (citizen *CitizenUnit) Tick() {
 	ticker := server.Ticker()
 	player, ok := server.GetEntity(citizen.GetOwner()).(*Player)
 	if !ok {
-		log.Error().
+		log.Warn().
+			Str("citizen_id", string(citizen.id)).
+			Str("player_id", string(citizen.owner)).
 			Msg("[CITIZEN] Could not find owner player (code kms initiated)")
 		citizen.SetDead()
 		return
