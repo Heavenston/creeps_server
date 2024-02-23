@@ -174,6 +174,7 @@ func (srv *Server) RemoveEntity(id uid.Uid) (entity IEntity) {
 	owner, isOwner := ownerEntity.(IOwnerEntity)
 	if !isOwner {
 		log.Warn().
+			Str("entity_type", reflect.TypeOf(entity).String()).
 			Str("entity_id", string(entity.GetId())).
 			Any("owner_id", string(ownerId)).
 			Msg("removed entity has an invalid owner")
