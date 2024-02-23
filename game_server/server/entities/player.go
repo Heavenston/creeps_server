@@ -174,6 +174,10 @@ func (player *Player) Register() {
 }
 
 func (player *Player) Unregister() {
+	for _, child := range player.CopyEntityList() {
+		child.Unregister()
+	}
+
 	player.server.RemoveEntity(player.id)
 	player.server.Events().Emit(&PlayerDespawnEvent{
 		Player: player,
