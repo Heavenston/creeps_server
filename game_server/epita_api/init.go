@@ -31,7 +31,7 @@ func (h *initHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				return
 			}
-			found = eplayer.GetSpawnPoint().Dist(p) < 15
+			found = eplayer.GetSpawnPoint().Dist(p) < 30
 			shouldStop = found
 			return
 		})
