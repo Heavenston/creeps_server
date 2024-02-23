@@ -235,7 +235,7 @@ func (srv *Server) GetEntityOwner(id uid.Uid) IOwnerEntity {
 		log.Warn().
 			Str("entity_id", string(entity.GetId())).
 			Any("owner_id", string(ownerId)).
-			Msg("entity has an invalid owner")
+			Msg("GetEntityOwner: entity has an invalid owner")
 		return nil
 	}
 

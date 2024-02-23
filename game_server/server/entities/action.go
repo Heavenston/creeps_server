@@ -8,6 +8,7 @@ import (
 	mathutils "creeps.heav.fr/math_utils"
 	. "creeps.heav.fr/server"
 	"creeps.heav.fr/server/terrain"
+	"creeps.heav.fr/uid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -245,11 +246,24 @@ func spawn[T IUnit](
 // called by unit in units/unit.go when the action is finished
 func ApplyAction(action *Action, unit IUnit) model.IReport {
 	server := unit.GetServer()
-	player, _ := server.GetEntity(unit.GetOwner()).(*Player)
+	owner := server.GetEntityOwner(unit.GetId())
+	player, _ := owner.(*Player)
+	oldPosition := unit.GetPosition()
 
 	var report model.IReport
 
-	oldPosition := unit.GetPosition()
+	if unit.GetOwner() != uid.ServerUid && owner == nil {
+		log.Warn().
+			Any("unit_opcode", unit.GetOpCode()).
+			Any("unit_id", unit.GetId()).
+			Any("owner_id", unit.GetOwner()).
+			Msg("Cannot apply unit action if its owner doesn't exist")
+		report = &model.ErrorReport{
+			ErrorCode: "dead-owner",
+			Error: "Owner's dead",
+		}
+		goto end
+	}
 
 	switch action.OpCode {
 	case OpCodeMoveLeft:
@@ -493,6 +507,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 		panic("uniplemented")
 	}
 
+end:
 	report.GetReport().ReportId = action.ReportId
 	report.GetReport().OpCode = string(action.OpCode)
 	report.GetReport().UnitId = unit.GetId()
