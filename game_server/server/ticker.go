@@ -33,7 +33,7 @@ func NewTicker(ticksPerSeconds float64) *Ticker {
 
 func (ticker *Ticker) Start() {
 	log.Info().Float64("tps", ticker.ticksPerSeconds).Msg("Ticker starting")
-	time_ticker := time.NewTicker(time.Duration(float64(time.Second) / ticker.ticksPerSeconds))
+	time_ticker := time.NewTicker(ticker.TickDuration())
 	defer time_ticker.Stop()
 
 
@@ -82,4 +82,8 @@ func (ticker *Ticker) Defer(f TickFunc) {
 	ticker.deferedFuncsLock.Lock()
 	defer ticker.deferedFuncsLock.Unlock()
 	ticker.deferedFuncs = append(ticker.deferedFuncs, f)
+}
+
+func (ticker *Ticker) TickDuration() time.Duration {
+	return time.Duration(float64(time.Second) / ticker.ticksPerSeconds);
 }
