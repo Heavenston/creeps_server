@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
 	"creeps.heav.fr/server/entities"
@@ -148,6 +147,15 @@ func (viewer *ViewerServer) handleClientSubscription(
 		return false
 	}
 
+	getActionData := func (action *server.Action) actionData {
+		data := actionData{
+			ActionOpCode: action.OpCode,
+			ReportId: action.ReportId,
+			Parameter: action.Parameter,
+		}
+		return data
+	}
+
 	sendTerrain()
 
 	for _, entity := range viewer.Server.Entities().GetAllIntersects(aabb) {
@@ -224,10 +232,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 
 				sendMessage("unitStartedAction", unitStartedActionContent{
 					UnitId: e.Unit.GetId(),
-					Action: actionData{
-						ActionOpCode: e.Action.OpCode,
-						ReportId: e.Action.ReportId,
-					},
+					Action: getActionData(e.Action),
 				})
 			}
 			if e, ok := event.(*server.UnitFinishedActionEvent); ok {
@@ -239,16 +244,8 @@ func (viewer *ViewerServer) handleClientSubscription(
 
 				content := unitFinishedActionContent{
 					UnitId: e.Unit.GetId(),
-					Action: actionData{
-						ActionOpCode: e.Action.OpCode,
-						ReportId: e.Action.ReportId,
-					},
-					// FIXME: MAGIC STRING HAHAH
-					Success: e.Report.GetReport().Status == "SUCCESS",
-				}
-
-				if mr, ok := e.Report.(*model.MoveReport); ok {
-					content.NewPosition = &mr.NewPosition
+					Action: getActionData(e.Action),
+					Report: e.Report,
 				}
 
 				sendMessage("unitFinishedAction", content)

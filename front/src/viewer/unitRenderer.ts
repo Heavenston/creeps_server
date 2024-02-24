@@ -47,13 +47,13 @@ export class UnitRenderer implements IRenderer {
           break;
         }
         case "unitFinishedAction": {
-          if (event.message.content.newPosition) {
+          if (api.isMoveReport(event.message.content.report)) {
             const unit = this.lastUnitMessage.get(event.message.content.unitId);
             if (!unit) {
               console.warn("received finished action for unkown unit", event.message);
               break;
             }
-            unit.content.position = event.message.content.newPosition;
+            unit.content.position = event.message.content.report.newPosition;
           }
 
           const act = this.unitsActions.get(event.message.content.unitId);
@@ -64,7 +64,7 @@ export class UnitRenderer implements IRenderer {
           this.unitsActions.set(event.message.content.unitId, {
             action: event.message.content.action,
             elapsed: act.elapsed,
-            state: event.message.content.success ? "finished" : "error",
+            state: event.message.content.report.status == "SUCCESS" ? "finished" : "error",
             finishedSince: 0,
           })
           break;
@@ -96,6 +96,7 @@ export class UnitRenderer implements IRenderer {
     if (action != null && cost != null && action.state == "running") {
       let prop = action.elapsed / (cost.cast * api.getSecondsPerTicks());
       prop = Math.min(Math.max(prop, 0), 1);
+      // to add cases here make sure they are handled in api.getActionCost too
       switch (action.action.actionOpCode) {
         case "move:left":
           pos.x -= prop;
@@ -108,6 +109,29 @@ export class UnitRenderer implements IRenderer {
           break;
         case "move:down":
           pos.y -= prop;
+          break;
+        case "fire:turret":
+          const stroke = (adsize: number, color: string) => {
+            this.renderer.ctx.beginPath();
+            this.renderer.ctx.moveTo(
+              unit.content.position.x+0.5,
+              unit.content.position.y+0.5
+            );
+
+            this.renderer.ctx.lineCap = "round";
+            this.renderer.ctx.strokeStyle = color;
+            this.renderer.ctx.lineWidth = prop * 0.3 + adsize;
+            this.renderer.ctx.lineTo(
+              action.action.parameter.destination.x+0.5,
+              action.action.parameter.destination.y+0.5,
+            );
+
+            this.renderer.ctx.stroke();
+          };
+
+          stroke( 0.05, `rgba(255, 255, 255, ${prop})`);
+          stroke(-0.05, `rgba(255, 000, 000, ${prop})`);
+
           break;
       }
     }

@@ -19,7 +19,28 @@ export type Point = {
 export type Action = {
   actionOpCode: string,
   reportId: string,
+  // hahahah...
+  parameter?: any,
 }
+
+export type CreepsReport = {
+  reportId: string,
+  unitId: string,
+  login: string,
+  unitPosition: Point,
+  status: "SUCCESS" | "ERROR",
+}
+
+export type MoveReport = CreepsReport & {
+  opcode: `move:${string}`,
+  newPosition: Point,
+}
+
+export function isMoveReport(report: (CreepsReport & {opcode: string})): report is MoveReport {
+  return report.opcode.startsWith("move:");
+}
+
+export type AnyReport = MoveReport;
 
 export type Resources = {
 	rock: number,
@@ -50,6 +71,9 @@ export function getActionCost(opcode: string): Cost|null {
     case "move:up":
     case "move:down":
       name = "move";
+      break
+    case "fire:turret":
+      name = "fireTurret";
       break
   }
   if (name == null)
@@ -138,8 +162,7 @@ export type UnitFinishedActionMessage = {
   content: {
     unitId: string,
     action: Action,
-    success: boolean,
-    newPosition?: Point,
+    report: AnyReport,
   }
 }
 

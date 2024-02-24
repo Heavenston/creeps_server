@@ -42,6 +42,7 @@ type tileChangeContent struct {
 type actionData struct {
 	ActionOpCode server.ActionOpCode `json:"actionOpCode"`
 	ReportId     uid.Uid             `json:"reportId"`
+	Parameter    any                 `json:"parameter,omitempty"`
 }
 
 // sent by the server when a unit spawned
@@ -64,10 +65,9 @@ type unitStartedActionContent struct {
 }
 
 type unitFinishedActionContent struct {
-	UnitId      uid.Uid    `json:"unitId"`
-	Action      actionData `json:"action"`
-	Success     bool       `json:"success"`
-	NewPosition *Point     `json:"newPosition,omitempty"`
+	UnitId uid.Uid       `json:"unitId"`
+	Action actionData    `json:"action"`
+	Report model.IReport `json:"report"`
 }
 
 type playerSpawnContent struct {
