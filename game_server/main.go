@@ -27,13 +27,13 @@ func main() {
 	generator := NewChunkGenerator(time.Now().UnixMilli())
 	tilemap := NewTilemap(generator)
 	srv := NewServer(&tilemap, &model.SetupResponse{
-		CitizenFeedingRate: 20,
+		CitizenFeedingRate: 25,
 		EnableGC:           false,
-		GcTickRate:         50,
+		GcTickRate:         150,
 		EnableEnemies:      true,
 		EnemyTickRate:      8,
-		EnemyBaseTickRate:  300,
-		MaxLoad:            40,
+		EnemyBaseTickRate:  150,
+		MaxLoad:            20,
 		MaxMissesPerPlayer: 200,
 		MaxMissesPerUnit:   200,
 		ServerId:           "heavenstone_server",
@@ -45,7 +45,7 @@ func main() {
 			Y: math.MaxInt32 >> 2,
 		},
 		FoodGatherRate:     5,
-		OilGatherRate:      5,
+		OilGatherRate:      2,
 		RockGatherRate:     5,
 		WoodGatherRate:     5,
 	}, &model.CostsResponse{
