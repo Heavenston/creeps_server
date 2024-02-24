@@ -182,6 +182,8 @@ func (player *Player) Unregister() {
 	player.server.Events().Emit(&PlayerDespawnEvent{
 		Player: player,
 	})
+
+	log.Info().Any("player_id", player.id).Msg("Player is DEAD ;(")
 }
 
 // called each tick if enemy spawning is enabled
