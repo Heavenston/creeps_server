@@ -1,19 +1,27 @@
 package main
 
 import (
-	"math"
 	"os"
-	"time"
 
-	"creeps.heav.fr/epita_api"
-	"creeps.heav.fr/epita_api/model"
-	. "creeps.heav.fr/geom"
-	. "creeps.heav.fr/server"
-	. "creeps.heav.fr/server/terrain"
-	"creeps.heav.fr/viewer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 )
+
+var tps float64
+var apiPort int
+var apiHost string
+var viewerPort int
+var viewerHost string
+
+var rootCmd = cobra.Command {
+	Use: "heav_creeps",
+	Short: "A reimplementation of the *very* famous creeps game",
+
+	Run: func(cmd *cobra.Command, args []string) {
+		startServ()
+	},
+}
 
 func main() {
 	cw := zerolog.ConsoleWriter{
@@ -24,175 +32,23 @@ func main() {
 		Logger()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	generator := NewChunkGenerator(time.Now().UnixMilli())
-	tilemap := NewTilemap(generator)
-	srv := NewServer(&tilemap, &model.SetupResponse{
-		CitizenFeedingRate: 25,
-		EnableGC:           false,
-		GcTickRate:         150,
-		EnableEnemies:      true,
-		EnemyTickRate:      8,
-		EnemyBaseTickRate:  150,
-		MaxLoad:            20,
-		MaxMissesPerPlayer: 200,
-		MaxMissesPerUnit:   200,
-		ServerId:           "heavenstone_server",
-		TicksPerSeconds:    10,
-		TrackAchievements:  false,
-		WorldDimension:     Point{
-			// big value but leave two bits to avoid any overflow anywhere
-			X: math.MaxInt32 >> 2,
-			Y: math.MaxInt32 >> 2,
-		},
-		FoodGatherRate:     5,
-		OilGatherRate:      2,
-		RockGatherRate:     5,
-		WoodGatherRate:     5,
-	}, &model.CostsResponse{
-		BuildHousehold: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 10,
-				Wood: 10,
-			},
-			Cast: 6,
-		},
-		BuildRoad: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 1,
-			},
-			Cast: 2,
-		},
-		BuildSawmill: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 15,
-				Wood: 25,
-			},
-			Cast: 10,
-		},
-		BuildSmeltery: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 25,
-				Wood: 15,
-			},
-			Cast: 2,
-		},
-		BuildTownHall: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 100,
-				Wood: 100,
-			},
-			Cast: 20,
-		},
-		Dismantle: model.CostResponse{
-			Cast: 1,
-		},
-		Farm: model.CostResponse{
-			Cast: 10,
-		},
-		FetchMessage: model.CostResponse{
-			Cast: 1,
-		},
-		FireBomberBot: model.CostResponse{
-			Cast: 6,
-		},
-		FireTurret: model.CostResponse{
-			Cast: 2,
-		},
-		Gather: model.CostResponse{
-			Cast: 4,
-		},
-		Move: model.CostResponse{
-			Cast: 2,
-		},
-		Noop: model.CostResponse{
-			Cast: 1,
-		},
-		Observe: model.CostResponse{
-			Cast: 1,
-		},
-		RefineCopper: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 10,
-			},
-			Cast: 8,
-		},
-		RefineWoodPlank: model.CostResponse{
-			Resources: model.Resources{
-				Wood: 10,
-			},
-			Cast: 8,
-		},
-		SendMessage: model.CostResponse{
-			Cast: 1,
-		},
-		SpawnBomberBot: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 5,
-				Wood: 10,
-			},
-			Cast: 6,
-		},
-		SpawnTurret: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 10,
-				Wood: 5,
-			},
-			Cast: 6,
-		},
-		Unload: model.CostResponse{
-			Cast: 1,
-		},
-		UpgradeBomberBot: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 5,
-				Wood: 10,
-				Oil: 4,
-				Copper: 1,
-				WoodPlank: 2,
-			},
-			Cast: 1,
-		},
-		UpgradeCitizen: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 5,
-				Wood: 5,
-				Food: 2,
-				Copper: 1,
-				WoodPlank: 1,
-			},
-			Cast: 1,
-		},
-		UpgradeTurret: model.CostResponse{
-			Resources: model.Resources{
-				Rock: 10,
-				Wood: 5,
-				Oil: 4,
-				Copper: 3,
-				WoodPlank: 1,
-			},
-			Cast: 1,
-		},
-	})
-	srv.SetDefaultPlayerResources(model.Resources{
-		Rock:      30,
-		Wood:      30,
-		Food:      30,
-		Oil:       0,
-		Copper:    0,
-		WoodPlank: 0,
-	})
+	rootCmd.Flags().Float64VarP(&tps, "tps", "t", 5, "Ticks per seconds")
+	rootCmd.Flags().IntVar(&apiPort, "api-port", 1664, "Port for the epita-compatible api")
+	rootCmd.Flags().StringVar(&apiHost,
+		"api-host", "",
+		`Full host for the epita-compatible api, ex: 'localhost:1664'.
+Overwrites api-port if present`,
+	)
+	rootCmd.Flags().IntVar(&viewerPort, "viewer-port", 1665, "Port for the viewer's api (not the viewer itself)")
+	rootCmd.Flags().StringVar(&viewerHost,
+		"viewer-host", "",
+		`Full host for the viewer's api, ex: 'localhost:1665'.
+Overwrites viewer-port if present`,
+	)
+	rootCmd.Flags().CountP("verbose", "v", "Once for debug twice for trace")
+	rootCmd.Flags().BoolP("quiet", "q", false, "If present only warnings or errors are printed (overwrites verbose)")
 
-	api_server := &epita_api.ApiServer{
-		Addr:   "localhost:1664",
-		Server: srv,
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal().Err(err).Msg("cli error")
 	}
-	go api_server.Start()
-
-	viewer_server := &viewer.ViewerServer{
-		Addr:   "localhost:1665",
-		Server: srv,
-	}
-	go viewer_server.Start()
-
-	srv.Start()
 }
