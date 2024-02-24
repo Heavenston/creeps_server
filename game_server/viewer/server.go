@@ -215,19 +215,45 @@ func (viewer *ViewerServer) handleClientSubscription(
 					break
 				}
 
-				if !sendUnit(e.Unit) {
-					sendMessage("unitMovement", unitMovementContent{
-						UnitId: e.Unit.GetId(),
-						New:    e.To,
-					})
+				if sendUnit(e.Unit) {
+					break
 				}
+
+				sendMessage("unitMovement", unitMovementContent{
+					UnitId: e.Unit.GetId(),
+					New:    e.To,
+				})
 			}
-			if e, ok := event.(*server.UnitUpgradedEvent); ok {
-				if !sendUnit(e.Unit) {
-					sendMessage("unitUpgraded", unitUpgradedContent{
-						UnitId: e.Unit.GetId(),
-					})
+			if e, ok := event.(*server.UnitStartedActionEvent); ok {
+				// note: we do skip the action...
+				if sendUnit(e.Unit) {
+					break
 				}
+
+				sendMessage("unitStartedAction", unitStartedActionContent{
+					UnitId: e.Unit.GetId(),
+					Action: actionData{
+						ActionOpCode: e.Action.OpCode,
+						ReportId: e.Action.ReportId,
+					},
+				})
+			}
+			if e, ok := event.(*server.UnitFinishedActionEvent); ok {
+				// note: if it didn't know about the unit it won't know about
+				//       the action
+				if sendUnit(e.Unit) {
+					break
+				}
+
+				sendMessage("unitFinishedAction", unitFinishedActionContent{
+					UnitId: e.Unit.GetId(),
+					Action: actionData{
+						ActionOpCode: e.Action.OpCode,
+						ReportId: e.Action.ReportId,
+					},
+					// FIXME: MAGIC STRING HAHAH
+					Success: e.Report.GetReport().Status == "SUCCESS",
+				})
 			}
 			if e, ok := event.(*entities.PlayerSpawnEvent); ok {
 				sendPlayer(e.Player)

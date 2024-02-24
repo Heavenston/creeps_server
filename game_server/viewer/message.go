@@ -5,6 +5,7 @@ import (
 
 	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
+	"creeps.heav.fr/server"
 	"creeps.heav.fr/uid"
 )
 
@@ -37,6 +38,12 @@ type tileChangeContent struct {
 	Value   byte  `json:"value"`
 }
 
+// not a messag but used inside messages
+type actionData struct {
+	ActionOpCode server.ActionOpCode `json:"actionOpCode"`
+	ReportId     uid.Uid             `json:"reportId"`
+}
+
 // sent by the server when a unit spawned
 type unitContent struct {
 	OpCode   string  `json:"opCode"`
@@ -46,18 +53,25 @@ type unitContent struct {
 	Upgraded bool    `json:"upgraded"`
 }
 
+// sent by the server when a unit dies or gets out of the subscribed chunks
+type unitDespawnContent struct {
+	UnitId uid.Uid `json:"unitId"`
+}
+
 type unitMovementContent struct {
 	UnitId uid.Uid `json:"unitId"`
 	New    Point   `json:"new"`
 }
 
-type unitUpgradedContent struct {
-	UnitId uid.Uid `json:"unitId"`
+type unitStartedActionContent struct {
+	UnitId uid.Uid    `json:"unitId"`
+	Action actionData `json:"action"`
 }
 
-// sent by the server when a unit dies or gets out of the subscribed chunks
-type unitDespawnContent struct {
-	UnitId uid.Uid `json:"unitId"`
+type unitFinishedActionContent struct {
+	UnitId  uid.Uid    `json:"unitId"`
+	Action  actionData `json:"action"`
+	Success bool
 }
 
 type playerSpawnContent struct {

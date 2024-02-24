@@ -37,15 +37,6 @@ export class UnitRenderer implements IRenderer {
           unit.content.position = event.message.content.new;
           break;
         }
-        case "unitUpgraded": {
-          const unit = this.lastUnitMessage.get(event.message.content.unitId);
-          if (!unit) {
-            console.warn("received unit upgrade for unkown unit ", event.message);
-            break;
-          }
-          unit.content.upgraded = true;
-          break;
-        }
       }
     }, {
       signal: this.eventAbort.signal,

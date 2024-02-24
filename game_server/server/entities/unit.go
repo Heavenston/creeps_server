@@ -85,21 +85,21 @@ func (unit *unit) SetPosition(new_pos Point) {
 	prevValue := unit.position.Store(new_pos)
 	unit.movedEvents.Emit(spatialmap.ObjectMovedEvent{
 		From: prevValue,
-		To: new_pos,
+		To:   new_pos,
 	})
 	if unit.server != nil {
-		unit.server.Events().Emit(&server.UnitMovedEvent {
+		unit.server.Events().Emit(&server.UnitMovedEvent{
 			Unit: unit.this,
 			From: prevValue,
-			To: new_pos,
+			To:   new_pos,
 		})
 	}
 }
 
 func (unit *unit) GetAABB() AABB {
-	return AABB {
+	return AABB{
 		From: unit.GetPosition(),
-		Size: Point { X: 1, Y: 1 },
+		Size: Point{X: 1, Y: 1},
 	}
 }
 
@@ -116,13 +116,13 @@ func (unit *unit) ModifyPosition(cb func(Point) Point) (Point, Point) {
 	if old != new {
 		unit.movedEvents.Emit(spatialmap.ObjectMovedEvent{
 			From: old,
-			To: new,
+			To:   new,
 		})
 		if unit.server != nil {
-			unit.server.Events().Emit(&server.UnitMovedEvent {
+			unit.server.Events().Emit(&server.UnitMovedEvent{
 				Unit: unit.this,
 				From: old,
-				To: new,
+				To:   new,
 			})
 		}
 	}
@@ -136,16 +136,12 @@ func (unit *unit) IsUpgraded() bool {
 func (unit *unit) SetUpgraded() {
 	was := unit.upgraded.Swap(true)
 	if was {
-		return;
+		return
 	}
 
 	if unit.server == nil {
 		return
 	}
-
-	unit.server.Events().Emit(&server.UnitUpgradedEvent{
-		Unit: unit.this,
-	})
 }
 
 func (unit *unit) ObserveDistance() int {
@@ -220,6 +216,12 @@ func (unit *unit) startAction(action *Action, supported []ActionOpCode) error {
 
 	unit.lastAction.Store(action)
 
+	unit.server.Events().Emit(&UnitStartedActionEvent{
+		Unit:   unit.this,
+		Pos:    unit.GetPosition(),
+		Action: action,
+	})
+
 	return nil
 }
 
@@ -258,4 +260,11 @@ func (unit *unit) tick() {
 	if len(report.GetReport().ReportId) > 0 {
 		unit.GetServer().AddReport(report)
 	}
+
+	unit.server.Events().Emit(&UnitFinishedActionEvent{
+		Unit:   unit.this,
+		Pos:    unit.GetPosition(),
+		Action: action,
+		Report: report,
+	})
 }

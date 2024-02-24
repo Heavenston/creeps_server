@@ -69,13 +69,6 @@ export type UnitMessage = {
   }
 }
 
-export type UnitUpgradedMessage = {
-  kind: "unitUpgraded",
-  content: {
-    unitId: string,
-  }
-}
-
 export type UnitMovementMessage = {
   kind: "unitMovement",
   content: {
@@ -116,7 +109,6 @@ export type RecvMessage =
   | UnitMessage
   | UnitMovementMessage
   | UnitDespawnedMessage
-  | UnitUpgradedMessage
   | PlayerSpawnMessage
   | PlayerDespawnMessage;
 export type SendMessage = SubscribeMessage | UnsubscribeMessage;

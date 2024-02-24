@@ -1,15 +1,15 @@
 package server
 
 import (
-	mathutils "creeps.heav.fr/math_utils"
+	"creeps.heav.fr/epita_api/model"
 	"creeps.heav.fr/events"
 	. "creeps.heav.fr/geom"
+	mathutils "creeps.heav.fr/math_utils"
 	"creeps.heav.fr/spatialmap"
 )
 
 // utility struct embedded into all server events to auto-implement the functions
 type ServerEventBase struct {
-	
 }
 
 func (event *ServerEventBase) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent] {
@@ -55,11 +55,11 @@ func (event *UnitMovedEvent) GetAABB() AABB {
 	//        support finer control I'll stick with this as most movements
 	//        are across adjacent tiles anyways
 
-	min := Point {
+	min := Point{
 		X: mathutils.Min(event.From.X, event.To.X),
 		Y: mathutils.Min(event.From.Y, event.To.Y),
 	}
-	max := Point {
+	max := Point{
 		X: mathutils.Max(event.From.X, event.To.X),
 		Y: mathutils.Max(event.From.Y, event.To.Y),
 	}
@@ -70,12 +70,31 @@ func (event *UnitMovedEvent) GetAABB() AABB {
 	}
 }
 
-// emitted by the units when setUpgraded is called
-type UnitUpgradedEvent struct {
+type UnitStartedActionEvent struct {
 	ServerEventBase
-	Unit IUnit
+	Unit   IUnit
+	Pos    Point
+	Action *Action
 }
 
-func (event *UnitUpgradedEvent) GetAABB() AABB {
-	return event.Unit.GetAABB()
+func (event *UnitStartedActionEvent) GetAABB() AABB {
+	return AABB{
+		From: event.Pos,
+		Size: Point{X: 1, Y: 1},
+	}
+}
+
+type UnitFinishedActionEvent struct {
+	ServerEventBase
+	Unit   IUnit
+	Pos    Point
+	Action *Action
+	Report model.IReport
+}
+
+func (event *UnitFinishedActionEvent) GetAABB() AABB {
+	return AABB{
+		From: event.Pos,
+		Size: Point{X: 1, Y: 1},
+	}
 }
