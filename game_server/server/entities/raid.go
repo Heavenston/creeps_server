@@ -35,6 +35,8 @@ func NewRaid(
 
 	raid.ownerPlayerId = ownerPlayerId
 
+	// note: camp position and other metrics are calculated in Register
+
 	return raid
 }
 
@@ -81,7 +83,7 @@ func (raid *Raid) Register() {
 			if !ok {
 				return
 			}
-			found = eplayer.spawnPoint.Dist(p) < 15
+			found = eplayer.spawnPoint.Dist(p) < 25
 			shouldStop = found
 			return
 		})
