@@ -109,7 +109,7 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         newAction.Parameter = reflect.Indirect(paramValue).Interface()
     }
 
-    err := unit.StartAction(newAction)
+    err := unit.StartAction(newAction, nil)
 
     if err != nil {
         if _, ok := err.(server.UnitBusyError); ok {

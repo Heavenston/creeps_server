@@ -3,6 +3,7 @@ package entities
 import (
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"creeps.heav.fr/epita_api/model"
 	"creeps.heav.fr/events"
@@ -166,7 +167,11 @@ func (unit *unit) SetInventory(newInv model.Resources) {
 	unit.inventory = newInv
 }
 
-func (unit *unit) startAction(action *Action, supported []ActionOpCode) error {
+func (unit *unit) startAction(
+	action *Action,
+	supported []ActionOpCode,
+	onFinished func(),
+) error {
 	if unit == nil || action == nil {
 		panic("cannot work nil")
 	}
@@ -223,6 +228,33 @@ func (unit *unit) startAction(action *Action, supported []ActionOpCode) error {
 		Action: action,
 	})
 
+	go (func() {
+		costs := action.OpCode.GetCost(unit.this)
+
+		<-time.After(unit.server.Ticker().TickDuration() * time.Duration(costs.Cast))
+		if !unit.GetAlive() {
+			return
+		}
+
+		action.Finised.Store(true)
+
+		report := ApplyAction(action, unit.this)
+		if len(report.GetReport().ReportId) > 0 {
+			unit.GetServer().AddReport(report)
+		}
+
+		unit.server.Events().Emit(&UnitFinishedActionEvent{
+			Unit:   unit.this,
+			Pos:    unit.GetPosition(),
+			Action: action,
+			Report: report,
+		})
+
+		if onFinished != nil {
+			onFinished()
+		}
+	})()
+
 	return nil
 }
 
@@ -236,36 +268,4 @@ func (unit *unit) Register() {
 
 func (unit *unit) Unregister() {
 	unit.SetDead()
-}
-
-func (unit *unit) tick() {
-	action := unit.GetLastAction()
-	if action == nil {
-		return
-	}
-
-	if action.Finised.Load() {
-		return
-	}
-
-	costs := action.OpCode.GetCost(unit.this)
-	if unit.GetServer().Ticker().GetTickNumber()-action.StartedAtTick < costs.Cast {
-		return
-	}
-
-	// action is finished
-
-	action.Finised.Store(true)
-
-	report := ApplyAction(action, unit.this)
-	if len(report.GetReport().ReportId) > 0 {
-		unit.GetServer().AddReport(report)
-	}
-
-	unit.server.Events().Emit(&UnitFinishedActionEvent{
-		Unit:   unit.this,
-		Pos:    unit.GetPosition(),
-		Action: action,
-		Report: report,
-	})
 }

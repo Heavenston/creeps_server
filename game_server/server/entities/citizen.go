@@ -50,7 +50,7 @@ func (citizen *CitizenUnit) ObserveDistance() int {
 	return 6
 }
 
-func (citizen *CitizenUnit) StartAction(action *Action) error {
+func (citizen *CitizenUnit) StartAction(action *Action, onFinished func()) error {
 	err := citizen.startAction(action, []ActionOpCode{
 		OpCodeMoveDown,
 		OpCodeMoveUp,
@@ -74,7 +74,7 @@ func (citizen *CitizenUnit) StartAction(action *Action) error {
 		OpCodeRefineWoodPlank,
 
 		OpCodeObserve,
-	})
+	}, onFinished)
 	if err != nil {
 		return err
 	}
@@ -84,8 +84,6 @@ func (citizen *CitizenUnit) StartAction(action *Action) error {
 func (citizen *CitizenUnit) Tick() {
 	citizen.lock.Lock()
 	defer citizen.lock.Unlock()
-
-	citizen.tick()
 
 	server := citizen.server
 	ticker := server.Ticker()

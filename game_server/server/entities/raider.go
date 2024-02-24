@@ -53,12 +53,17 @@ func (raider *RaiderUnit) GetTarget() Point {
 	return raider.target
 }
 
-func (raider *RaiderUnit) StartAction(action *Action) error {
+func (raider *RaiderUnit) StartAction(action *Action, onFinished func()) error {
 	err := raider.startAction(action, []ActionOpCode {
 		OpCodeMoveDown,
 		OpCodeMoveUp,
 		OpCodeMoveLeft,
 		OpCodeMoveRight,
+	}, func () {
+		if onFinished != nil {
+			onFinished()
+		}
+		raider.Tick()
 	})
 	if err != nil {
 		return err
@@ -69,8 +74,6 @@ func (raider *RaiderUnit) StartAction(action *Action) error {
 func (raider *RaiderUnit) Tick() {
 	raider.lock.Lock()
 	defer raider.lock.Unlock()
-
-	raider.tick()
 
 	owner := raider.server.GetEntityOwner(raider.id)
 	if owner == nil {
@@ -142,7 +145,7 @@ func (raider *RaiderUnit) Tick() {
 		}
 	}
 
-	err := raider.StartAction(newAction)
+	err := raider.StartAction(newAction, nil)
 	if err != nil {
 		log.Warn().
 			Any("action", newAction).

@@ -47,21 +47,16 @@ func (bomberBot *BomberBotUnit) ObserveDistance() int {
 	return 5
 }
 
-func (bomberBot *BomberBotUnit) StartAction(action *Action) error {
+func (bomberBot *BomberBotUnit) StartAction(action *Action, onFinished func()) error {
 	err := bomberBot.startAction(action, []ActionOpCode{
 		OpCodeUpgrade,
 		OpCodeFireBomberBot,
-	})
+	}, onFinished)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (bomberBot *BomberBotUnit) Tick() {
-	bomberBot.lock.Lock()
-	defer bomberBot.lock.Unlock()
-
-	bomberBot.tick()
-}
+func (bomberBot *BomberBotUnit) Tick() { }
 

@@ -47,21 +47,16 @@ func (turret *TurretUnit) ObserveDistance() int {
 	return 5
 }
 
-func (turret *TurretUnit) StartAction(action *Action) error {
+func (turret *TurretUnit) StartAction(action *Action, onFinished func()) error {
 	err := turret.startAction(action, []ActionOpCode{
 		OpCodeUpgrade,
 		OpCodeFireTurret,
-	})
+	}, onFinished)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (turret *TurretUnit) Tick() {
-	turret.lock.Lock()
-	defer turret.lock.Unlock()
-
-	turret.tick()
-}
+func (turret *TurretUnit) Tick() { }
 

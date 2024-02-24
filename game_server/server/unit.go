@@ -49,7 +49,8 @@ type IUnit interface {
 	ModifyPosition(cb func(Point) Point) (Point, Point)
 	GetLastAction() *Action
 	// can return UnitBusyError or UnsuportedActionError
-	StartAction(action *Action) error
+	// unFinished can be nil
+	StartAction(action *Action, onFinished func()) error
 	GetUpgradeCosts() *model.CostResponse
 	IsUpgraded() bool
 	ObserveDistance() int
