@@ -31,13 +31,13 @@ func main() {
 		EnableGC:           false,
 		GcTickRate:         50,
 		EnableEnemies:      true,
-		EnemyTickRate:      3,
-		EnemyBaseTickRate:  150,
+		EnemyTickRate:      8,
+		EnemyBaseTickRate:  300,
 		MaxLoad:            40,
 		MaxMissesPerPlayer: 200,
 		MaxMissesPerUnit:   200,
 		ServerId:           "heavenstone_server",
-		TicksPerSeconds:    5,
+		TicksPerSeconds:    10,
 		TrackAchievements:  false,
 		WorldDimension:     Point{
 			// big value but leave two bits to avoid any overflow anywhere
@@ -51,46 +51,58 @@ func main() {
 	}, &model.CostsResponse{
 		BuildHousehold: model.CostResponse{
 			Resources: model.Resources{
-				Rock: 3,
-				Wood: 5,
+				Rock: 10,
+				Wood: 10,
 			},
-			Cast: 1,
+			Cast: 6,
 		},
 		BuildRoad: model.CostResponse{
 			Resources: model.Resources{
 				Rock: 1,
 			},
-			Cast: 1,
+			Cast: 2,
 		},
 		BuildSawmill: model.CostResponse{
-			Cast: 1,
+			Resources: model.Resources{
+				Rock: 15,
+				Wood: 25,
+			},
+			Cast: 10,
 		},
 		BuildSmeltery: model.CostResponse{
-			Cast: 1,
+			Resources: model.Resources{
+				Rock: 25,
+				Wood: 15,
+			},
+			Cast: 2,
 		},
 		BuildTownHall: model.CostResponse{
-			Cast: 1,
+			Resources: model.Resources{
+				Rock: 100,
+				Wood: 100,
+			},
+			Cast: 20,
 		},
 		Dismantle: model.CostResponse{
 			Cast: 1,
 		},
 		Farm: model.CostResponse{
-			Cast: 1,
+			Cast: 10,
 		},
 		FetchMessage: model.CostResponse{
 			Cast: 1,
 		},
 		FireBomberBot: model.CostResponse{
-			Cast: 1,
+			Cast: 6,
 		},
 		FireTurret: model.CostResponse{
-			Cast: 1,
+			Cast: 2,
 		},
 		Gather: model.CostResponse{
-			Cast: 1,
+			Cast: 4,
 		},
 		Move: model.CostResponse{
-			Cast: 1,
+			Cast: 2,
 		},
 		Noop: model.CostResponse{
 			Cast: 1,
@@ -99,30 +111,65 @@ func main() {
 			Cast: 1,
 		},
 		RefineCopper: model.CostResponse{
-			Cast: 1,
+			Resources: model.Resources{
+				Rock: 10,
+			},
+			Cast: 8,
 		},
 		RefineWoodPlank: model.CostResponse{
-			Cast: 1,
+			Resources: model.Resources{
+				Wood: 10,
+			},
+			Cast: 8,
 		},
 		SendMessage: model.CostResponse{
 			Cast: 1,
 		},
 		SpawnBomberBot: model.CostResponse{
-			Cast: 1,
+			Resources: model.Resources{
+				Rock: 5,
+				Wood: 10,
+			},
+			Cast: 6,
 		},
 		SpawnTurret: model.CostResponse{
-			Cast: 1,
+			Resources: model.Resources{
+				Rock: 10,
+				Wood: 5,
+			},
+			Cast: 6,
 		},
 		Unload: model.CostResponse{
 			Cast: 1,
 		},
 		UpgradeBomberBot: model.CostResponse{
+			Resources: model.Resources{
+				Rock: 5,
+				Wood: 10,
+				Oil: 4,
+				Copper: 1,
+				WoodPlank: 2,
+			},
 			Cast: 1,
 		},
 		UpgradeCitizen: model.CostResponse{
+			Resources: model.Resources{
+				Rock: 5,
+				Wood: 5,
+				Food: 2,
+				Copper: 1,
+				WoodPlank: 1,
+			},
 			Cast: 1,
 		},
 		UpgradeTurret: model.CostResponse{
+			Resources: model.Resources{
+				Rock: 10,
+				Wood: 5,
+				Oil: 4,
+				Copper: 3,
+				WoodPlank: 1,
+			},
 			Cast: 1,
 		},
 	})
