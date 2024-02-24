@@ -22,6 +22,8 @@ A web server is opened at port `1234`, while the epita-compatible creeps
 	- [ ] Add a list of games to the main menu (just be able to add ips manually at least)
 	- [ ] Be able to create/join games from a master server
 - [x] Map generation (not at all like the real one)
+- [x] Cli
+	- [ ] Accept config files (using spf13/viper)
 - [ ] Game viewer
 	- [x] Load chunks and units from the server
 	- [x] Render textures !
@@ -37,9 +39,10 @@ A web server is opened at port `1234`, while the epita-compatible creeps
 	- [x] Refine
 	- [x] Build
 	- [x] Spawn
-	- [ ] Fire (turret)
-	- [ ] Fire (bomber-bot)
-- [ ] Enemies
+	- [x] Fire (turret)
+	- [x] Fire (bomber-bot)
+- [x] Enemies
+	- [ ] Make them get stronger and stronger (whatever that means)
 - [ ] Garbage collector
 - [ ] LOTS OF TESTING (and tests? lol)
 - [ ] More techtree stuff like machine guns or nuclear bombs (really important) for pvp
