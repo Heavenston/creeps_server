@@ -127,7 +127,6 @@ func (raider *RaiderUnit) Tick() {
 
 	diff := raider.target.Sub(position)
 	newAction := new(Action)
-	newAction.StartedAtTick = raider.GetServer().Ticker().GetTickNumber()
 
 	if mathutils.AbsInt(diff.X) > mathutils.AbsInt(diff.Y) {
 		if diff.X < 0 {

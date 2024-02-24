@@ -214,6 +214,7 @@ func (unit *unit) startAction(action *Action, supported []ActionOpCode) error {
 		}
 	}
 
+	action.StartedAtTick = unit.server.Ticker().GetTickNumber()
 	unit.lastAction.Store(action)
 
 	unit.server.Events().Emit(&UnitStartedActionEvent{

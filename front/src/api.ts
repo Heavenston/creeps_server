@@ -16,15 +16,64 @@ export type Point = {
   y: number,
 }
 
+export type Action = {
+  actionOpCode: string,
+  reportId: string,
+}
+
+export type Resources = {
+	rock: number,
+	wood: number,
+	food: number,
+	oil: number,
+	copper: number,
+	woodPlank: number,
+}
+
+export type Cost = Resources & {
+  cast: number,
+}
+
+export type Costs = {
+  [action: string]: undefined | Cost,
+}
+
+export function getActionCost(opcode: string): Cost|null {
+  const initMsg = getInitMessage();
+  if (!initMsg)
+    return null;
+
+  let name = null;
+  switch (opcode) {
+    case "move:left":
+    case "move:right":
+    case "move:up":
+    case "move:down":
+      name = "move";
+      break
+  }
+  if (name == null)
+    return null;
+  return initMsg.content.costs[name] ?? null;
+}
+
 export type InitMessage = {
   kind: "init",
   content: {
     chunkSize: number,
+    costs: Costs,
     // TODO: describe
-    costs: unknown,
-    // TODO: describe
-    setup: unknown,
+    setup: {
+      ticksPerSeconds: number,
+    },
   }
+}
+
+export function getSecondsPerTicks(): number {
+  const init = getInitMessage();
+  if (!init)
+    return 1;
+  return 1 / init.content.setup.ticksPerSeconds;
 }
 
 export type SubscribeMessage = {
@@ -69,6 +118,13 @@ export type UnitMessage = {
   }
 }
 
+export type UnitDespawnedMessage = {
+  kind: "unitDespawned",
+  content: {
+    unitId: string,
+  }
+}
+
 export type UnitMovementMessage = {
   kind: "unitMovement",
   content: {
@@ -77,10 +133,20 @@ export type UnitMovementMessage = {
   }
 }
 
-export type UnitDespawnedMessage = {
-  kind: "unitDespawned",
+export type UnitStartedActionMessage = {
+  kind: "unitStartedAction",
   content: {
     unitId: string,
+    action: Action,
+  }
+}
+
+export type UnitFinishedActionMessage = {
+  kind: "unitFinishedAction",
+  content: {
+    unitId: string,
+    action: Action,
+    success: boolean,
   }
 }
 
@@ -109,6 +175,8 @@ export type RecvMessage =
   | UnitMessage
   | UnitMovementMessage
   | UnitDespawnedMessage
+  | UnitStartedActionMessage
+  | UnitFinishedActionMessage
   | PlayerSpawnMessage
   | PlayerDespawnMessage;
 export type SendMessage = SubscribeMessage | UnsubscribeMessage;
