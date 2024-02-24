@@ -38,19 +38,7 @@ export class UnitRenderer implements IRenderer {
           this.lastUnitMessage.delete(event.message.content.unitId);
           break;
         }
-        case "unitMovement": {
-          console.log("movement")
-          const unit = this.lastUnitMessage.get(event.message.content.unitId);
-          if (!unit) {
-            console.warn("received unit movement for unkown unit ", event.message);
-            break;
-          }
-          unit.content.position = event.message.content.new;
-          break;
-        }
         case "unitStartedAction": {
-          if (event.message.content.action.actionOpCode.startsWith("move:"))
-            console.log("move actino", event.message.content)
           this.unitsActions.set(event.message.content.unitId, {
             action: event.message.content.action,
             elapsed: 0,
@@ -59,8 +47,15 @@ export class UnitRenderer implements IRenderer {
           break;
         }
         case "unitFinishedAction": {
-          if (event.message.content.action.actionOpCode.startsWith("move:"))
-            console.log("finished move action ", event.message.content)
+          if (event.message.content.newPosition) {
+            const unit = this.lastUnitMessage.get(event.message.content.unitId);
+            if (!unit) {
+              console.warn("received finished action for unkown unit", event.message);
+              break;
+            }
+            unit.content.position = event.message.content.newPosition;
+          }
+
           const act = this.unitsActions.get(event.message.content.unitId);
           if (!act) {
             console.warn("received finished action for unkown action", event.message);

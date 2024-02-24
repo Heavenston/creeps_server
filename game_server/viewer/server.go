@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"creeps.heav.fr/epita_api/model"
 	. "creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
 	"creeps.heav.fr/server/entities"
@@ -214,15 +215,6 @@ func (viewer *ViewerServer) handleClientSubscription(
 					conn.setIsUnitKnown(e.Unit.GetId(), false)
 					break
 				}
-
-				if sendUnit(e.Unit) {
-					break
-				}
-
-				sendMessage("unitMovement", unitMovementContent{
-					UnitId: e.Unit.GetId(),
-					New:    e.To,
-				})
 			}
 			if e, ok := event.(*server.UnitStartedActionEvent); ok {
 				// note: we do skip the action...
@@ -245,7 +237,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 					break
 				}
 
-				sendMessage("unitFinishedAction", unitFinishedActionContent{
+				content := unitFinishedActionContent{
 					UnitId: e.Unit.GetId(),
 					Action: actionData{
 						ActionOpCode: e.Action.OpCode,
@@ -253,7 +245,13 @@ func (viewer *ViewerServer) handleClientSubscription(
 					},
 					// FIXME: MAGIC STRING HAHAH
 					Success: e.Report.GetReport().Status == "SUCCESS",
-				})
+				}
+
+				if mr, ok := e.Report.(*model.MoveReport); ok {
+					content.NewPosition = &mr.NewPosition
+				}
+
+				sendMessage("unitFinishedAction", content)
 			}
 			if e, ok := event.(*entities.PlayerSpawnEvent); ok {
 				sendPlayer(e.Player)

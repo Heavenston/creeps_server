@@ -125,14 +125,6 @@ export type UnitDespawnedMessage = {
   }
 }
 
-export type UnitMovementMessage = {
-  kind: "unitMovement",
-  content: {
-    unitId: string,
-    "new": Point,
-  }
-}
-
 export type UnitStartedActionMessage = {
   kind: "unitStartedAction",
   content: {
@@ -147,6 +139,7 @@ export type UnitFinishedActionMessage = {
     unitId: string,
     action: Action,
     success: boolean,
+    newPosition?: Point,
   }
 }
 
@@ -173,7 +166,6 @@ export type RecvMessage =
   | FullchunkMessage
   | TileChangeMessage
   | UnitMessage
-  | UnitMovementMessage
   | UnitDespawnedMessage
   | UnitStartedActionMessage
   | UnitFinishedActionMessage

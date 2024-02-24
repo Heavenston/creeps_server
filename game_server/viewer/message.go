@@ -58,20 +58,16 @@ type unitDespawnContent struct {
 	UnitId uid.Uid `json:"unitId"`
 }
 
-type unitMovementContent struct {
-	UnitId uid.Uid `json:"unitId"`
-	New    Point   `json:"new"`
-}
-
 type unitStartedActionContent struct {
 	UnitId uid.Uid    `json:"unitId"`
 	Action actionData `json:"action"`
 }
 
 type unitFinishedActionContent struct {
-	UnitId  uid.Uid    `json:"unitId"`
-	Action  actionData `json:"action"`
-	Success bool
+	UnitId      uid.Uid    `json:"unitId"`
+	Action      actionData `json:"action"`
+	Success     bool       `json:"success"`
+	NewPosition *Point     `json:"newPosition,omitempty"`
 }
 
 type playerSpawnContent struct {
