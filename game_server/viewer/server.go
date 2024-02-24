@@ -36,6 +36,22 @@ type connection struct {
 	knownPlayers map[uid.Uid]bool
 }
 
+func (conn *connection) setIsUnitKnown(id uid.Uid, known bool) {
+	conn.unitsLock.Lock()
+	defer conn.unitsLock.Unlock()
+	if known {
+		conn.knownUnits[id] = true
+	} else {
+		delete(conn.knownUnits, id)
+	}
+}
+
+func (conn *connection) subedToChunk(chunk Point) bool {
+	conn.chunksLock.RLock()
+	defer conn.chunksLock.RUnlock()
+	return conn.subscribedChunks[chunk]
+}
+
 func (viewer *ViewerServer) handleClientSubscription(
 	chunkPos Point,
 	conn *connection,
@@ -143,10 +159,22 @@ func (viewer *ViewerServer) handleClientSubscription(
 	}
 
 	for {
-		conn.chunksLock.RLock()
-		stillSubed := conn.subscribedChunks[chunkPos]
-		conn.chunksLock.RUnlock()
+		stillSubed := conn.subedToChunk(chunkPos)
 		if !stillSubed {
+			conn.unitsLock.Lock()
+
+			for _, entity := range viewer.Server.Entities().GetAllIntersects(aabb) {
+				id := entity.GetId()
+				if !conn.knownUnits[id] {
+					continue
+				}
+				sendMessage("unitDespawned", unitDespawnContent{
+					UnitId: id,
+				})
+				delete(conn.knownUnits, id)
+			}
+
+			conn.unitsLock.Unlock()
 			break
 		}
 
@@ -175,11 +203,18 @@ func (viewer *ViewerServer) handleClientSubscription(
 				sendMessage("unitDespawned", unitDespawnContent{
 					UnitId: e.Unit.GetId(),
 				})
-				conn.unitsLock.Lock()
-				delete(conn.knownUnits, e.Unit.GetId())
-				conn.unitsLock.Unlock()
+				conn.setIsUnitKnown(e.Unit.GetId(), false)
 			}
 			if e, ok := event.(*server.UnitMovedEvent); ok {
+				newChunk := terrain.Global2ContainingChunkCoords(e.To)
+				if newChunk != chunkPos && !conn.subedToChunk(newChunk) {
+					sendMessage("unitDespawned", unitDespawnContent{
+						UnitId: e.Unit.GetId(),
+					})
+					conn.setIsUnitKnown(e.Unit.GetId(), false)
+					break
+				}
+
 				if !sendUnit(e.Unit) {
 					sendMessage("unitMovement", unitMovementContent{
 						UnitId: e.Unit.GetId(),

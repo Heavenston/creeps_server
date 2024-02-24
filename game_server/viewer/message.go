@@ -55,7 +55,7 @@ type unitUpgradedContent struct {
 	UnitId uid.Uid `json:"unitId"`
 }
 
-// sent by the server
+// sent by the server when a unit dies or gets out of the subscribed chunks
 type unitDespawnContent struct {
 	UnitId uid.Uid `json:"unitId"`
 }
