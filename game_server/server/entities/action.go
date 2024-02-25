@@ -56,7 +56,7 @@ func observe(unit IUnit, into *model.ObserveReport) {
 func refine(
 	unit IUnit,
 	requiredTile terrain.TileKind,
-	from model.ResourceKind,
+	cost *model.CostResponse,
 	to model.ResourceKind,
 ) (report model.IReport) {
 	server := unit.GetServer()
@@ -81,16 +81,15 @@ func refine(
 	}
 
 	player.ModifyResources(func(resources model.Resources) model.Resources {
-		ptr := resources.OfKind(from)
-		if *ptr <= 0 {
+		if resources.EnoughFor(cost.Resources) < 1 {
 			report = &model.ErrorReport{
+				Error:     "Not enough resources",
 				ErrorCode: "insufficient-funds",
-				Error:     fmt.Sprintf("Missing one %s to make one %s", from, to),
 			}
 			return resources
 		}
 
-		(*ptr)--
+		resources.Remove(cost.Resources)
 
 		(*resources.OfKind(to))++
 
@@ -434,9 +433,9 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 
 		report = &model.UpgradeReport{}
 	case OpCodeRefineCopper:
-		report = refine(unit, terrain.TileSmeltery, model.Rock, model.Copper)
+		report = refine(unit, terrain.TileSmeltery, &server.GetCosts().RefineCopper, model.Copper)
 	case OpCodeRefineWoodPlank:
-		report = refine(unit, terrain.TileSawMill, model.Wood, model.WoodPlank)
+		report = refine(unit, terrain.TileSawMill, &server.GetCosts().RefineWoodPlank, model.WoodPlank)
 	case OpCodeBuildTownHall:
 		report = build(unit, "town-hall", &server.GetCosts().BuildTownHall, terrain.TileTownHall)
 	case OpCodeBuildHousehold:
