@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	. "creeps.heav.fr/server"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog/log"

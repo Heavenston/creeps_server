@@ -5,12 +5,12 @@ import (
 	"math"
 	"time"
 
-	"creeps.heav.fr/epita_api"
-	"lib.creeps.heav.fr/model"
-	. "lib.creeps.heav.fr/geom"
-	. "creeps.heav.fr/server"
-	. "lib.creeps.heav.fr/terrain"
-	"creeps.heav.fr/viewer"
+	"github.com/heavenston/creeps_server/creeps_server/epita_api"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
+	. "github.com/heavenston/creeps_server/creeps_lib/terrain"
+	"github.com/heavenston/creeps_server/creeps_server/viewer"
 )
 
 func startServ() {

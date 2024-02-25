@@ -3,7 +3,7 @@ package terrain
 import (
 	"io"
 
-	"lib.creeps.heav.fr/model"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/fatih/color"
 )
 

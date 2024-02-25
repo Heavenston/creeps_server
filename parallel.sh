@@ -8,7 +8,7 @@ PIDS=""
 
 make -C front $1 &
 PIDS="$! $PIDS"
-make -C game_server $1 &
+make -C creeps_server $1 &
 PIDS="$! $PIDS"
 
 killall() {

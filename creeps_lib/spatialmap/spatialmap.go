@@ -3,8 +3,8 @@ package spatialmap
 import (
 	"sync"
 
-	"lib.creeps.heav.fr/events"
-	. "lib.creeps.heav.fr/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/events"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 )
 
 type ObjectMovedEvent struct {

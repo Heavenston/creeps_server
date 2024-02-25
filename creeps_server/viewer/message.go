@@ -3,10 +3,10 @@ package viewer
 import (
 	"encoding/json"
 
-	"lib.creeps.heav.fr/model"
-	. "lib.creeps.heav.fr/geom"
-	"creeps.heav.fr/server"
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 )
 
 type message struct {

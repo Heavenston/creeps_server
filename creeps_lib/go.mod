@@ -1,4 +1,4 @@
-module lib.creeps.heav.fr
+module github.com/heavenston/creeps_server/creeps_lib
 
 go 1.22.0
 

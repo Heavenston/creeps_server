@@ -9,10 +9,10 @@ import (
 	"reflect"
 	"strings"
 
-	"lib.creeps.heav.fr/model"
-	"creeps.heav.fr/server"
-	"creeps.heav.fr/server/entities"
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	"github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_server/server/entities"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )

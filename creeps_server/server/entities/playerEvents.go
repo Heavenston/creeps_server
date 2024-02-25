@@ -1,8 +1,8 @@
 package entities
 
 import (
-	. "lib.creeps.heav.fr/geom"
-	. "creeps.heav.fr/server"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 )
 
 type PlayerSpawnEvent struct {

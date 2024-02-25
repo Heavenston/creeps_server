@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"strings"
 
-	"lib.creeps.heav.fr/model"
-	"creeps.heav.fr/gameplay"
-	. "lib.creeps.heav.fr/geom"
-	"creeps.heav.fr/server"
-	"creeps.heav.fr/server/entities"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	"github.com/heavenston/creeps_server/creeps_server/gameplay"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_server/server/entities"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"

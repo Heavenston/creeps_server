@@ -6,12 +6,12 @@ import (
 	"reflect"
 	"sync"
 
-	"lib.creeps.heav.fr/model"
-	"lib.creeps.heav.fr/events/spatialevents"
-	. "lib.creeps.heav.fr/geom"
-	"lib.creeps.heav.fr/terrain"
-	"lib.creeps.heav.fr/spatialmap"
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	"github.com/heavenston/creeps_server/creeps_lib/events/spatialevents"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
+	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/rs/zerolog/log"
 )
 

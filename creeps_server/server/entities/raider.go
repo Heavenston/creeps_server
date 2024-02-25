@@ -3,12 +3,12 @@ package entities
 import (
 	"sync"
 
-	"lib.creeps.heav.fr/model"
-	. "lib.creeps.heav.fr/geom"
-	mathutils "lib.creeps.heav.fr/math_utils"
-	. "creeps.heav.fr/server"
-	"lib.creeps.heav.fr/terrain"
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/rs/zerolog/log"
 )
 

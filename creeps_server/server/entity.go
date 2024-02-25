@@ -3,10 +3,10 @@ package server
 import (
 	"sync"
 
-	"lib.creeps.heav.fr/events"
-	. "lib.creeps.heav.fr/geom"
-	"lib.creeps.heav.fr/spatialmap"
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/events"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/rs/zerolog/log"
 )
 

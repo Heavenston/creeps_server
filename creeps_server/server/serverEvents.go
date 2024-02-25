@@ -1,11 +1,11 @@
 package server
 
 import (
-	"lib.creeps.heav.fr/model"
-	"lib.creeps.heav.fr/events"
-	. "lib.creeps.heav.fr/geom"
-	mathutils "lib.creeps.heav.fr/math_utils"
-	"lib.creeps.heav.fr/spatialmap"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	"github.com/heavenston/creeps_server/creeps_lib/events"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
+	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
 )
 
 // utility struct embedded into all server events to auto-implement the functions

@@ -1,10 +1,10 @@
 package gameplay
 
 import (
-	. "lib.creeps.heav.fr/geom"
-	"creeps.heav.fr/server"
-	"creeps.heav.fr/server/entities"
-	"lib.creeps.heav.fr/terrain"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_server/server/entities"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 )
 
 // Spawns the given player town hall and everything it needs

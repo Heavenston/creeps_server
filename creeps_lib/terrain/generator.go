@@ -3,7 +3,7 @@ package terrain
 import (
 	"math/rand"
 
-	"lib.creeps.heav.fr/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/geom"
 	simplex "github.com/ojrac/opensimplex-go"
 )
 

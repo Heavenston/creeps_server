@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )

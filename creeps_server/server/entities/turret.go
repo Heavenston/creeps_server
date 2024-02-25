@@ -3,9 +3,9 @@ package entities
 import (
 	"sync"
 
-	"lib.creeps.heav.fr/model"
-	. "creeps.heav.fr/server"
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 )
 
 type TurretUnit struct {

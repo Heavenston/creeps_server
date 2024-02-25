@@ -1,12 +1,12 @@
 package entities
 
 import (
-	"lib.creeps.heav.fr/events"
-	. "lib.creeps.heav.fr/geom"
-	. "creeps.heav.fr/server"
-	"lib.creeps.heav.fr/terrain"
-	"lib.creeps.heav.fr/spatialmap"
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/events"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
+	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/rs/zerolog/log"
 )
 

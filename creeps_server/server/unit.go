@@ -3,9 +3,9 @@ package server
 import (
 	"fmt"
 
-	"lib.creeps.heav.fr/model"
-	. "lib.creeps.heav.fr/geom"
-	"lib.creeps.heav.fr/uid"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 )
 
 type UnitBusyError struct{}

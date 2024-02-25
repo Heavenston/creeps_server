@@ -5,9 +5,9 @@ import (
 	"io"
 	"sync"
 
-	"lib.creeps.heav.fr/events"
-	. "lib.creeps.heav.fr/geom"
-	mathutils "lib.creeps.heav.fr/math_utils"
+	"github.com/heavenston/creeps_server/creeps_lib/events"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
 )
 
 type TilemapUpdateEvent struct {
