@@ -1,11 +1,11 @@
 
-build_front:
-	@make -C front build
-
 dev:
-	./parallel.sh dev
+	@./parallel.sh dev
+
+serve:
+	@./parallel.sh serve
 
 clean:
-	make -C front clean
+	@./parallel.sh clean
 
-.PHONY: dev build_front clean
+.PHONY: dev serve clean

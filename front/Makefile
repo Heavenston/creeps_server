@@ -8,13 +8,16 @@ node_modules: package.json package-lock.json
 src_files := $(shell find src -name "*.ts" -o -name "*.html" -o -name "*.css")
 
 dist: node_modules ${src_files}
-	npm run build
+	npm run build > /dev/null
 
 dev: node_modules
 	npm run dev
+
+serve: dist
+	npm run serve
 
 clean:
 	rm -rf dist
 	rm -rf .parcel-cache
 
-.PHONY: build clean
+.PHONY: build clean serve

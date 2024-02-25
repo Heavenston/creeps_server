@@ -1,15 +1,16 @@
 {
   "name": "creeps_front",
   "type": "module",
+  "source": "src/index.html",
   "devDependencies": {
     "@types/node": "^20.11.19",
     "parcel": "^2.11.0",
     "parcel-reporter-static-files-copy": "^1.5.3"
   },
   "scripts": {
-    "dev": "parcel src/index.html",
-    "build": "parcel build src/index.html",
-    "serve": "parcel serve src/index.html"
+    "dev": "parcel",
+    "build": "parcel build",
+    "serve": "parcel serve"
   },
   "dependencies": {
     "minze": "^1.10.1",

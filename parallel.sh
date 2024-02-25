@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# scripts to execute make $1 on all subfolder at the same time
+# script to execute `make $1` on all subfolder at the same time
 
 stty -tostop
 
@@ -12,7 +12,7 @@ make -C game_server $1 &
 PIDS="$! $PIDS"
 
 killall() {
-    kill $PIDS
+    kill $PIDS &> /dev/null
 }
 
 trap killall EXIT
