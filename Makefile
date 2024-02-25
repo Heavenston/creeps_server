@@ -3,7 +3,7 @@ build_front:
 	@make -C front build
 
 dev:
-	./dev.sh
+	./parallel.sh dev
 
 clean:
 	make -C front clean
