@@ -254,10 +254,14 @@ func (viewer *ViewerServer) handleClientSubscription(
 				sendPlayer(e.Player)
 			}
 			if e, ok := event.(*entities.PlayerDespawnEvent); ok {
+				conn.playersLock.Lock()
+				// don't double send
+				if !conn.knownPlayers[e.Player.GetId()] {
+					break
+				}
 				sendMessage("playerDespawn", playerDespawnContent{
 					Id: e.Player.GetId(),
 				})
-				conn.playersLock.Lock()
 				delete(conn.knownPlayers, e.Player.GetId())
 				conn.playersLock.Unlock()
 			}
