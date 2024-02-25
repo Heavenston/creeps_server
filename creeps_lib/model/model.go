@@ -3,9 +3,9 @@ package model
 import (
 	"math"
 
-	"creeps.heav.fr/geom"
-	mathutils "creeps.heav.fr/math_utils"
-	"creeps.heav.fr/uid"
+	"lib.creeps.heav.fr/geom"
+	mathutils "lib.creeps.heav.fr/math_utils"
+	"lib.creeps.heav.fr/uid"
 )
 
 type ResourceKind string

@@ -1,6 +1,6 @@
 package model
 
-import "creeps.heav.fr/geom"
+import "lib.creeps.heav.fr/geom"
 
 type MessageSendParameter struct {
     Recipient string `json:"recipient"`

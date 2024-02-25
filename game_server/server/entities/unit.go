@@ -5,13 +5,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"creeps.heav.fr/epita_api/model"
-	"creeps.heav.fr/events"
-	. "creeps.heav.fr/geom"
+	"lib.creeps.heav.fr/model"
+	"lib.creeps.heav.fr/events"
+	. "lib.creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
 	. "creeps.heav.fr/server"
-	"creeps.heav.fr/spatialmap"
-	"creeps.heav.fr/uid"
+	"lib.creeps.heav.fr/spatialmap"
+	"lib.creeps.heav.fr/uid"
 )
 
 type extendedUnit interface {

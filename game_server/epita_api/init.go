@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"creeps.heav.fr/epita_api/model"
+	"lib.creeps.heav.fr/model"
 	"creeps.heav.fr/gameplay"
-	. "creeps.heav.fr/geom"
+	. "lib.creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
 	"creeps.heav.fr/server/entities"
 

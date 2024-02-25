@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	. "creeps.heav.fr/geom"
-	mathutils "creeps.heav.fr/math_utils"
+	. "lib.creeps.heav.fr/geom"
+	mathutils "lib.creeps.heav.fr/math_utils"
 	"github.com/rs/zerolog/log"
 )
 
@@ -65,27 +65,19 @@ func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *TilemapChunk {
 	return tilemap.chunks[chunkPos]
 }
 
-// func (t Tilemap) GetOrCreateChunk(p Point) tilemapChunk {
-// 	_, ok := t.chunks[p]
-// 	if !ok {
-// 		t.chunks[p] = tilemapChunk{}
-// 	}
-// 	return t.chunks[p]
-// }
-
-// Gets read access on the chunk and returns the value of the chunk
+// Generate the chunk if needed and calls terrain.Chunk.GetTile
 func (t *Tilemap) GetTile(p Point) Tile {
 	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
 	return chunk.GetTile(Global2ChunkSubCoords(p))
 }
 
-// Gets write access on the chunk, the sets the given tile to the given value
-// returning its previous value
+// Generate the chunk if needed and calls terrain.Chunk.SetTile
 func (t *Tilemap) SetTile(p Point, newVal Tile) Tile {
 	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
 	return chunk.SetTile(Global2ChunkSubCoords(p), newVal)
 }
 
+// Generate the chunk if needed and calls terrain.Chunk.ModifyTile
 func (t *Tilemap) ModifyTile(p Point, cb func (Tile) Tile) {
 	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
 	chunk.ModifyTile(Global2ChunkSubCoords(p), cb)

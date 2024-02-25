@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"creeps.heav.fr/epita_api/model"
+	"lib.creeps.heav.fr/model"
 	"github.com/rs/zerolog/log"
 )
 

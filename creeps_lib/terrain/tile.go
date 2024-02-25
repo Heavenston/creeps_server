@@ -3,12 +3,14 @@ package terrain
 import (
 	"io"
 
-	"creeps.heav.fr/epita_api/model"
+	"lib.creeps.heav.fr/model"
 	"github.com/fatih/color"
 )
 
 type TileKind uint8
 
+// follows epita's values
+// so only add new ones do not change existing ones
 const (
 	TileGrass TileKind = iota
 	TileWater

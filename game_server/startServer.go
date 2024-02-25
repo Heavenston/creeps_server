@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"creeps.heav.fr/epita_api"
-	"creeps.heav.fr/epita_api/model"
-	. "creeps.heav.fr/geom"
+	"lib.creeps.heav.fr/model"
+	. "lib.creeps.heav.fr/geom"
 	. "creeps.heav.fr/server"
-	. "creeps.heav.fr/server/terrain"
+	. "lib.creeps.heav.fr/terrain"
 	"creeps.heav.fr/viewer"
 )
 

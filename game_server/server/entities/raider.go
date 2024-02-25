@@ -3,12 +3,12 @@ package entities
 import (
 	"sync"
 
-	"creeps.heav.fr/epita_api/model"
-	. "creeps.heav.fr/geom"
-	mathutils "creeps.heav.fr/math_utils"
+	"lib.creeps.heav.fr/model"
+	. "lib.creeps.heav.fr/geom"
+	mathutils "lib.creeps.heav.fr/math_utils"
 	. "creeps.heav.fr/server"
-	"creeps.heav.fr/server/terrain"
-	"creeps.heav.fr/uid"
+	"lib.creeps.heav.fr/terrain"
+	"lib.creeps.heav.fr/uid"
 	"github.com/rs/zerolog/log"
 )
 

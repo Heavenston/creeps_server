@@ -3,10 +3,10 @@ package viewer
 import (
 	"encoding/json"
 
-	"creeps.heav.fr/epita_api/model"
-	. "creeps.heav.fr/geom"
+	"lib.creeps.heav.fr/model"
+	. "lib.creeps.heav.fr/geom"
 	"creeps.heav.fr/server"
-	"creeps.heav.fr/uid"
+	"lib.creeps.heav.fr/uid"
 )
 
 type message struct {

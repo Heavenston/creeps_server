@@ -1,11 +1,11 @@
 package server
 
 import (
-	"creeps.heav.fr/epita_api/model"
-	"creeps.heav.fr/events"
-	. "creeps.heav.fr/geom"
-	mathutils "creeps.heav.fr/math_utils"
-	"creeps.heav.fr/spatialmap"
+	"lib.creeps.heav.fr/model"
+	"lib.creeps.heav.fr/events"
+	. "lib.creeps.heav.fr/geom"
+	mathutils "lib.creeps.heav.fr/math_utils"
+	"lib.creeps.heav.fr/spatialmap"
 )
 
 // utility struct embedded into all server events to auto-implement the functions

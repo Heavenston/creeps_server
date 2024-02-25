@@ -1,9 +1,9 @@
 package spatialevents
 
 import (
-	"creeps.heav.fr/events"
-	. "creeps.heav.fr/geom"
-	"creeps.heav.fr/spatialmap"
+	"lib.creeps.heav.fr/events"
+	. "lib.creeps.heav.fr/geom"
+	"lib.creeps.heav.fr/spatialmap"
 )
 
 type sub[T any] struct {

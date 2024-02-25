@@ -1,8 +1,8 @@
 package model
 
 import (
-	"creeps.heav.fr/geom"
-	"creeps.heav.fr/uid"
+	"lib.creeps.heav.fr/geom"
+	"lib.creeps.heav.fr/uid"
 )
 
 // used by some reports

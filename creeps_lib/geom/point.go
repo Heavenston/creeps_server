@@ -3,7 +3,7 @@ package geom
 import (
 	"sync"
 
-	mathutils "creeps.heav.fr/math_utils"
+	mathutils "lib.creeps.heav.fr/math_utils"
 )
 
 type AtomicPoint struct {

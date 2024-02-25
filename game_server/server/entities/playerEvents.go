@@ -1,7 +1,7 @@
 package entities
 
 import (
-	. "creeps.heav.fr/geom"
+	. "lib.creeps.heav.fr/geom"
 	. "creeps.heav.fr/server"
 )
 

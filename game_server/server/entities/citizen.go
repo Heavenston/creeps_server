@@ -3,9 +3,9 @@ package entities
 import (
 	"sync"
 
-	"creeps.heav.fr/epita_api/model"
+	"lib.creeps.heav.fr/model"
 	. "creeps.heav.fr/server"
-	"creeps.heav.fr/uid"
+	"lib.creeps.heav.fr/uid"
 	"github.com/rs/zerolog/log"
 )
 

@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"sync/atomic"
 
-	"creeps.heav.fr/epita_api/model"
-	. "creeps.heav.fr/geom"
-	"creeps.heav.fr/uid"
+	"lib.creeps.heav.fr/model"
+	. "lib.creeps.heav.fr/geom"
+	"lib.creeps.heav.fr/uid"
 )
 
 type ActionOpCode string
