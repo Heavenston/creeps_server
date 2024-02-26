@@ -2,6 +2,7 @@ package server
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -12,7 +13,7 @@ type TickFunc func()
 type Ticker struct {
 	ticksPerSeconds float64
 
-	tickNumber int
+	tickNumber atomic.Int32
 	startedAt  time.Time
 
 	tickFuncsLock sync.RWMutex
@@ -26,7 +27,6 @@ type Ticker struct {
 func NewTicker(ticksPerSeconds float64) *Ticker {
 	ticker := new(Ticker)
 	ticker.startedAt = time.Now()
-	ticker.tickNumber = 0
 	ticker.ticksPerSeconds = ticksPerSeconds
 	return ticker
 }
@@ -63,12 +63,12 @@ func (ticker *Ticker) Start() {
 		log.Trace().TimeDiff("took", time.Now(), start).Msg("Finished tick")
 
 		_ = <-time_ticker.C
-		ticker.tickNumber++
+		ticker.tickNumber.Add(1)
 	}
 }
 
 func (ticker *Ticker) GetTickNumber() int {
-	return ticker.tickNumber
+	return int(ticker.tickNumber.Load())
 }
 
 func (ticker *Ticker) AddTickFunc(f TickFunc) {
