@@ -91,12 +91,20 @@ func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *Chunk {
 	// we do have write lock to chunk so we know no race-condition is possible
 	chunk.isGenerated.Store(true)
 
+	chunk.UpdatedEventProvider.Emit(GeneratedChunkEvent{})
+
 	return chunk
 }
 
 // Generate the chunk if needed and calls terrain.Chunk.GetTile
 func (t *Tilemap) GetTile(p Point) Tile {
 	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
+	return chunk.GetTile(Global2ChunkSubCoords(p))
+}
+
+// Like GetTile but won't generate the chunk if unavailable
+func (t *Tilemap) TryGetTile(p Point) Tile {
+	chunk := t.CreateChunk(Global2ContainingChunkCoords(p))
 	return chunk.GetTile(Global2ChunkSubCoords(p))
 }
 

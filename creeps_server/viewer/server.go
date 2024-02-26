@@ -56,14 +56,9 @@ func (viewer *ViewerServer) handleClientSubscription(
 	chunkPos Point,
 	conn *connection,
 ) {
-	chunk := viewer.Server.Tilemap().GetChunk(chunkPos)
-	if chunk == nil {
-		// FIXME: DO NOT GENERATE, maybe create the object but still to-be-generated
-		//        as we still need to be notified when it is generated
-		chunk = viewer.Server.Tilemap().GenerateChunk(chunkPos)
-	}
+	chunk := viewer.Server.Tilemap().CreateChunk(chunkPos)
 
-	terrainChangeChannel := make(chan terrain.TilemapUpdateEvent, 64)
+	terrainChangeChannel := make(chan any, 64)
 	terrainCancelHandle := chunk.UpdatedEventProvider.Subscribe(terrainChangeChannel)
 	defer terrainCancelHandle.Cancel()
 
@@ -95,6 +90,10 @@ func (viewer *ViewerServer) handleClientSubscription(
 
 	// send full chunk
 	sendTerrain := func() {
+		if !chunk.IsGenerated() {
+			return
+		}
+
 		tiles := make([]byte, 2*terrain.ChunkSize*terrain.ChunkSize)
 		for y := 0; y < terrain.ChunkSize; y++ {
 			for x := 0; x < terrain.ChunkSize; x++ {
@@ -188,17 +187,22 @@ func (viewer *ViewerServer) handleClientSubscription(
 		}
 
 		select {
-		case change, ok := (<-terrainChangeChannel):
+		case event, ok := (<-terrainChangeChannel):
 			if !ok {
 				log.Trace().Msg("terrain channel closed")
 				break
 			}
 
-			sendMessage("tileChange", tileChangeContent{
-				TilePos: change.UpdatedPosition.Add(chunkPos.Times(terrain.ChunkSize)),
-				Kind:    byte(change.NewValue.Kind),
-				Value:   change.NewValue.Value,
-			})
+			if change, ok := event.(terrain.TileUpdateChunkEvent); ok {
+				sendMessage("tileChange", tileChangeContent{
+					TilePos: change.UpdatedPosition.Add(chunkPos.Times(terrain.ChunkSize)),
+					Kind:    byte(change.NewValue.Kind),
+					Value:   change.NewValue.Value,
+				})
+			}
+			if _, ok := event.(terrain.GeneratedChunkEvent); ok {
+				sendTerrain()
+			}
 		case event, ok := (<-serverEventsChannel):
 			if !ok {
 				log.Trace().Msg("server events channel closed")

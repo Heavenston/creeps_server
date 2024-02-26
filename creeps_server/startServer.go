@@ -194,6 +194,11 @@ func startServ() {
 	}
 	go viewer_server.Start()
 
+	tilemap.GenerateChunk(Point { X: 0, Y: 0 })
+	tilemap.GenerateChunk(Point { X: 0, Y: -1 })
+	tilemap.GenerateChunk(Point { X: -1, Y: 0 })
+	tilemap.GenerateChunk(Point { X: -1, Y: -1 })
+
 	srv.Start()
 }
 

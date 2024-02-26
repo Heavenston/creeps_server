@@ -11,11 +11,13 @@ import (
 	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
 )
 
-type TilemapUpdateEvent struct {
+type TileUpdateChunkEvent struct {
 	UpdatedPosition Point
 	PreviousValue Tile
 	NewValue Tile
 }
+
+type GeneratedChunkEvent struct {}
 
 type Chunk struct {
 	isGenerated atomic.Bool
@@ -23,7 +25,7 @@ type Chunk struct {
 	// guards tiles
 	tileslock sync.RWMutex
 	tiles [ChunkTileCount]Tile
-	UpdatedEventProvider events.EventProvider[TilemapUpdateEvent]
+	UpdatedEventProvider events.EventProvider[any]
 }
 
 type ReadLockedChunk struct {
@@ -82,6 +84,10 @@ func (chunk *Chunk) GetChunkPos() Point {
 	return chunk.chunkPos
 }
 
+func (chunk *Chunk) IsGenerated() bool {
+	return chunk.isGenerated.Load()
+}
+
 func (chunk *Chunk) IsInBounds(subcoord Point) bool {
     return subcoord.X >= 0 && subcoord.X < ChunkSize ||
 		subcoord.Y >= 0 || subcoord.Y < ChunkSize
@@ -125,7 +131,7 @@ func (chunk *Chunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 	chunk.tileslock.Unlock()
 
 	if newValue != prevValue {
-		chunk.UpdatedEventProvider.Emit(TilemapUpdateEvent{
+		chunk.UpdatedEventProvider.Emit(TileUpdateChunkEvent{
 			UpdatedPosition: subcoord,
 			PreviousValue: prevValue,
 			NewValue: newValue,
