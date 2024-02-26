@@ -1,4 +1,4 @@
-creeps.heav.fr:
+creeps_server:
 	go build
 
 clean:
@@ -7,7 +7,7 @@ clean:
 dev:
 	go run .
 
-serve: creeps.heav.fr
-	./creeps.heav.fr
+serve: creeps_server
+	./creeps_server
 
 .PHONY: dev serve clean

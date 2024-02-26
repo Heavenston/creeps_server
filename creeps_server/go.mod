@@ -1,15 +1,15 @@
-module github.com/heavenston/creeps_server
+module github.com/heavenston/creeps_server/creeps_server
 
 go 1.22.0
 
-replace github.com/heavenston/creeps_lib => ../creeps_lib
+replace github.com/heavenston/creeps_server/creeps_lib => ../creeps_lib
 
 require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/gorilla/websocket v1.5.1
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
-	github.com/heavenston/creeps_lib v0.0.0
+	github.com/heavenston/creeps_server/creeps_lib v0.0.0
 )
 
 require (
