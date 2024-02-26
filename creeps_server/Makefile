@@ -5,7 +5,7 @@ clean:
 	go clean
 
 dev:
-	go run . ${CREEPS_ARGS}
+	go run -race . ${CREEPS_ARGS}
 
 serve: creeps_server
 	./creeps_server ${CREEPS_ARGS}
