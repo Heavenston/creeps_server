@@ -82,7 +82,7 @@ func (gen *NoiseGenerator) sample(x int, y int) Tile {
 	}
 }
 
-func (gen *NoiseGenerator) GenerateChunk(chunkPos Point) *TilemapChunk {
+func (gen *NoiseGenerator) GenerateChunk(chunkPos Point) *Chunk {
 	chunk := NewChunk(chunkPos)
 	wcl := chunk.WLock()
 	defer wcl.UnLock()

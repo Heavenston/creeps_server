@@ -16,7 +16,7 @@ type TilemapUpdateEvent struct {
 	NewValue Tile
 }
 
-type TilemapChunk struct {
+type Chunk struct {
 	chunkPos Point
 	// guards tiles
 	tileslock sync.RWMutex
@@ -26,12 +26,12 @@ type TilemapChunk struct {
 
 type readLockedChunk struct {
     unlocked bool
-    chunk *TilemapChunk
+    chunk *Chunk
 }
 
 type writeLockedChunk struct {
     unlocked bool
-    chunk *TilemapChunk
+    chunk *Chunk
 }
 
 const ChunkSize = 32
@@ -61,8 +61,8 @@ func Global2ChunkSubCoords(tile Point) Point {
 	}
 }
 
-func NewChunk(pos Point) (chunk *TilemapChunk) {
-	chunk = new(TilemapChunk)
+func NewChunk(pos Point) (chunk *Chunk) {
+	chunk = new(Chunk)
 
 	chunk.chunkPos = pos
 	for i := range chunk.tiles {
@@ -76,21 +76,21 @@ func NewChunk(pos Point) (chunk *TilemapChunk) {
 }
 
 // the "chunk position" (world pos / chunkSize)
-func (chunk *TilemapChunk) GetChunkPos() Point {
+func (chunk *Chunk) GetChunkPos() Point {
 	return chunk.chunkPos
 }
 
-func (chunk *TilemapChunk) IsInBounds(subcoord Point) bool {
+func (chunk *Chunk) IsInBounds(subcoord Point) bool {
     return subcoord.X >= 0 && subcoord.X < ChunkSize ||
 		subcoord.Y >= 0 || subcoord.Y < ChunkSize
 }
 
-func (chunk *TilemapChunk) tileIndex(subcoord Point) int {
+func (chunk *Chunk) tileIndex(subcoord Point) int {
     return subcoord.X + subcoord.Y * ChunkSize
 }
 
 // Waits for a read access lock on the chunk and returns the value of the tile
-func (chunk *TilemapChunk) GetTile(subcoord Point) Tile {
+func (chunk *Chunk) GetTile(subcoord Point) Tile {
 	if !chunk.IsInBounds(subcoord) {
         panic("out of bound chunk tile access")
 	}
@@ -102,7 +102,7 @@ func (chunk *TilemapChunk) GetTile(subcoord Point) Tile {
 
 // Waits for a write access lock on the chunk and sets the given tile to the
 // given value, and returns the previous value
-func (chunk *TilemapChunk) SetTile(subcoord Point, newValue Tile) Tile {
+func (chunk *Chunk) SetTile(subcoord Point, newValue Tile) Tile {
 	return chunk.ModifyTile(subcoord, func(t Tile) Tile {
 		return newValue
 	})
@@ -110,7 +110,7 @@ func (chunk *TilemapChunk) SetTile(subcoord Point, newValue Tile) Tile {
 
 // Atomically modify the given tile
 // returns the pervious value
-func (chunk *TilemapChunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
+func (chunk *Chunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 	if !chunk.IsInBounds(subcoord) {
         panic("out of bound chunk tile access")
 	}
@@ -133,7 +133,7 @@ func (chunk *TilemapChunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 	return prevValue
 }
 
-func (chunk *TilemapChunk) Print(w io.Writer) {
+func (chunk *Chunk) Print(w io.Writer) {
     rlc := chunk.RLock()
 	defer rlc.UnLock()
 	for y := ChunkSize - 1; y > 0; y-- {
@@ -145,7 +145,7 @@ func (chunk *TilemapChunk) Print(w io.Writer) {
 	}
 }
 
-func (chunk *TilemapChunk) RLock() readLockedChunk {
+func (chunk *Chunk) RLock() readLockedChunk {
     chunk.tileslock.RLock()
     return readLockedChunk{
         chunk: chunk,
@@ -161,7 +161,7 @@ func (rlc *readLockedChunk) GetTile(subcoords Point) Tile {
     return rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)]
 }
 
-func (chunk *TilemapChunk) WLock() writeLockedChunk {
+func (chunk *Chunk) WLock() writeLockedChunk {
     chunk.tileslock.Lock()
     return writeLockedChunk{
         chunk: chunk,

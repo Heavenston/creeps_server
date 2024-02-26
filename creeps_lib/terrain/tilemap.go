@@ -17,20 +17,20 @@ type Tilemap struct {
 	// generator can only be accessed (for read or write) with write lock on
 	// chunkslock
 	generator IGenerator
-	chunks    map[Point]*TilemapChunk
+	chunks    map[Point]*Chunk
 }
 
 // generator can be nil in which case the default generator will be used
 func NewTilemap(generator IGenerator) Tilemap {
 	return Tilemap{
 		generator: generator,
-		chunks:    make(map[Point]*TilemapChunk),
+		chunks:    make(map[Point]*Chunk),
 	}
 }
 
 // Use GetTile and SetTile instead, this is mainly for serialization and internal use
 // if the chunk isn't generated this retuns nil
-func (tilemap *Tilemap) GetChunk(chunkPos Point) *TilemapChunk {
+func (tilemap *Tilemap) GetChunk(chunkPos Point) *Chunk {
 	tilemap.chunkslock.RLock()
 	defer tilemap.chunkslock.RUnlock()
 	return tilemap.chunks[chunkPos]
@@ -38,7 +38,7 @@ func (tilemap *Tilemap) GetChunk(chunkPos Point) *TilemapChunk {
 
 // Like GetChunk but if it would return nil this will generate the chunk using
 // the assigned generator.
-func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *TilemapChunk {
+func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *Chunk {
 	// first try to read already existing chunk
 	tilemap.chunkslock.RLock()
 	if chunk := tilemap.chunks[chunkPos]; chunk != nil {
