@@ -26,6 +26,9 @@ const (
 	TileRaiderCamp
 	TileRaiderBorder
 	TileRoad
+
+	// Used when the tile is not generated
+	TileUnknown
 )
 
 func (kind TileKind) GetResourceName() model.ResourceKind {

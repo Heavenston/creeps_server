@@ -20,6 +20,7 @@ type Tilemap struct {
 	chunks    map[Point]*TilemapChunk
 }
 
+// generator can be nil in which case the default generator will be used
 func NewTilemap(generator *ChunkGenerator) Tilemap {
 	return Tilemap{
 		generator: generator,
@@ -35,7 +36,8 @@ func (tilemap *Tilemap) GetChunk(chunkPos Point) *TilemapChunk {
 	return tilemap.chunks[chunkPos]
 }
 
-// Retuns the already known chunk or generates it
+// Like GetChunk but if it would return nil this will generate the chunk using
+// the assigned generator.
 func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *TilemapChunk {
 	// first try to read already existing chunk
 	tilemap.chunkslock.RLock()
