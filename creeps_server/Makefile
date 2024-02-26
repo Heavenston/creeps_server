@@ -5,9 +5,9 @@ clean:
 	go clean
 
 dev:
-	go run .
+	go run . ${CREEPS_ARGS}
 
 serve: creeps_server
-	./creeps_server
+	./creeps_server ${CREEPS_ARGS}
 
 .PHONY: dev serve clean

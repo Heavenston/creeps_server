@@ -74,9 +74,9 @@ func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *Chunk {
 	chunk := tilemap.CreateChunk(chunkPos)
 
 	wc := chunk.WLock()
-	defer wc.UnLock()
 
 	if chunk.isGenerated.Load() {
+		wc.UnLock()
 		return chunk
 	}
 
@@ -91,8 +91,9 @@ func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *Chunk {
 	// we do have write lock to chunk so we know no race-condition is possible
 	chunk.isGenerated.Store(true)
 
-	chunk.UpdatedEventProvider.Emit(GeneratedChunkEvent{})
+	wc.UnLock()
 
+	chunk.UpdatedEventProvider.Emit(GeneratedChunkEvent{})
 	return chunk
 }
 

@@ -1,6 +1,7 @@
 
 dev:
-	@./parallel.sh dev
+	@export CREEPS_ARGS="-vv"; \
+	./parallel.sh dev
 
 serve:
 	@./parallel.sh serve

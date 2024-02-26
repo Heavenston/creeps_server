@@ -19,6 +19,15 @@ var rootCmd = cobra.Command {
 	Short: "A reimplementation of the *very* famous creeps game",
 
 	Run: func(cmd *cobra.Command, args []string) {
+		vl, _ := cmd.Flags().GetCount("verbose")
+		log.Info().Int("vl", vl).Any("args", args).Msg("vl")
+		if vl == 0 {
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		} else if vl == 1 {
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		} else {
+			zerolog.SetGlobalLevel(zerolog.TraceLevel)
+		}
 		startServ()
 	},
 }
@@ -30,7 +39,6 @@ func main() {
 	log.Logger = zerolog.New(cw).With().
 		Timestamp().
 		Logger()
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	rootCmd.Flags().Float64VarP(&tps, "tps", "t", 5, "Ticks per seconds")
 	rootCmd.Flags().IntVar(&apiPort, "api-port", 1664, "Port for the epita-compatible api")

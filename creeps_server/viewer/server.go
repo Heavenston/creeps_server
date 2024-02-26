@@ -325,7 +325,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 		}
 
 		log.Trace().
-			Any("message", mess).
+			Any("message_kind", mess.Kind).
 			Any("addr", conn.RemoteAddr()).
 			Msg("Websocket received message")
 
