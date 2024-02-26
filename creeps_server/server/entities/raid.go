@@ -1,17 +1,21 @@
 package entities
 
 import (
+	"sync"
+
 	"github.com/heavenston/creeps_server/creeps_lib/events"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
-	. "github.com/heavenston/creeps_server/creeps_server/server"
-	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/rs/zerolog/log"
 )
 
 type Raid struct {
 	OwnerEntity
+	tickLock sync.Mutex
+
 	ownerPlayerId uid.Uid
 
 	server *Server
@@ -118,6 +122,9 @@ func (raid *Raid) Unregister() {
 }
 
 func (raid *Raid) Tick() {
+	raid.tickLock.Lock()
+	defer raid.tickLock.Unlock()
+
 	var player, ok = raid.server.GetEntity(raid.ownerPlayerId).(*Player)
 	if !ok || player == nil {
 		log.Info().
