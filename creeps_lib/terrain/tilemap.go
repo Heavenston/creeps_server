@@ -22,6 +22,9 @@ type Tilemap struct {
 
 // generator can be nil in which case the default generator will be used
 func NewTilemap(generator IGenerator) Tilemap {
+	if generator == nil {
+		generator = &DefaultGenerator{}
+ 	}
 	return Tilemap{
 		generator: generator,
 		chunks:    make(map[Point]*Chunk),
@@ -36,9 +39,9 @@ func (tilemap *Tilemap) GetChunk(chunkPos Point) *Chunk {
 	return tilemap.chunks[chunkPos]
 }
 
-// Like GetChunk but if it would return nil this will generate the chunk using
-// the assigned generator.
-func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *Chunk {
+// Return the existing chunk at given pos or create a new not yet generated
+// one
+func (tilemap *Tilemap) CreateChunk(chunkPos Point) *Chunk {
 	// first try to read already existing chunk
 	tilemap.chunkslock.RLock()
 	if chunk := tilemap.chunks[chunkPos]; chunk != nil {
@@ -46,25 +49,49 @@ func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *Chunk {
 		return chunk
 	}
 	tilemap.chunkslock.RUnlock()
-	// no chunk = get write access
+
 	tilemap.chunkslock.Lock()
 	defer tilemap.chunkslock.Unlock()
 
-	// there may be a race condition where the chunk was generated between lock
+	// there may be a race condition where the chunk was created between lock
 	// access so we must re-check for it
 	if chunk := tilemap.chunks[chunkPos]; chunk != nil {
 		return chunk
 	}
 
+	chunk := tilemap.chunks[chunkPos]
+	if chunk == nil {
+		chunk = NewChunk(chunkPos)
+		tilemap.chunks[chunkPos] = chunk
+	}
+
+	return chunk
+}
+
+// Like GetChunk but if it would return nil this will generate the chunk using
+// the assigned generator.
+func (tilemap *Tilemap) GenerateChunk(chunkPos Point) *Chunk {
+	chunk := tilemap.CreateChunk(chunkPos)
+
+	wc := chunk.WLock()
+	defer wc.UnLock()
+
+	if chunk.isGenerated.Load() {
+		return chunk
+	}
+
 	log.Trace().Any("pos", chunkPos).Msg("Generating chunk")
 	start := time.Now()
-	// Only now can we safely generate the chunk
-	tilemap.chunks[chunkPos] = tilemap.generator.GenerateChunk(chunkPos)
+	tilemap.generator.GenerateChunk(&wc)
 	log.Debug().
 		Any("pos", chunkPos).
 		TimeDiff("took", time.Now(), start).
 		Msg("Finished generating chunk")
-	return tilemap.chunks[chunkPos]
+
+	// we do have write lock to chunk so we know no race-condition is possible
+	chunk.isGenerated.Store(true)
+
+	return chunk
 }
 
 // Generate the chunk if needed and calls terrain.Chunk.GetTile

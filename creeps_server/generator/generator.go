@@ -82,18 +82,15 @@ func (gen *NoiseGenerator) sample(x int, y int) Tile {
 	}
 }
 
-func (gen *NoiseGenerator) GenerateChunk(chunkPos Point) *Chunk {
-	chunk := NewChunk(chunkPos)
-	wcl := chunk.WLock()
-	defer wcl.UnLock()
+func (gen *NoiseGenerator) GenerateChunk(wc *WriteLockedChunk) {
+	chunk := wc.GetChunk()
+	pos := chunk.GetChunkPos()
 
 	for x := 0; x < ChunkSize; x++ {
 		for y := 0; y < ChunkSize; y++ {
 			point := Point{X: x, Y: y}
-			wcl.SetTile(point, gen.sample(x+chunkPos.X*ChunkSize, y+chunkPos.Y*ChunkSize))
+			wc.SetTile(point, gen.sample(x+pos.X*ChunkSize, y+pos.Y*ChunkSize))
 		}
 	}
-
-	return chunk
 }
 

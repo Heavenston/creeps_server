@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"sync/atomic"
 
 	"github.com/heavenston/creeps_server/creeps_lib/events"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
@@ -17,6 +18,7 @@ type TilemapUpdateEvent struct {
 }
 
 type Chunk struct {
+	isGenerated atomic.Bool
 	chunkPos Point
 	// guards tiles
 	tileslock sync.RWMutex
@@ -24,12 +26,12 @@ type Chunk struct {
 	UpdatedEventProvider events.EventProvider[TilemapUpdateEvent]
 }
 
-type readLockedChunk struct {
+type ReadLockedChunk struct {
     unlocked bool
     chunk *Chunk
 }
 
-type writeLockedChunk struct {
+type WriteLockedChunk struct {
     unlocked bool
     chunk *Chunk
 }
@@ -145,38 +147,46 @@ func (chunk *Chunk) Print(w io.Writer) {
 	}
 }
 
-func (chunk *Chunk) RLock() readLockedChunk {
+func (chunk *Chunk) RLock() ReadLockedChunk {
     chunk.tileslock.RLock()
-    return readLockedChunk{
+    return ReadLockedChunk{
         chunk: chunk,
     }
 }
 
-func (rlc *readLockedChunk) UnLock() {
+func (rlc *ReadLockedChunk) UnLock() {
     rlc.chunk.tileslock.Unlock()
     rlc.unlocked = true
 }
 
-func (rlc *readLockedChunk) GetTile(subcoords Point) Tile {
+func (rlc *ReadLockedChunk) GetChunk() *Chunk {
+	return rlc.chunk
+}
+
+func (rlc *ReadLockedChunk) GetTile(subcoords Point) Tile {
     return rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)]
 }
 
-func (chunk *Chunk) WLock() writeLockedChunk {
+func (chunk *Chunk) WLock() WriteLockedChunk {
     chunk.tileslock.Lock()
-    return writeLockedChunk{
+    return WriteLockedChunk{
         chunk: chunk,
     }
 }
 
-func (wlc *writeLockedChunk) UnLock() {
+func (wlc *WriteLockedChunk) UnLock() {
     wlc.chunk.tileslock.Unlock()
     wlc.unlocked = true
 }
 
-func (rlc *writeLockedChunk) GetTile(subcoords Point) Tile {
+func (rlc *WriteLockedChunk) GetChunk() *Chunk {
+	return rlc.chunk
+}
+
+func (rlc *WriteLockedChunk) GetTile(subcoords Point) Tile {
     return rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)]
 }
 
-func (rlc *writeLockedChunk) SetTile(subcoords Point, newVal Tile) {
+func (rlc *WriteLockedChunk) SetTile(subcoords Point, newVal Tile) {
     rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)] = newVal
 }
