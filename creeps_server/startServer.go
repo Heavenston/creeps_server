@@ -5,16 +5,17 @@ import (
 	"math"
 	"time"
 
-	"github.com/heavenston/creeps_server/creeps_server/epita_api"
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
-	. "github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	. "github.com/heavenston/creeps_server/creeps_lib/terrain"
+	"github.com/heavenston/creeps_server/creeps_server/epita_api"
+	"github.com/heavenston/creeps_server/creeps_server/generator"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/heavenston/creeps_server/creeps_server/viewer"
 )
 
 func startServ() {
-	generator := NewChunkGenerator(time.Now().UnixMilli())
+	generator := generator.NewNoiseGenerator(time.Now().UnixMilli())
 	tilemap := NewTilemap(generator)
 
 	srv := NewServer(&tilemap, &model.SetupResponse{

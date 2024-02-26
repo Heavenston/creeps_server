@@ -16,12 +16,12 @@ type Tilemap struct {
 	chunkslock sync.RWMutex
 	// generator can only be accessed (for read or write) with write lock on
 	// chunkslock
-	generator *ChunkGenerator
+	generator IGenerator
 	chunks    map[Point]*TilemapChunk
 }
 
 // generator can be nil in which case the default generator will be used
-func NewTilemap(generator *ChunkGenerator) Tilemap {
+func NewTilemap(generator IGenerator) Tilemap {
 	return Tilemap{
 		generator: generator,
 		chunks:    make(map[Point]*TilemapChunk),

@@ -61,6 +61,20 @@ func Global2ChunkSubCoords(tile Point) Point {
 	}
 }
 
+func NewChunk(pos Point) (chunk *TilemapChunk) {
+	chunk = new(TilemapChunk)
+
+	chunk.chunkPos = pos
+	for i := range chunk.tiles {
+		chunk.tiles[i] = Tile {
+			Kind: TileUnknown,
+			Value: 0,
+		}
+	}
+
+	return
+}
+
 // the "chunk position" (world pos / chunkSize)
 func (chunk *TilemapChunk) GetChunkPos() Point {
 	return chunk.chunkPos
