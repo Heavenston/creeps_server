@@ -81,13 +81,13 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 
 func (srv *Server) tick() {
 	srv.entitiesLock.Lock()
-	entites := make([]IEntity, 0, len(srv.entitiesMap))
+	entities := make([]IEntity, 0, len(srv.entitiesMap))
 	for _, entity := range srv.entitiesMap {
-		entites = append(entites, entity)
+		entities = append(entities, entity)
 	}
 	srv.entitiesLock.Unlock()
 
-	for _, entity := range srv.entitiesMap {
+	for _, entity := range entities {
 		entity.Tick()
 	}
 }
