@@ -156,7 +156,6 @@ func (srv *Server) RemoveEntity(id uid.Uid) (entity IEntity) {
 	if entity == nil {
 		log.Warn().
 			Str("id", string(id)).
-			Str("type_name", string(reflect.TypeOf(entity).String())).
 			Msg("Attempted to remove an entity that isn't registered")
 		return
 	}
