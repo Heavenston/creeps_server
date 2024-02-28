@@ -1,4 +1,6 @@
-creeps_server:
+SRC_FILES != find . -name "*.go"
+
+creeps_server: ${SRC_FILES}
 	go build
 
 clean:
