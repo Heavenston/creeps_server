@@ -1,7 +1,6 @@
 package spatialevents
 
 import (
-	"reflect"
 	"runtime"
 	"strings"
 
@@ -84,7 +83,7 @@ func (provider *SpatialEventProvider[T]) Emit(event T) {
         case sub.sendChan <- event:
         default:
             log.Warn().
-                Str("event_type", reflect.TypeOf(event).String()).
+                Type("event_type", event).
                 Str("sub_file", sub.file).
                 Int("sub_line", sub.line).
                 Msg("Could not send event")

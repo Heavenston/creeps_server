@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"math/rand"
-	"reflect"
 	"sync"
 
 	"github.com/heavenston/creeps_server/creeps_lib/events/spatialevents"
@@ -70,7 +69,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 			}
 
 			log.Trace().
-				Str("type", reflect.TypeOf(event).String()).
+				Type("event_type", event).
 				Any("event", event).
 				Msg("Server event")
 		}
@@ -92,10 +91,14 @@ func (srv *Server) tick() {
 		if !entity.IsRegistered() {
 			continue
 		}
-		log.Trace().Str("entity_type", reflect.TypeOf(entity).String()).
+		log.Trace().
+			Type("entity_type", entity).
+			Str("entity_id", string(entity.GetId())).
 			Msg("entity tick start")
 		entity.Tick()
-		log.Trace().Str("entity_type", reflect.TypeOf(entity).String()).
+		log.Trace().
+			Type("entity_type", entity).
+			Str("entity_id", string(entity.GetId())).
 			Msg("entity tick end")
 	}
 }
@@ -184,9 +187,9 @@ func (srv *Server) RemoveEntity(id uid.Uid) (entity IEntity) {
 	owner, isOwner := ownerEntity.(IOwnerEntity)
 	if !isOwner {
 		log.Warn().
-			Str("entity_type", reflect.TypeOf(entity).String()).
+			Type("entity_type", entity).
 			Str("entity_id", string(entity.GetId())).
-			Any("owner_type", reflect.TypeOf(owner).String()).
+			Type("owner_type", owner).
 			Any("owner_id", string(ownerId)).
 			Msg("removed entity has an invalid owner")
 		return
