@@ -1,5 +1,9 @@
 
 dev:
+	@export CREEPS_ARGS="-v"; \
+	./parallel.sh dev
+
+trace:
 	@export CREEPS_ARGS="-vv"; \
 	./parallel.sh dev
 
