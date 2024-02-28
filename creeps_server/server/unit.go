@@ -39,8 +39,6 @@ type IUnit interface {
 	// returns an identifier of this kind of unit
 	GetOpCode() string
 	IsBusy() bool
-	GetAlive() bool
-	SetDead()
 	// the id of the owner, note: can be the server by way of ServerUid
 	GetOwner() uid.Uid
 	GetPosition() Point

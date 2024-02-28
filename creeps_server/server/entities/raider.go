@@ -114,7 +114,7 @@ func (raider *RaiderUnit) Tick() {
 	}
 
 	if foundAndDestroy {
-		raider.SetDead()
+		raider.Unregister()
 		return
 	}
 
@@ -124,7 +124,7 @@ func (raider *RaiderUnit) Tick() {
 	}
 
 	if raider.target == position {
-		raider.SetDead()
+		raider.Unregister()
 		return
 	}
 

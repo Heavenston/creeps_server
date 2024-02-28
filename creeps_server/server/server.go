@@ -88,6 +88,10 @@ func (srv *Server) tick() {
 	srv.entitiesLock.Unlock()
 
 	for _, entity := range entities {
+		// can happen if a previously ticked entity killed it
+		if !entity.IsRegistered() {
+			continue
+		}
 		log.Trace().Str("entity_type", reflect.TypeOf(entity).String()).
 			Msg("entity tick start")
 		entity.Tick()

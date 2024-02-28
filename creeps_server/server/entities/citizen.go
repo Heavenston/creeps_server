@@ -92,8 +92,8 @@ func (citizen *CitizenUnit) Tick() {
 		log.Warn().
 			Str("citizen_id", string(citizen.id)).
 			Str("player_id", string(citizen.owner)).
-			Msg("[CITIZEN] Could not find owner player (code kms initiated)")
-		citizen.SetDead()
+			Msg("CITIZEN: Could not find owner player (code kms initiated)")
+		citizen.Unregister()
 		return
 	}
 
@@ -117,7 +117,7 @@ func (citizen *CitizenUnit) Tick() {
 		if couldFeed {
 			citizen.lastEatenAt = ticker.GetTickNumber()
 		} else {
-			citizen.SetDead()
+			citizen.Unregister()
 		}
 	}
 }

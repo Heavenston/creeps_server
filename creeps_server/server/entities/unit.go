@@ -12,6 +12,7 @@ import (
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/heavenston/creeps_server/creeps_server/server"
 	. "github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/rs/zerolog/log"
 )
 
 type extendedUnit interface {
@@ -26,7 +27,7 @@ type unit struct {
 	server *Server
 	// read-only (no lock)
 	id            uid.Uid
-	alive         atomic.Bool
+	registered    atomic.Bool
 	position      AtomicPoint
 	lastAction    atomic.Pointer[Action]
 	upgraded      atomic.Bool
@@ -38,7 +39,7 @@ type unit struct {
 func (unit *unit) unitInit(server *Server) {
 	unit.server = server
 	unit.id = uid.GenUid()
-	unit.alive.Store(true)
+	unit.registered.Store(true)
 }
 
 func (unit *unit) GetServer() *Server {
@@ -51,31 +52,7 @@ func (unit *unit) GetId() uid.Uid {
 
 func (unit *unit) IsBusy() bool {
 	action := unit.GetLastAction()
-	return action != nil && !action.Finised.Load()
-}
-
-func (unit *unit) GetAlive() bool {
-	return unit.alive.Load()
-}
-
-func (unit *unit) SetDead() {
-	if asOwner, ok := unit.this.(IOwnerEntity); ok {
-		for _, child := range asOwner.CopyEntityList() {
-			child.Unregister()
-		}
-	}
-
-	if !unit.alive.Swap(false) {
-		// was already dead
-		return
-	}
-
-	unit.server.RemoveEntity(unit.id)
-
-	unit.server.Events().Emit(&server.UnitDespawnEvent{
-		Unit: unit.this,
-		AABB: unit.GetAABB(),
-	})
+	return !unit.IsRegistered() || (action != nil && !action.Finised.Load())
 }
 
 func (unit *unit) GetPosition() Point {
@@ -232,7 +209,7 @@ func (unit *unit) startAction(
 		costs := action.OpCode.GetCost(unit.this)
 
 		<-time.After(unit.server.Ticker().TickDuration() * time.Duration(costs.Cast))
-		if !unit.GetAlive() {
+		if !unit.IsRegistered() {
 			return
 		}
 
@@ -260,12 +237,38 @@ func (unit *unit) startAction(
 
 func (unit *unit) Register() {
 	unit.server.RegisterEntity(unit.this)
+	unit.registered.Store(true)
+
 	unit.server.Events().Emit(&server.UnitSpawnEvent{
 		Unit: unit.this,
 		AABB: unit.GetAABB(),
 	})
 }
 
+func (unit *unit) IsRegistered() bool {
+	return unit.registered.Load()
+}
+
 func (unit *unit) Unregister() {
-	unit.SetDead()
+	if asOwner, ok := unit.this.(IOwnerEntity); ok {
+		for _, child := range asOwner.CopyEntityList() {
+			child.Unregister()
+		}
+	}
+
+	if !unit.registered.Swap(false) {
+		log.Warn().
+			Caller().
+			Type("unit_type",unit.this).
+			Str("unit_id", string(unit.id)).
+			Msg("Unit got double killed")
+		return
+	}
+
+	unit.server.RemoveEntity(unit.id)
+
+	unit.server.Events().Emit(&server.UnitDespawnEvent{
+		Unit: unit.this,
+		AABB: unit.GetAABB(),
+	})
 }

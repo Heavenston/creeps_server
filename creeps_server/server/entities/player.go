@@ -2,14 +2,15 @@ package entities
 
 import (
 	"sync"
+	"sync/atomic"
 
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/events"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
-	. "github.com/heavenston/creeps_server/creeps_server/server"
-	"github.com/heavenston/creeps_server/creeps_lib/terrain"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,7 +19,9 @@ type Player struct {
 
 	server *Server
 
-	// locks everything not read only
+	isRegistred atomic.Bool
+
+	// locks everything below not read only
 	lock sync.RWMutex
 
 	id         uid.Uid
@@ -168,9 +171,15 @@ func (player *Player) RemoveTownHall(p Point) bool {
 
 func (player *Player) Register() {
 	player.server.RegisterEntity(player)
+	player.isRegistred.Store(true)
+
 	player.server.Events().Emit(&PlayerSpawnEvent{
 		Player: player,
 	})
+}
+
+func (player *Player) IsRegistered() bool {
+	return player.isRegistred.Load()
 }
 
 func (player *Player) Unregister() {
@@ -179,6 +188,8 @@ func (player *Player) Unregister() {
 	}
 
 	player.server.RemoveEntity(player.id)
+	player.isRegistred.Store(false)
+
 	player.server.Events().Emit(&PlayerDespawnEvent{
 		Player: player,
 	})

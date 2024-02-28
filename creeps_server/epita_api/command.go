@@ -82,7 +82,7 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    if !unit.GetAlive() {
+    if !unit.IsRegistered() {
         sendError("dead", "Your unit died.")
         return
     }

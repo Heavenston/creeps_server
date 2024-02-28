@@ -22,6 +22,8 @@ type IEntity interface {
 	// if there is no real owner use uid.ServerId
 	GetOwner() uid.Uid
 
+	IsRegistered() bool
+
 	Unregister()
 	Register()
 	

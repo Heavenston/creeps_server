@@ -2,6 +2,7 @@ package entities
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"github.com/heavenston/creeps_server/creeps_lib/events"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
@@ -14,6 +15,9 @@ import (
 
 type Raid struct {
 	OwnerEntity
+
+	registered atomic.Bool
+
 	tickLock sync.Mutex
 
 	ownerPlayerId uid.Uid
@@ -70,6 +74,10 @@ func (raid *Raid) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedE
 	return nil
 }
 
+func (raid *Raid) IsRegistered() bool {
+	return raid.registered.Load()
+}
+
 func (raid *Raid) Register() {
 	raid.tickLock.Lock()
 	defer raid.tickLock.Unlock()
@@ -102,6 +110,7 @@ func (raid *Raid) Register() {
 	raid.targetPosition = player.GetSpawnPoint()
 
 	raid.server.RegisterEntity(raid)
+	raid.registered.Store(true)
 
 	log.Info().Any("raid_id", raid.id).
 		Any("point", raid.campPosition).
@@ -127,6 +136,7 @@ func (raid *Raid) Unregister() {
 	})
 
 	raid.server.RemoveEntity(raid.id)
+	raid.registered.Store(false)
 }
 
 func (raid *Raid) Tick() {
