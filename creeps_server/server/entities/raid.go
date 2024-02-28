@@ -71,14 +71,15 @@ func (raid *Raid) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedE
 }
 
 func (raid *Raid) Register() {
+	raid.tickLock.Lock()
+	defer raid.tickLock.Unlock()
+
 	var player, ok = raid.server.GetEntity(raid.ownerPlayerId).(*Player)
 	if !ok || player == nil {
 		log.Warn().Any("raid_id", raid.id).Any("owner_player", raid.ownerPlayerId).
 			Msg("Invilid raid owner")
 		return
 	}
-
-	raid.server.RegisterEntity(raid)
 
 	raid.campPosition = raid.server.FindSpawnPoint(player.GetSpawnPoint(), 1, func(p Point) bool {
 		found := false
@@ -100,6 +101,8 @@ func (raid *Raid) Register() {
 
 	raid.targetPosition = player.GetSpawnPoint()
 
+	raid.server.RegisterEntity(raid)
+
 	log.Info().Any("raid_id", raid.id).
 		Any("point", raid.campPosition).
 		Any("owner_player", raid.ownerPlayerId).
@@ -110,6 +113,11 @@ func (raid *Raid) Unregister() {
 	// we need to copy as unregister removes the entity from the raid list
 	// blocking the entity list
 	for _, entity := range raid.CopyEntityList() {
+		log.Debug().
+			Type("entity_type", entity).
+			Str("entity_id", string(entity.GetId())).
+			Str("raid_id", string(raid.id)).
+			Msg("RAID: deleting child")
 		entity.Unregister()
 	}
 
