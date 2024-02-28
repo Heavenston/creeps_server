@@ -2,19 +2,22 @@
 
 Implementation in Go of the very famous Creeps game
 
-## Development (/ the only way to use it for now lol)
+## Compilation / usage
 
 You need go as well as nodejs/npm installed on your computer.
-(TODO: minimum versions ?)
 
-Run
+You can use the followin make targets
 ```bash
+# Compiles and starts the project in production mode
+make serve
+# Starts in dev mode with debug logs enabled
 make dev
+# Like dev but with trace logs enabled
+make trace
 ```
-to start the develpment environment.
 
-A web server is opened at port `1234`, while the epita-compatible creeps
-"rest" api is opened at port `1664`.
+For all commands, a web server is opened at port `1234`, while the
+epita-compatible creeps "rest" api is opened at port `1664`.
 
 ## Todo
 
