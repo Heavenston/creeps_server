@@ -5,13 +5,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/events"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
-	"github.com/heavenston/creeps_server/creeps_server/server"
-	. "github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	"github.com/heavenston/creeps_server/creeps_server/server"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 )
 
 type extendedUnit interface {

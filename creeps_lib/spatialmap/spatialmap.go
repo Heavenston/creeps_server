@@ -200,7 +200,7 @@ func (m *SpatialMap[T]) GetAllIntersects(aabb AABB) []T {
 
 	for _, obj := range m.objects {
 		oaabb := obj.val.GetAABB()
-		if oaabb.IsZero() || aabb.Intersects(oaabb) {
+		if aabb.IsZero() || oaabb.IsZero() || aabb.Intersects(oaabb) {
 			result = append(result, obj.val)
 		}
 	}

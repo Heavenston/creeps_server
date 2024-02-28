@@ -1,15 +1,23 @@
 package spatialevents
 
 import (
+	"reflect"
+	"runtime"
+	"strings"
+
 	"github.com/heavenston/creeps_server/creeps_lib/events"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
+	"github.com/rs/zerolog/log"
 )
 
 type sub[T any] struct {
     filter AABB
     sendChan chan T
     handle *events.CancelHandle
+
+    file string
+    line int
 }
 
 func (sub sub[T]) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent] {
@@ -50,10 +58,17 @@ func (provider *SpatialEventProvider[T]) SubscribeWithHandle(
         return;
     }
 
+    _, file, line, _ := runtime.Caller(1)
+    if strings.Contains(file, "spatialevents") {
+        _, file, line, _ = runtime.Caller(2)
+    }
+
     provider.subs.Add(sub[T]{
         sendChan: channel,
         handle: handle,
         filter: filter,
+        file: file,
+        line: line,
     })
 }
 
@@ -61,14 +76,18 @@ func (provider *SpatialEventProvider[T]) Emit(event T) {
     aabb := event.GetAABB()
 
     provider.subs.RemoveAll(func(t sub[T]) bool {
-        if t.handle.IsCancelled() {
-            return true
-        }
-
-        if aabb.IsZero() || t.filter.IsZero() || t.filter.Intersects(aabb) {
-            t.sendChan <- event
-        }
-
-        return false
+        return t.handle.IsCancelled()
     })
+
+    for _, sub := range provider.subs.GetAllIntersects(aabb) {
+        select {
+        case sub.sendChan <- event:
+        default:
+            log.Warn().
+                Str("event_type", reflect.TypeOf(event).String()).
+                Str("sub_file", sub.file).
+                Int("sub_line", sub.line).
+                Msg("Could not send event")
+        }
+    }
 }

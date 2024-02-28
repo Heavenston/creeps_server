@@ -61,7 +61,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 	srv.spawnRand = *rand.New(rand.NewSource(256))
 
 	go (func() {
-		channel := make(chan IServerEvent)
+		channel := make(chan IServerEvent, 2048)
 		srv.events.Subscribe(channel, AABB{})
 		for {
 			event, ok := (<-channel)
