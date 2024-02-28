@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/events/spatialevents"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
-	"github.com/heavenston/creeps_server/creeps_lib/terrain"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/rs/zerolog/log"
 )
@@ -88,7 +88,11 @@ func (srv *Server) tick() {
 	srv.entitiesLock.Unlock()
 
 	for _, entity := range entities {
+		log.Trace().Str("entity_type", reflect.TypeOf(entity).String()).
+			Msg("entity tick start")
 		entity.Tick()
+		log.Trace().Str("entity_type", reflect.TypeOf(entity).String()).
+			Msg("entity tick end")
 	}
 }
 
@@ -112,7 +116,7 @@ func (srv *Server) Events() *spatialevents.SpatialEventProvider[IServerEvent] {
 	return srv.events
 }
 
-// Do not call directly, use entity.Register(), otherwise events won't be 
+// Do not call directly, use entity.Register(), otherwise events won't be
 // emitted
 func (srv *Server) RegisterEntity(entity IEntity) {
 	if entity.GetServer() != srv {
@@ -197,27 +201,27 @@ func (srv *Server) RemoveEntity(id uid.Uid) (entity IEntity) {
 func (srv *Server) GetEntity(id uid.Uid) IEntity {
 	srv.entitiesLock.RLock()
 	defer srv.entitiesLock.RUnlock()
-	
+
 	return srv.entitiesMap[id]
 }
 
-func (srv *Server) FindEntity(pred func (e IEntity) bool) IEntity {
+func (srv *Server) FindEntity(pred func(e IEntity) bool) IEntity {
 	srv.entitiesLock.RLock()
 	defer srv.entitiesLock.RUnlock()
 
 	for _, e := range srv.entitiesMap {
-		if (pred(e)) {
+		if pred(e) {
 			return e
 		}
 	}
-	
+
 	return nil
 }
 
 func (srv *Server) GetEntityOwner(id uid.Uid) IOwnerEntity {
 	srv.entitiesLock.RLock()
 	defer srv.entitiesLock.RUnlock()
-	
+
 	entity := srv.entitiesMap[id]
 	if entity == nil {
 		return nil
