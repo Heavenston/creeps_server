@@ -58,11 +58,11 @@ func (viewer *ViewerServer) handleClientSubscription(
 ) {
 	chunk := viewer.Server.Tilemap().CreateChunk(chunkPos)
 
-	terrainChangeChannel := make(chan any, 64)
+	terrainChangeChannel := make(chan any)
 	terrainCancelHandle := chunk.UpdatedEventProvider.Subscribe(terrainChangeChannel)
 	defer terrainCancelHandle.Cancel()
 
-	serverEventsChannel := make(chan server.IServerEvent, 64)
+	serverEventsChannel := make(chan server.IServerEvent)
 	aabb := AABB{
 		From: chunkPos.Times(terrain.ChunkSize),
 		Size: Point{
