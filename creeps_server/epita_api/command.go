@@ -134,6 +134,11 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			)
 			return
 		}
+		sendError(
+			"other",
+			"Some weird and unrecognized error happened",
+		)
+		return
 	}
 
 	response := model.CommandResponse{
