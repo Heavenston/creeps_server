@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"sync/atomic"
 	"time"
 
@@ -31,6 +32,14 @@ type ReportError struct {
 
 func (err *ReportError) Error() string {
 	return err.Report.ErrorCode
+}
+
+type ErrCommand struct {
+	response *model.CommandResponse
+}
+
+func (err *ErrCommand) Error() string {
+	return *err.response.ErrorCode
 }
 
 // Creates a new client, makes no requests
@@ -70,7 +79,7 @@ func (client *Client) TickDuration() time.Duration {
 }
 
 func (client *Client) SleepFor(ticks int) {
-	time.Sleep(client.TickDuration() * time.Duration(ticks))
+	time.Sleep(client.TickDuration() * time.Duration(ticks) + time.Millisecond * 5)
 }
 
 func (client *Client) SetTilemap(tm *terrain.Tilemap) {
@@ -177,6 +186,12 @@ func (client *Client) PostCommand(
 		&resp,
 		nil,
 	)
+	if resp != nil && resp.ErrorCode != nil {
+		err = &ErrCommand{
+			response: resp,
+		}
+		resp = nil
+	}
 	return
 }
 
@@ -238,4 +253,23 @@ func (client *Client) GetReport(
 	}
 
 	return nil
+}
+
+func (client *Client) Command(
+	unitId uid.Uid,
+	opcode model.ActionOpCode,
+) (model.IReport, error) {
+	cmd, err := client.PostCommand(unitId, opcode)
+	if err != nil {
+		return nil, err
+	}
+
+	client.SleepFor(opcode.GetCost(client.InitResponse().Costs, nil).Cast)
+
+	report := reflect.New(opcode.GetReportType())
+	err = client.GetReport(*cmd.ReportId, report.Interface())
+	if err != nil {
+		return nil, err
+	}
+	return report.Interface().(model.IReport), nil
 }

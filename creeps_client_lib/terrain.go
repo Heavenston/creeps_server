@@ -9,12 +9,12 @@ import (
 )
 
 func registerTiles(tp *terrain.Tilemap, pos Point, tiles []uint16) {
-	size := int(math.Sqrt(float64(len(tiles))))
+	size := int(math.Ceil(math.Sqrt(float64(len(tiles)))))
 	for i, val := range tiles {
 		x := i % size
 		y := i / size
-		tp.SetTile(pos.Plus(x - size/2, y - size/2), terrain.Tile {
-			Kind: terrain.TileKind(val >> 10),
+		tp.SetTile(pos.Plus(x-size/2, y-size/2), terrain.Tile{
+			Kind:  terrain.TileKind(val >> 10),
 			Value: uint8(val & 0x3F),
 		})
 	}
