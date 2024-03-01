@@ -1,12 +1,23 @@
 package creepsclientlib
 
 import (
+	"math"
+
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 )
 
-func registerTiles(tp *terrain.Tilemap, tiles []uint16) {
-
+func registerTiles(tp *terrain.Tilemap, pos Point, tiles []uint16) {
+	size := int(math.Sqrt(float64(len(tiles))))
+	for i, val := range tiles {
+		x := i % size
+		y := i / size
+		tp.SetTile(pos.Plus(x - size/2, y - size/2), terrain.Tile {
+			Kind: terrain.TileKind(val >> 10),
+			Value: uint8(val & 0x3F),
+		})
+	}
 }
 
 func registerBuilding(tp *terrain.Tilemap, buildReport *model.BuildReport) {
@@ -38,9 +49,9 @@ func registerBuilding(tp *terrain.Tilemap, buildReport *model.BuildReport) {
 func RegisterReport(tp *terrain.Tilemap, report model.IReport) {
 	switch casted := report.(type) {
 	case *model.ObserveReport:
-		registerTiles(tp, casted.Tiles)
+		registerTiles(tp, casted.UnitPosition, casted.Tiles)
 	case *model.MoveReport:
-		registerTiles(tp, casted.Tiles)
+		registerTiles(tp, casted.NewPosition, casted.Tiles)
 	case *model.GatherReport:
 		if casted.ResourcesLeft == 0 {
 			tp.SetTile(casted.UnitPosition, terrain.Tile{

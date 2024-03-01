@@ -105,5 +105,9 @@ func (tile Tile) Print(w io.Writer) {
 		c.Fprint(w, "SM")
 	case TileSmeltery:
 		c.Fprint(w, "SL")
+
+	case TileUnknown:
+		c.Add(color.Reset)
+		c.Fprint(w, "XX")
 	}
 }

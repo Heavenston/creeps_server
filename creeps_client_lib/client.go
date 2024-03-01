@@ -70,7 +70,7 @@ func (client *Client) TickDuration() time.Duration {
 }
 
 func (client *Client) SleepFor(ticks int) {
-	time.Sleep(client.TickDuration())
+	time.Sleep(client.TickDuration() * time.Duration(ticks))
 }
 
 func (client *Client) SetTilemap(tm *terrain.Tilemap) {
@@ -143,10 +143,8 @@ func (client *Client) GetStatistics() (resp model.StatisticsResponse, err error)
 
 // The response is also stored inside the client
 func (client *Client) PostInit() (resp *model.InitResponse, err error) {
-	err = client.Post("/init/"+client.login, resp, nil)
-	if err != nil {
-		client.initResponse.Store(resp)
-	}
+	err = client.Post("/init/"+client.login, &resp, nil)
+	client.initResponse.Store(resp)
 	return
 }
 
