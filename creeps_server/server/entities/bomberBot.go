@@ -48,9 +48,9 @@ func (bomberBot *BomberBotUnit) ObserveDistance() int {
 }
 
 func (bomberBot *BomberBotUnit) StartAction(action *Action, onFinished func()) error {
-	err := bomberBot.startAction(action, []ActionOpCode{
-		OpCodeUpgrade,
-		OpCodeFireBomberBot,
+	err := bomberBot.startAction(action, []model.ActionOpCode{
+		model.OpCodeUpgrade,
+		model.OpCodeFireBomberBot,
 	}, onFinished)
 	if err != nil {
 		return err

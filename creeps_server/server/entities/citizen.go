@@ -51,29 +51,29 @@ func (citizen *CitizenUnit) ObserveDistance() int {
 }
 
 func (citizen *CitizenUnit) StartAction(action *Action, onFinished func()) error {
-	err := citizen.startAction(action, []ActionOpCode{
-		OpCodeMoveDown,
-		OpCodeMoveUp,
-		OpCodeMoveLeft,
-		OpCodeMoveRight,
+	err := citizen.startAction(action, []model.ActionOpCode{
+		model.OpCodeMoveDown,
+		model.OpCodeMoveUp,
+		model.OpCodeMoveLeft,
+		model.OpCodeMoveRight,
 
-		OpCodeBuildHousehold,
-		OpCodeBuildRoad,
-		OpCodeBuildSawmill,
-		OpCodeBuildSmeltery,
-		OpCodeBuildTownHall,
+		model.OpCodeBuildHousehold,
+		model.OpCodeBuildRoad,
+		model.OpCodeBuildSawmill,
+		model.OpCodeBuildSmeltery,
+		model.OpCodeBuildTownHall,
 
-		OpCodeUpgrade,
-		OpCodeSpawnBomberBot,
-		OpCodeSpawnTurret,
+		model.OpCodeUpgrade,
+		model.OpCodeSpawnBomberBot,
+		model.OpCodeSpawnTurret,
 
-		OpCodeGather,
-		OpCodeFarm,
-		OpCodeUnload,
-		OpCodeRefineCopper,
-		OpCodeRefineWoodPlank,
+		model.OpCodeGather,
+		model.OpCodeFarm,
+		model.OpCodeUnload,
+		model.OpCodeRefineCopper,
+		model.OpCodeRefineWoodPlank,
 
-		OpCodeObserve,
+		model.OpCodeObserve,
 	}, onFinished)
 	if err != nil {
 		return err

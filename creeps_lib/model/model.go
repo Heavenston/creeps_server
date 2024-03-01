@@ -186,11 +186,11 @@ type InitResponse struct {
 }
 
 type CommandResponse struct {
-	OpCode    string   `json:"opcode"`
-	ReportId  *uid.Uid `json:"reportId"`
-	ErrorCode *string  `json:"errorCode"`
-	Error     *string  `json:"error"`
-	Login     string   `json:"login"`
-	UnitId    *uid.Uid `json:"unitId"`
-	Misses    int      `json:"misses"`
+	OpCode    ActionOpCode `json:"opcode"`
+	ReportId  *uid.Uid     `json:"reportId"`
+	ErrorCode *string      `json:"errorCode"`
+	Error     *string      `json:"error"`
+	Login     string       `json:"login"`
+	UnitId    *uid.Uid     `json:"unitId"`
+	Misses    int          `json:"misses"`
 }

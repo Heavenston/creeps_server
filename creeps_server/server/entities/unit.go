@@ -146,7 +146,7 @@ func (unit *unit) SetInventory(newInv model.Resources) {
 
 func (unit *unit) startAction(
 	action *Action,
-	supported []ActionOpCode,
+	supported []model.ActionOpCode,
 	onFinished func(),
 ) error {
 	if unit == nil || action == nil {
@@ -175,7 +175,7 @@ func (unit *unit) startAction(
 		return UnitBusyError{}
 	}
 
-	cost := action.OpCode.GetCost(unit.this)
+	cost := action.OpCode.GetCost(unit.server.GetCosts(), unit.this.GetUpgradeCosts())
 	if player, ok := unit.GetServer().GetEntityOwner(unit.id).(*Player); ok {
 		var hadEnough bool
 		var had model.Resources
@@ -206,7 +206,7 @@ func (unit *unit) startAction(
 	})
 
 	go (func() {
-		costs := action.OpCode.GetCost(unit.this)
+		costs := action.OpCode.GetCost(unit.server.GetCosts(), unit.this.GetUpgradeCosts())
 
 		<-time.After(unit.server.Ticker().TickDuration() * time.Duration(costs.Cast))
 		if !unit.IsRegistered() {

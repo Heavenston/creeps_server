@@ -15,8 +15,8 @@ func (e UnitBusyError) Error() string {
 }
 
 type UnsuportedActionError struct {
-	Tried     ActionOpCode
-	Supported []ActionOpCode
+	Tried     model.ActionOpCode
+	Supported []model.ActionOpCode
 }
 
 func (e UnsuportedActionError) Error() string {

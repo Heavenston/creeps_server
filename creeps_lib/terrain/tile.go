@@ -5,6 +5,7 @@ import (
 
 	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 )
 
 type TileKind uint8
@@ -30,6 +31,27 @@ const (
 	// Used when the tile is not generated
 	TileUnknown
 )
+
+func TileFromResource(res model.ResourceKind) TileKind {
+	switch res {
+	case model.Food:
+		return TileBush
+	case model.Oil:
+		return TileOil
+	case model.Rock:
+		return TileStone
+	case model.Wood:
+		return TileTree
+	case model.Copper:
+		fallthrough
+	case model.WoodPlank:
+		return TileUnknown
+
+	default:
+		log.Warn().Msg("TileFromResource switch not complete")
+	}
+	return TileUnknown
+}
 
 func (kind TileKind) GetResourceName() model.ResourceKind {
 	switch kind {

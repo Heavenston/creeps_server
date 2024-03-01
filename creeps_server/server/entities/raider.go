@@ -54,11 +54,11 @@ func (raider *RaiderUnit) GetTarget() Point {
 }
 
 func (raider *RaiderUnit) StartAction(action *Action, onFinished func()) error {
-	err := raider.startAction(action, []ActionOpCode {
-		OpCodeMoveDown,
-		OpCodeMoveUp,
-		OpCodeMoveLeft,
-		OpCodeMoveRight,
+	err := raider.startAction(action, []model.ActionOpCode {
+		model.OpCodeMoveDown,
+		model.OpCodeMoveUp,
+		model.OpCodeMoveLeft,
+		model.OpCodeMoveRight,
 	}, func () {
 		if onFinished != nil {
 			onFinished()
@@ -133,15 +133,15 @@ func (raider *RaiderUnit) Tick() {
 
 	if mathutils.AbsInt(diff.X) > mathutils.AbsInt(diff.Y) {
 		if diff.X < 0 {
-			newAction.OpCode = OpCodeMoveLeft
+			newAction.OpCode = model.OpCodeMoveLeft
 		} else {
-			newAction.OpCode = OpCodeMoveRight
+			newAction.OpCode = model.OpCodeMoveRight
 		}
 	} else {
 		if diff.Y < 0 {
-			newAction.OpCode = OpCodeMoveDown
+			newAction.OpCode = model.OpCodeMoveDown
 		} else {
-			newAction.OpCode = OpCodeMoveUp
+			newAction.OpCode = model.OpCodeMoveUp
 		}
 	}
 

@@ -265,13 +265,13 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 	}
 
 	switch action.OpCode {
-	case OpCodeMoveLeft:
+	case model.OpCodeMoveLeft:
 		fallthrough
-	case OpCodeMoveRight:
+	case model.OpCodeMoveRight:
 		fallthrough
-	case OpCodeMoveUp:
+	case model.OpCodeMoveUp:
 		fallthrough
-	case OpCodeMoveDown:
+	case model.OpCodeMoveDown:
 		var newPos Point
 		unit.ModifyPosition(func(pos Point) Point {
 			newPos = pos.Add(action.OpCode.MoveDirection())
@@ -282,11 +282,11 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 		}
 		observe(unit, &mv.ObserveReport)
 		report = mv
-	case OpCodeObserve:
+	case model.OpCodeObserve:
 		mv := &model.ObserveReport{}
 		observe(unit, mv)
 		report = mv
-	case OpCodeGather:
+	case model.OpCodeGather:
 		maxInventorySize := server.GetSetup().MaxLoad
 		position := unit.GetPosition()
 
@@ -330,7 +330,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 			})
 			return tile
 		})
-	case OpCodeUnload:
+	case model.OpCodeUnload:
 		tile := server.Tilemap().GetTile(unit.GetPosition())
 		if tile.Kind != terrain.TileTownHall {
 			report = &model.ErrorReport{
@@ -351,7 +351,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 		report = &model.UnloadReport{
 			CreditedResources: credited,
 		}
-	case OpCodeFarm:
+	case model.OpCodeFarm:
 		position := unit.GetPosition()
 
 		poses := []Point {
@@ -400,9 +400,9 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 			}
 			return tile
 		})
-	case OpCodeDismantle:
+	case model.OpCodeDismantle:
 		report = &model.DismantleReport{}
-	case OpCodeUpgrade:
+	case model.OpCodeUpgrade:
 		if unit.IsUpgraded() {
 			report = &model.ErrorReport{
 				Error:     "Unit is already upgraded",
@@ -432,33 +432,33 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 		}
 
 		report = &model.UpgradeReport{}
-	case OpCodeRefineCopper:
+	case model.OpCodeRefineCopper:
 		report = refine(unit, terrain.TileSmeltery, &server.GetCosts().RefineCopper, model.Copper)
-	case OpCodeRefineWoodPlank:
+	case model.OpCodeRefineWoodPlank:
 		report = refine(unit, terrain.TileSawMill, &server.GetCosts().RefineWoodPlank, model.WoodPlank)
-	case OpCodeBuildTownHall:
+	case model.OpCodeBuildTownHall:
 		report = build(unit, "town-hall", &server.GetCosts().BuildTownHall, terrain.TileTownHall)
-	case OpCodeBuildHousehold:
+	case model.OpCodeBuildHousehold:
 		report = build(unit, "household", &server.GetCosts().BuildHousehold, terrain.TileHousehold)
-	case OpCodeBuildSawmill:
+	case model.OpCodeBuildSawmill:
 		report = build(unit, "sawmill", &server.GetCosts().BuildSawmill, terrain.TileSawMill)
-	case OpCodeBuildSmeltery:
+	case model.OpCodeBuildSmeltery:
 		report = build(unit, "smeltery", &server.GetCosts().BuildSmeltery, terrain.TileSmeltery)
-	case OpCodeBuildRoad:
+	case model.OpCodeBuildRoad:
 		report = build(unit, "road", &server.GetCosts().BuildRoad, terrain.TileRoad)
-	case OpCodeSpawnTurret:
+	case model.OpCodeSpawnTurret:
 		report = spawn[*TurretUnit](
 			unit,
 			&server.GetCosts().SpawnTurret,
 			NewTurretUnit(server, unit.GetOwner()),
 		)
-	case OpCodeSpawnBomberBot:
+	case model.OpCodeSpawnBomberBot:
 		report = spawn[*TurretUnit](
 			unit,
 			&server.GetCosts().SpawnTurret,
 			NewTurretUnit(server, unit.GetOwner()),
 		)
-	case OpCodeFireTurret:
+	case model.OpCodeFireTurret:
 		parameter := action.Parameter.(model.FireParameter)
 
 		distance := parameter.Destination.Sub(oldPosition)
@@ -502,7 +502,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 			Target: parameter.Destination,
 			KilledUnits: killed,
 		}
-	case OpCodeFireBomberBot:
+	case model.OpCodeFireBomberBot:
 		panic("uniplemented")
 	}
 

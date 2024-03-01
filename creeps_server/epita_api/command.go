@@ -28,11 +28,11 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     unitIdStr := chi.URLParam(r, "unitId")
     unitId := uid.Uid(unitIdStr)
     strOpcode := chi.URLParam(r, "opcode")
-    opcode := server.ActionOpCode(strOpcode)
+    opcode := model.ActionOpCode(strOpcode)
 
     sendError := func(code string, mess string) {
         bytes, err := json.Marshal(model.CommandResponse {
-            OpCode: strOpcode,
+            OpCode: opcode,
             Login: login,
             UnitId: &unitId,
             ReportId: nil,
@@ -50,6 +50,14 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     log.Debug().
         Str("login", login).Str("unitId", unitIdStr).Str("opcode", strOpcode).
         Msg("Command post")
+
+    if !opcode.IsValid() {
+        sendError(
+            "unrecognized",
+            fmt.Sprintf("Opcode '%s' doesn't exist", opcode),
+        )
+        return
+    }
 
     player, _ := h.api.Server.FindEntity(func(e server.IEntity) bool {
         if p, ok := e.(*entities.Player); ok {
@@ -136,7 +144,7 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 
     response := model.CommandResponse {
-        OpCode: strOpcode,
+        OpCode: opcode,
         ReportId: &newAction.ReportId,
         Login: login,
         UnitId: &unitId,

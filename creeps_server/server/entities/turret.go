@@ -48,9 +48,9 @@ func (turret *TurretUnit) ObserveDistance() int {
 }
 
 func (turret *TurretUnit) StartAction(action *Action, onFinished func()) error {
-	err := turret.startAction(action, []ActionOpCode{
-		OpCodeUpgrade,
-		OpCodeFireTurret,
+	err := turret.startAction(action, []model.ActionOpCode{
+		model.OpCodeUpgrade,
+		model.OpCodeFireTurret,
 	}, onFinished)
 	if err != nil {
 		return err

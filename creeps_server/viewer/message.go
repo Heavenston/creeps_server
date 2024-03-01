@@ -40,7 +40,7 @@ type tileChangeContent struct {
 
 // not a messag but used inside messages
 type actionData struct {
-	ActionOpCode server.ActionOpCode `json:"actionOpCode"`
+	ActionOpCode model.ActionOpCode `json:"actionOpCode"`
 	ReportId     uid.Uid             `json:"reportId"`
 	Parameter    any                 `json:"parameter,omitempty"`
 }
