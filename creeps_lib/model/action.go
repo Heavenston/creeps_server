@@ -114,9 +114,9 @@ func (opcode ActionOpCode) GetReportType() reflect.Type {
 	case OpCodeRefineWoodPlank:
 		return reflect.TypeFor[RefineReport]()
 
-	case OpCodeBuildTownHall:
-		fallthrough
 	case OpCodeBuildHousehold:
+		return reflect.TypeFor[BuildHouseHoldReport]()
+	case OpCodeBuildTownHall:
 		fallthrough
 	case OpCodeBuildSawmill:
 		fallthrough

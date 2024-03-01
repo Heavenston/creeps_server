@@ -43,6 +43,12 @@ type Point struct {
 	Y int `json:"y"`
 }
 
+func (p Point) ToAtomic() AtomicPoint {
+	return AtomicPoint{
+		point: p,
+	}
+}
+
 func (a Point) Add(b Point) Point {
 	return Point{
 		X: a.X + b.X,

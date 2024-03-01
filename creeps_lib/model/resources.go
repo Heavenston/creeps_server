@@ -102,6 +102,12 @@ type AtomicResources struct {
     resources Resources
 }
 
+func NewAtomicResources(res Resources) AtomicResources {
+	return AtomicResources{
+		resources: res,
+	}
+}
+
 func (res *AtomicResources) Load() Resources {
     res.lock.RLock()
     defer res.lock.RUnlock()
@@ -126,7 +132,7 @@ func (res *AtomicResources) Modify(cb func(Resources) Resources) {
 func (res *AtomicResources) Sub(other Resources) {
     res.lock.Lock()
     defer res.lock.Unlock()
-    res.resources.Sub(other)
+    res.resources.Remove(other)
 }
 
 func (res *AtomicResources) TrySub(other Resources) bool {
@@ -135,7 +141,7 @@ func (res *AtomicResources) TrySub(other Resources) bool {
     if res.resources.EnoughFor(other) < 1 {
         return false
     }
-    res.resources.Sub(other)
+    res.resources.Remove(other)
     return true
 }
 
