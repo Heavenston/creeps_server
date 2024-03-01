@@ -49,7 +49,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 
 	srv.reports = make(map[uid.Uid]model.IReport)
 
-	srv.ticker = NewTicker(setup.TicksPerSeconds)
+	srv.ticker = NewTicker(setup.TicksPerSecond)
 	srv.ticker.AddTickFunc(func() {
 		srv.tick()
 	})

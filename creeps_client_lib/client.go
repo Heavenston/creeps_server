@@ -75,7 +75,7 @@ func (client *Client) InitResponse() *model.InitResponse {
 
 // Computes the tick duration from the init response
 func (client *Client) TickDuration() time.Duration {
-	return time.Second / time.Duration(client.initResponse.Load().Setup.TicksPerSeconds)
+	return time.Second / time.Duration(client.initResponse.Load().Setup.TicksPerSecond)
 }
 
 func (client *Client) SleepFor(ticks int) {

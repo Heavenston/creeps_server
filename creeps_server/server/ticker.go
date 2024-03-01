@@ -11,7 +11,7 @@ import (
 type TickFunc func()
 
 type Ticker struct {
-	ticksPerSeconds float64
+	ticksPerSecond float64
 
 	tickNumber atomic.Int32
 	startedAt  time.Time
@@ -24,15 +24,15 @@ type Ticker struct {
 	deferedFuncs []TickFunc
 }
 
-func NewTicker(ticksPerSeconds float64) *Ticker {
+func NewTicker(ticksPerSecond float64) *Ticker {
 	ticker := new(Ticker)
 	ticker.startedAt = time.Now()
-	ticker.ticksPerSeconds = ticksPerSeconds
+	ticker.ticksPerSecond = ticksPerSecond
 	return ticker
 }
 
 func (ticker *Ticker) Start() {
-	log.Info().Float64("tps", ticker.ticksPerSeconds).Msg("Ticker starting")
+	log.Info().Float64("tps", ticker.ticksPerSecond).Msg("Ticker starting")
 	time_ticker := time.NewTicker(ticker.TickDuration())
 	defer time_ticker.Stop()
 
@@ -84,5 +84,5 @@ func (ticker *Ticker) Defer(f TickFunc) {
 }
 
 func (ticker *Ticker) TickDuration() time.Duration {
-	return time.Duration(float64(time.Second) / ticker.ticksPerSeconds)
+	return time.Duration(float64(time.Second) / ticker.ticksPerSecond)
 }

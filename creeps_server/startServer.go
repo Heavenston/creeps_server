@@ -29,7 +29,7 @@ func startServ() {
 		MaxMissesPerPlayer: 200,
 		MaxMissesPerUnit:   200,
 		ServerId:           "heavenstone_server",
-		TicksPerSeconds:    tps,
+		TicksPerSecond:    tps,
 		TrackAchievements:  false,
 		WorldDimension: Point{
 			// big value but leave two bits to avoid any overflow anywhere

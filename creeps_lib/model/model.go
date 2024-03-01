@@ -165,7 +165,7 @@ type SetupResponse struct {
 	OilGatherRate      int        `json:"oilGatherRate"`
 	RockGatherRate     int        `json:"rockGatherRate"`
 	ServerId           string     `json:"serverId"`
-	TicksPerSeconds    float64    `json:"ticksPerSeconds"`
+	TicksPerSecond     float64    `json:"ticksPerSecond"`
 	TrackAchievements  bool       `json:"trackAchievements"`
 	WoodGatherRate     int        `json:"woodGatherRate"`
 	WorldDimension     geom.Point `json:"worldDimension"`

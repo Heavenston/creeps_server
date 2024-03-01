@@ -88,7 +88,7 @@ export type InitMessage = {
     costs: Costs,
     // TODO: describe
     setup: {
-      ticksPerSeconds: number,
+      ticksPerSecond: number,
     },
   }
 }
@@ -97,7 +97,7 @@ export function getSecondsPerTicks(): number {
   const init = getInitMessage();
   if (!init)
     return 1;
-  return 1 / init.content.setup.ticksPerSeconds;
+  return 1 / init.content.setup.ticksPerSecond;
 }
 
 export type SubscribeMessage = {
