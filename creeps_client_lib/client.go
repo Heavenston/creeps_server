@@ -47,7 +47,7 @@ type ErrCommand struct {
 }
 
 func (err *ErrCommand) Error() string {
-	return *err.response.ErrorCode
+	return *err.response.Error
 }
 
 type ErrNotEnoughResources struct {
