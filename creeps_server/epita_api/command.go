@@ -134,13 +134,6 @@ func (h *commandHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			)
 			return
 		}
-		if _, ok := err.(server.NotEnoughResourcesError); ok {
-			sendError(
-				"noresources",
-				"You do not own enough resources at the moment. Try again later when you do.",
-			)
-			return
-		}
 	}
 
 	response := model.CommandResponse{

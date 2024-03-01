@@ -23,15 +23,6 @@ func (e UnsuportedActionError) Error() string {
 	return fmt.Sprintf("action %s is not supported, supported: %v", e.Tried, e.Supported)
 }
 
-type NotEnoughResourcesError struct {
-	Required  model.Resources
-	Available model.Resources
-}
-
-func (e NotEnoughResourcesError) Error() string {
-	return fmt.Sprintf("not enough resources to perform action")
-}
-
 // every unit operation must be thread-safe atomic
 // implemented in the server/units package (avoids circular depedency)
 type IUnit interface {

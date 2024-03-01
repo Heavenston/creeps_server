@@ -175,26 +175,31 @@ func (unit *unit) startAction(
 		return UnitBusyError{}
 	}
 
-	cost := action.OpCode.GetCost(unit.server.GetCosts(), unit.this.GetUpgradeCosts())
-	if player, ok := unit.GetServer().GetEntityOwner(unit.id).(*Player); ok {
-		var hadEnough bool
-		var had model.Resources
-		player.ModifyResources(func(res model.Resources) model.Resources {
-			if res.EnoughFor(cost.Resources) < 1 {
-				hadEnough = false
-				had = res
-				return res
-			}
-			hadEnough = true
-			return res.Sub(cost.Resources)
-		})
-		if !hadEnough {
-			return NotEnoughResourcesError{
-				Required:  cost.Resources,
-				Available: had,
-			}
-		}
-	}
+	// Note on commented code: Checking resources on starting an action has
+	// lots of problems and no advantages, the epita creeps seems to verify
+	// there is enough now although it may not be used or resources may be
+	// added after so we just don't do it
+
+	// cost := action.OpCode.GetCost(unit.server.GetCosts(), unit.this.GetUpgradeCosts())
+	// if player, ok := unit.GetServer().GetEntityOwner(unit.id).(*Player); ok {
+	// 	var hadEnough bool
+	// 	var had model.Resources
+	// 	player.ModifyResources(func(res model.Resources) model.Resources {
+	// 		if res.EnoughFor(cost.Resources) < 1 {
+	// 			hadEnough = false
+	// 			had = res
+	// 			return res
+	// 		}
+	// 		hadEnough = true
+	// 		return res
+	// 	})
+	// 	if !hadEnough {
+	// 		return NotEnoughResourcesError{
+	// 			Required:  cost.Resources,
+	// 			Available: had,
+	// 		}
+	// 	}
+	// }
 
 	action.StartedAtTick = unit.server.Ticker().GetTickNumber()
 	unit.lastAction.Store(action)
