@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/heavenston/creeps_server/creeps_lib/model"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 )
 
@@ -17,7 +19,9 @@ type Client struct {
 	apiPrefix  string
 	login      string
 
-	initResponse *model.InitResponse
+	tilemap atomic.Pointer[terrain.Tilemap]
+
+	initResponse atomic.Pointer[model.InitResponse]
 }
 
 // error returned by Get*Report methods if they get a model.ReportError response
@@ -30,6 +34,7 @@ func (err *ReportError) Error() string {
 }
 
 // Creates a new client, makes no requests
+// You can opt in for all reports to be registred by calling SetTilemap
 //
 // example:
 // client := NewClient("localhost:1664", "heavenstone")
@@ -56,16 +61,20 @@ func (client *Client) Login() string {
 }
 
 func (client *Client) InitResponse() *model.InitResponse {
-	return client.initResponse
+	return client.initResponse.Load()
 }
 
 // Computes the tick duration from the init response
 func (client *Client) TickDuration() time.Duration {
-	return time.Second / time.Duration(client.initResponse.Setup.TicksPerSeconds)
+	return time.Second / time.Duration(client.initResponse.Load().Setup.TicksPerSeconds)
 }
 
 func (client *Client) SleepFor(ticks int) {
 	time.Sleep(client.TickDuration())
+}
+
+func (client *Client) SetTilemap(tm *terrain.Tilemap) {
+	client.tilemap.Store(tm)
 }
 
 func (client *Client) RawGet(url string) (*http.Response, error) {
@@ -134,8 +143,10 @@ func (client *Client) GetStatistics() (resp model.StatisticsResponse, err error)
 
 // The response is also stored inside the client
 func (client *Client) PostInit() (resp *model.InitResponse, err error) {
-	err = client.Post("/init/"+client.login, &client.initResponse, nil)
-	resp = client.initResponse
+	err = client.Post("/init/"+client.login, resp, nil)
+	if err != nil {
+		client.initResponse.Store(resp)
+	}
 	return
 }
 
@@ -188,6 +199,9 @@ func (client *Client) PostCommandWithBody(
 // Gets the report and fills the given variable
 // If the server responds with an error report a ReportError is returned
 //
+// Also gets reported if SetTilemap has been called before with a non-nil
+// value
+//
 // expample:
 // var report model.SpawnReport
 // err := client.GetReport(id, &report)
@@ -218,6 +232,11 @@ func (client *Client) GetReport(
 	err = json.Unmarshal(body, reportOut)
 	if err != nil {
 		return err
+	}
+
+	tm := client.tilemap.Load()
+	if rep, ok := reportOut.(model.IReport); ok && tm != nil {
+		RegisterReport(tm, rep)
 	}
 
 	return nil
