@@ -6,7 +6,6 @@ import (
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
-	"github.com/heavenston/creeps_server/creeps_server/server"
 )
 
 type message struct {
