@@ -16,6 +16,7 @@ killall() {
 }
 
 trap killall EXIT
+trap killall SIGINT
 
 # -n to exit when any for the processes exits
 wait -n $PIDS
