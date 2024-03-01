@@ -4,14 +4,14 @@ import (
 	"sync"
 
 	"github.com/heavenston/creeps_server/creeps_lib/model"
-	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 )
 
 type BomberBotUnit struct {
 	unit
-	lock        sync.Mutex
-	owner       uid.Uid
+	lock  sync.Mutex
+	owner uid.Uid
 }
 
 func NewBomberBotUnit(server *Server, owner uid.Uid) *BomberBotUnit {
@@ -58,5 +58,4 @@ func (bomberBot *BomberBotUnit) StartAction(action *Action, onFinished func()) e
 	return nil
 }
 
-func (bomberBot *BomberBotUnit) Tick() { }
-
+func (bomberBot *BomberBotUnit) Tick() {}

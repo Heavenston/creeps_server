@@ -3,18 +3,18 @@ package entities
 import (
 	"sync"
 
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
-	. "github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/rs/zerolog/log"
 )
 
 type RaiderUnit struct {
 	unit
-	lock   sync.RWMutex
+	lock sync.RWMutex
 
 	owner uid.Uid
 
@@ -54,12 +54,12 @@ func (raider *RaiderUnit) GetTarget() Point {
 }
 
 func (raider *RaiderUnit) StartAction(action *Action, onFinished func()) error {
-	err := raider.startAction(action, []model.ActionOpCode {
+	err := raider.startAction(action, []model.ActionOpCode{
 		model.OpCodeMoveDown,
 		model.OpCodeMoveUp,
 		model.OpCodeMoveLeft,
 		model.OpCodeMoveRight,
-	}, func () {
+	}, func() {
 		if onFinished != nil {
 			onFinished()
 		}
@@ -91,10 +91,10 @@ func (raider *RaiderUnit) Tick() {
 	foundAndDestroy := false
 	raider.server.Tilemap().ModifyTile(position, func(t terrain.Tile) terrain.Tile {
 		destroy := t.Kind == terrain.TileRoad ||
-				   t.Kind == terrain.TileHousehold ||
-				   t.Kind == terrain.TileSawMill ||
-				   t.Kind == terrain.TileTownHall ||
-				   t.Kind == terrain.TileSmeltery
+			t.Kind == terrain.TileHousehold ||
+			t.Kind == terrain.TileSawMill ||
+			t.Kind == terrain.TileTownHall ||
+			t.Kind == terrain.TileSmeltery
 		foundAndDestroy = foundAndDestroy || destroy
 		if destroy {
 			t.Kind = terrain.TileGrass

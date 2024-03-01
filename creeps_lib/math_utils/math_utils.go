@@ -46,4 +46,3 @@ func Max[T cmp.Ordered](a T, rest ...T) T {
 	}
 	return max
 }
-

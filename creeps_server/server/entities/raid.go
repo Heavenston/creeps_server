@@ -25,8 +25,8 @@ type Raid struct {
 	server *Server
 	id     uid.Uid
 
-	campPosition Point
-	targetPosition Point
+	campPosition    Point
+	targetPosition  Point
 	lastRaiderSpawn int
 }
 
@@ -58,9 +58,9 @@ func (raid *Raid) GetId() uid.Uid {
 
 // for IEntity
 func (raid *Raid) GetAABB() AABB {
-	return AABB {
+	return AABB{
 		From: raid.campPosition,
-		Size: Point { X: 1, Y: 1 },
+		Size: Point{X: 1, Y: 1},
 	}
 }
 
@@ -102,8 +102,8 @@ func (raid *Raid) Register() {
 		})
 		return !found
 	})
-	raid.server.Tilemap().SetTile(raid.campPosition, terrain.Tile {
-		Kind: terrain.TileRaiderCamp,
+	raid.server.Tilemap().SetTile(raid.campPosition, terrain.Tile{
+		Kind:  terrain.TileRaiderCamp,
 		Value: 0,
 	})
 
@@ -130,8 +130,8 @@ func (raid *Raid) Unregister() {
 		entity.Unregister()
 	}
 
-	raid.server.Tilemap().SetTile(raid.campPosition, terrain.Tile {
-		Kind: terrain.TileGrass,
+	raid.server.Tilemap().SetTile(raid.campPosition, terrain.Tile{
+		Kind:  terrain.TileGrass,
 		Value: 0,
 	})
 
@@ -158,7 +158,7 @@ func (raid *Raid) Tick() {
 	currentTick := raid.server.Ticker().GetTickNumber()
 	rate := raid.server.GetSetup().EnemyTickRate
 
-	if currentTick - raid.lastRaiderSpawn < rate {
+	if currentTick-raid.lastRaiderSpawn < rate {
 		return
 	}
 

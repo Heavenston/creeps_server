@@ -174,9 +174,9 @@ func startServ() {
 		WoodPlank: 0,
 	})
 
-    if apiHost == "" {
-        apiHost = fmt.Sprintf("localhost:%d", apiPort)
-    }
+	if apiHost == "" {
+		apiHost = fmt.Sprintf("localhost:%d", apiPort)
+	}
 
 	api_server := &epita_api.ApiServer{
 		Addr:   apiHost,
@@ -184,9 +184,9 @@ func startServ() {
 	}
 	go api_server.Start()
 
-    if viewerHost == "" {
-        viewerHost = fmt.Sprintf("localhost:%d", viewerPort)
-    }
+	if viewerHost == "" {
+		viewerHost = fmt.Sprintf("localhost:%d", viewerPort)
+	}
 
 	viewer_server := &viewer.ViewerServer{
 		Addr:   viewerHost,
@@ -194,11 +194,10 @@ func startServ() {
 	}
 	go viewer_server.Start()
 
-	tilemap.GenerateChunk(Point { X: 0, Y: 0 })
-	tilemap.GenerateChunk(Point { X: 0, Y: -1 })
-	tilemap.GenerateChunk(Point { X: -1, Y: 0 })
-	tilemap.GenerateChunk(Point { X: -1, Y: -1 })
+	tilemap.GenerateChunk(Point{X: 0, Y: 0})
+	tilemap.GenerateChunk(Point{X: 0, Y: -1})
+	tilemap.GenerateChunk(Point{X: -1, Y: 0})
+	tilemap.GenerateChunk(Point{X: -1, Y: -1})
 
 	srv.Start()
 }
-

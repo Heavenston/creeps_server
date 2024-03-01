@@ -36,7 +36,6 @@ func (ticker *Ticker) Start() {
 	time_ticker := time.NewTicker(ticker.TickDuration())
 	defer time_ticker.Stop()
 
-
 	for {
 		start := time.Now()
 		log.Trace().Msg("Started tick")
@@ -85,5 +84,5 @@ func (ticker *Ticker) Defer(f TickFunc) {
 }
 
 func (ticker *Ticker) TickDuration() time.Duration {
-	return time.Duration(float64(time.Second) / ticker.ticksPerSeconds);
+	return time.Duration(float64(time.Second) / ticker.ticksPerSeconds)
 }

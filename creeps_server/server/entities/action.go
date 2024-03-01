@@ -3,12 +3,12 @@ package entities
 import (
 	"fmt"
 
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
-	. "github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/rs/zerolog/log"
 )
 
@@ -17,9 +17,9 @@ func observe(unit IUnit, into *model.ObserveReport) {
 	server := unit.GetServer()
 	dist := unit.ObserveDistance() / 2
 	// remainder upto is excluded
-	aabb := AABB {
+	aabb := AABB{
 		From: unit.GetPosition().Minus(dist, dist),
-		Size: Point {
+		Size: Point{
 			X: unit.ObserveDistance(),
 			Y: unit.ObserveDistance(),
 		},
@@ -259,7 +259,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 			Msg("Cannot apply unit action if its owner doesn't exist")
 		report = &model.ErrorReport{
 			ErrorCode: "dead-owner",
-			Error: "Owner's dead",
+			Error:     "Owner's dead",
 		}
 		goto end
 	}
@@ -354,11 +354,11 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 	case model.OpCodeFarm:
 		position := unit.GetPosition()
 
-		poses := []Point {
-			{ X:  1, Y:  0 },
-			{ X:  0, Y:  1 },
-			{ X: -1, Y:  0 },
-			{ X:  0, Y: -1 },
+		poses := []Point{
+			{X: 1, Y: 0},
+			{X: 0, Y: 1},
+			{X: -1, Y: 0},
+			{X: 0, Y: -1},
 		}
 
 		// note on race condition: as water cannot be removed if water is found
@@ -376,11 +376,11 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 		if !foundWater {
 			report = &model.ErrorReport{
 				ErrorCode: "no-water-nearby",
-				Error: "Cannot farm if no water is next to this tile",
+				Error:     "Cannot farm if no water is next to this tile",
 			}
 			break
 		}
-		
+
 		server.Tilemap().ModifyTile(position, func(tile terrain.Tile) terrain.Tile {
 			if tile.Kind != terrain.TileGrass {
 				report = &model.ErrorReport{
@@ -466,7 +466,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 		if mathutils.Max(distance.X, distance.Y) > unit.ObserveDistance() {
 			report = &model.ErrorReport{
 				ErrorCode: "out-of-range",
-				Error: "You are reaching too far !!",
+				Error:     "You are reaching too far !!",
 			}
 			break
 		}
@@ -474,7 +474,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 		if parameter.Destination == oldPosition {
 			report = &model.ErrorReport{
 				ErrorCode: "turret-minimum-range",
-				Error: "Literally 1969, you cannot shoot yourself",
+				Error:     "Literally 1969, you cannot shoot yourself",
 			}
 			break
 		}
@@ -483,7 +483,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 
 		entities := server.Entities().GetAllIntersects(AABB{
 			From: parameter.Destination,
-			Size: Point{ X: 1, Y: 1 },
+			Size: Point{X: 1, Y: 1},
 		})
 		for _, entity := range entities {
 			unit, ok := entity.(IUnit)
@@ -491,15 +491,15 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 				continue
 			}
 			killed = append(killed, model.Unit{
-				OpCode: unit.GetOpCode(),
-				Player: string(unit.GetOwner()),
+				OpCode:   unit.GetOpCode(),
+				Player:   string(unit.GetOwner()),
 				Position: unit.GetPosition(),
 			})
 			entity.Unregister()
 		}
 
 		report = &model.FireReport{
-			Target: parameter.Destination,
+			Target:      parameter.Destination,
 			KilledUnits: killed,
 		}
 	case model.OpCodeFireBomberBot:

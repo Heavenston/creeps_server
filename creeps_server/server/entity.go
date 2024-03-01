@@ -26,7 +26,7 @@ type IEntity interface {
 
 	Unregister()
 	Register()
-	
+
 	// Ran each tick after being registered by the server
 	Tick()
 }
@@ -35,7 +35,7 @@ type IEntity interface {
 type IOwnerEntity interface {
 	IEntity
 	CopyEntityList() map[uid.Uid]IEntity
-	ForEachEntities(func (entity IEntity) (shouldStop bool))
+	ForEachEntities(func(entity IEntity) (shouldStop bool))
 	HasEntity(id uid.Uid) bool
 	AddEntity(entity IEntity)
 	RemoveEntity(id uid.Uid) IEntity
@@ -64,7 +64,7 @@ func (e *OwnerEntity) CopyEntityList() map[uid.Uid]IEntity {
 	return copy
 }
 
-func (e *OwnerEntity) ForEachEntities(cb func (entity IEntity) (shouldStop bool)) {
+func (e *OwnerEntity) ForEachEntities(cb func(entity IEntity) (shouldStop bool)) {
 	e.entitesLock.RLock()
 	defer e.entitesLock.RUnlock()
 

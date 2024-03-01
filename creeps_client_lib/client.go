@@ -192,9 +192,9 @@ func (client *Client) PostCommandWithBody(
 // var report model.SpawnReport
 // err := client.GetReport(id, &report)
 //
-// if err != nil {
-//     return err
-// }
+//	if err != nil {
+//	    return err
+//	}
 func (client *Client) GetReport(
 	reportId uid.Uid,
 	reportOut any,

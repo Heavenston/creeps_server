@@ -7,7 +7,7 @@ import (
 )
 
 type AtomicPoint struct {
-	lock sync.RWMutex
+	lock  sync.RWMutex
 	point Point
 }
 

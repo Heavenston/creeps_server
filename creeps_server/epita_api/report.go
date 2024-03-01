@@ -6,38 +6,38 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/go-chi/chi/v5"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/rs/zerolog/log"
 )
 
 type reportHandle struct {
-    api *ApiServer
+	api *ApiServer
 }
 
 func (h *reportHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    reportIdStr := chi.URLParam(r, "reportId")
-    reportId := uid.Uid(reportIdStr)
+	reportIdStr := chi.URLParam(r, "reportId")
+	reportId := uid.Uid(reportIdStr)
 
 	log.Trace().
-        Str("reportId", reportIdStr).
-        Str("addr", r.RemoteAddr).
+		Str("reportId", reportIdStr).
+		Str("addr", r.RemoteAddr).
 		Msg("Get report Id")
 
-    report := h.api.Server.GetReport(reportId)
-    if report == nil {
-        w.WriteHeader(404)
-        w.Write([]byte(fmt.Sprintf(`{
+	report := h.api.Server.GetReport(reportId)
+	if report == nil {
+		w.WriteHeader(404)
+		w.Write([]byte(fmt.Sprintf(`{
             "opcode": "noreport",
             "error": "No such reprot",
             "reportId": "%s",
         }`, reportId)))
-        return
-    }
+		return
+	}
 
-    res, err := json.Marshal(report)
-    errors.Unwrap(err)
-    
-    w.WriteHeader(200)
-    w.Write(res)
+	res, err := json.Marshal(report)
+	errors.Unwrap(err)
+
+	w.WriteHeader(200)
+	w.Write(res)
 }

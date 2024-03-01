@@ -13,29 +13,29 @@ import (
 
 type TileUpdateChunkEvent struct {
 	UpdatedPosition Point
-	PreviousValue Tile
-	NewValue Tile
+	PreviousValue   Tile
+	NewValue        Tile
 }
 
-type GeneratedChunkEvent struct {}
+type GeneratedChunkEvent struct{}
 
 type Chunk struct {
 	isGenerated atomic.Bool
-	chunkPos Point
+	chunkPos    Point
 	// guards tiles
-	tileslock sync.RWMutex
-	tiles [ChunkTileCount]Tile
+	tileslock            sync.RWMutex
+	tiles                [ChunkTileCount]Tile
 	UpdatedEventProvider events.EventProvider[any]
 }
 
 type ReadLockedChunk struct {
-    unlocked bool
-    chunk *Chunk
+	unlocked bool
+	chunk    *Chunk
 }
 
 type WriteLockedChunk struct {
-    unlocked bool
-    chunk *Chunk
+	unlocked bool
+	chunk    *Chunk
 }
 
 const ChunkSize = 32
@@ -70,8 +70,8 @@ func NewChunk(pos Point) (chunk *Chunk) {
 
 	chunk.chunkPos = pos
 	for i := range chunk.tiles {
-		chunk.tiles[i] = Tile {
-			Kind: TileUnknown,
+		chunk.tiles[i] = Tile{
+			Kind:  TileUnknown,
 			Value: 0,
 		}
 	}
@@ -89,18 +89,18 @@ func (chunk *Chunk) IsGenerated() bool {
 }
 
 func (chunk *Chunk) IsInBounds(subcoord Point) bool {
-    return subcoord.X >= 0 && subcoord.X < ChunkSize ||
+	return subcoord.X >= 0 && subcoord.X < ChunkSize ||
 		subcoord.Y >= 0 || subcoord.Y < ChunkSize
 }
 
 func (chunk *Chunk) tileIndex(subcoord Point) int {
-    return subcoord.X + subcoord.Y * ChunkSize
+	return subcoord.X + subcoord.Y*ChunkSize
 }
 
 // Waits for a read access lock on the chunk and returns the value of the tile
 func (chunk *Chunk) GetTile(subcoord Point) Tile {
 	if !chunk.IsInBounds(subcoord) {
-        panic("out of bound chunk tile access")
+		panic("out of bound chunk tile access")
 	}
 
 	chunk.tileslock.RLock()
@@ -120,12 +120,12 @@ func (chunk *Chunk) SetTile(subcoord Point, newValue Tile) Tile {
 // returns the pervious value
 func (chunk *Chunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 	if !chunk.IsInBounds(subcoord) {
-        panic("out of bound chunk tile access")
+		panic("out of bound chunk tile access")
 	}
 
 	chunk.tileslock.Lock()
 	tileRef := &chunk.tiles[chunk.tileIndex(subcoord)]
-    prevValue := *tileRef
+	prevValue := *tileRef
 	newValue := cb(prevValue)
 	*tileRef = newValue
 	chunk.tileslock.Unlock()
@@ -133,8 +133,8 @@ func (chunk *Chunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 	if newValue != prevValue {
 		chunk.UpdatedEventProvider.Emit(TileUpdateChunkEvent{
 			UpdatedPosition: subcoord,
-			PreviousValue: prevValue,
-			NewValue: newValue,
+			PreviousValue:   prevValue,
+			NewValue:        newValue,
 		})
 	}
 
@@ -142,7 +142,7 @@ func (chunk *Chunk) ModifyTile(subcoord Point, cb func(Tile) Tile) Tile {
 }
 
 func (chunk *Chunk) Print(w io.Writer) {
-    rlc := chunk.RLock()
+	rlc := chunk.RLock()
 	defer rlc.UnLock()
 	for y := ChunkSize - 1; y > 0; y-- {
 		for x := 0; x < ChunkSize; x++ {
@@ -154,15 +154,15 @@ func (chunk *Chunk) Print(w io.Writer) {
 }
 
 func (chunk *Chunk) RLock() ReadLockedChunk {
-    chunk.tileslock.RLock()
-    return ReadLockedChunk{
-        chunk: chunk,
-    }
+	chunk.tileslock.RLock()
+	return ReadLockedChunk{
+		chunk: chunk,
+	}
 }
 
 func (rlc *ReadLockedChunk) UnLock() {
-    rlc.chunk.tileslock.Unlock()
-    rlc.unlocked = true
+	rlc.chunk.tileslock.Unlock()
+	rlc.unlocked = true
 }
 
 func (rlc *ReadLockedChunk) GetChunk() *Chunk {
@@ -170,19 +170,19 @@ func (rlc *ReadLockedChunk) GetChunk() *Chunk {
 }
 
 func (rlc *ReadLockedChunk) GetTile(subcoords Point) Tile {
-    return rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)]
+	return rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)]
 }
 
 func (chunk *Chunk) WLock() WriteLockedChunk {
-    chunk.tileslock.Lock()
-    return WriteLockedChunk{
-        chunk: chunk,
-    }
+	chunk.tileslock.Lock()
+	return WriteLockedChunk{
+		chunk: chunk,
+	}
 }
 
 func (wlc *WriteLockedChunk) UnLock() {
-    wlc.chunk.tileslock.Unlock()
-    wlc.unlocked = true
+	wlc.chunk.tileslock.Unlock()
+	wlc.unlocked = true
 }
 
 func (rlc *WriteLockedChunk) GetChunk() *Chunk {
@@ -190,9 +190,9 @@ func (rlc *WriteLockedChunk) GetChunk() *Chunk {
 }
 
 func (rlc *WriteLockedChunk) GetTile(subcoords Point) Tile {
-    return rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)]
+	return rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)]
 }
 
 func (rlc *WriteLockedChunk) SetTile(subcoords Point, newVal Tile) {
-    rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)] = newVal
+	rlc.chunk.tiles[rlc.chunk.tileIndex(subcoords)] = newVal
 }

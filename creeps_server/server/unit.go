@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 )
 
@@ -24,7 +24,7 @@ func (e UnsuportedActionError) Error() string {
 }
 
 type NotEnoughResourcesError struct {
-	Required model.Resources
+	Required  model.Resources
 	Available model.Resources
 }
 

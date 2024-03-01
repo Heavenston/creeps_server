@@ -14,8 +14,8 @@ var apiHost string
 var viewerPort int
 var viewerHost string
 
-var rootCmd = cobra.Command {
-	Use: "heav_creeps",
+var rootCmd = cobra.Command{
+	Use:   "heav_creeps",
 	Short: "A reimplementation of the *very* famous creeps game",
 
 	Run: func(cmd *cobra.Command, args []string) {

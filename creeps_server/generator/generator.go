@@ -35,8 +35,8 @@ func (gen *NoiseGenerator) newPath(
 	defaultTileValue uint8,
 ) {
 	noise := simplex.NewNormalized(gen.rand.Int63())
-	
-	var elm = patch {
+
+	var elm = patch{
 		thresh: thresh,
 
 		kind:             kind,
@@ -93,4 +93,3 @@ func (gen *NoiseGenerator) GenerateChunk(wc *WriteLockedChunk) {
 		}
 	}
 }
-

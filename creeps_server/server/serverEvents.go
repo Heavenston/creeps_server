@@ -1,10 +1,10 @@
 package server
 
 import (
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/events"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
 )
 

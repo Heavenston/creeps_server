@@ -3,8 +3,8 @@ package terrain
 import (
 	"io"
 
-	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/fatih/color"
+	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/rs/zerolog/log"
 )
 

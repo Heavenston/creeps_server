@@ -159,7 +159,9 @@ func (m *SpatialMap[T]) RemoveAll(predicate func(T) bool) int {
 	new := m.objects[:0]
 	for _, o := range m.objects {
 		if predicate(o.val) {
-			if o.subHandle != nil { o.subHandle.Cancel() }
+			if o.subHandle != nil {
+				o.subHandle.Cancel()
+			}
 			matches++
 		} else {
 			new = append(new, o)
@@ -209,7 +211,7 @@ func (m *SpatialMap[T]) GetAllIntersects(aabb AABB) []T {
 }
 
 // if you want to short circuit maybe look at Find
-func (m *SpatialMap[T]) ForEach(cb func (T)) {
+func (m *SpatialMap[T]) ForEach(cb func(T)) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 

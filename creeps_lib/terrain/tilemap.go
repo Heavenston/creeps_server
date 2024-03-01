@@ -24,7 +24,7 @@ type Tilemap struct {
 func NewTilemap(generator IGenerator) Tilemap {
 	if generator == nil {
 		generator = &DefaultGenerator{}
- 	}
+	}
 	return Tilemap{
 		generator: generator,
 		chunks:    make(map[Point]*Chunk),
@@ -116,7 +116,7 @@ func (t *Tilemap) SetTile(p Point, newVal Tile) Tile {
 }
 
 // Generate the chunk if needed and calls terrain.Chunk.ModifyTile
-func (t *Tilemap) ModifyTile(p Point, cb func (Tile) Tile) {
+func (t *Tilemap) ModifyTile(p Point, cb func(Tile) Tile) {
 	chunk := t.GenerateChunk(Global2ContainingChunkCoords(p))
 	chunk.ModifyTile(Global2ChunkSubCoords(p), cb)
 }
@@ -127,9 +127,9 @@ func (t *Tilemap) PrintRegion(w io.Writer, from Point, upto Point) {
 	max_x := mathutils.Max(from.X, upto.X)
 	max_y := mathutils.Max(from.Y, upto.Y)
 
-	for y := max_y-1; y > min_y; y-- {
+	for y := max_y - 1; y > min_y; y-- {
 		for x := min_x; x < max_x; x++ {
-			t.GetTile(Point { X:x, Y:y }).Print(w)
+			t.GetTile(Point{X: x, Y: y}).Print(w)
 		}
 		fmt.Fprintln(w)
 	}
@@ -142,7 +142,7 @@ func (t *Tilemap) ObserveRegion(aabb AABB) []Tile {
 	// FIXME: Lots of locks, but locking the correct chunks... too lazy rn
 	for y := aabb.From.Y; y < aabb.Upto().Y; y++ {
 		for x := aabb.From.X; x < aabb.Upto().X; x++ {
-			tiles = append(tiles, t.GetTile(Point { X:x, Y:y }))
+			tiles = append(tiles, t.GetTile(Point{X: x, Y: y}))
 		}
 	}
 

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_server/gameplay"
-	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/heavenston/creeps_server/creeps_server/server/entities"
 
@@ -20,7 +20,7 @@ type initHandle struct {
 }
 
 func (h *initHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    addr := strings.Split(r.RemoteAddr, ":")[0]
+	addr := strings.Split(r.RemoteAddr, ":")[0]
 
 	username := chi.URLParam(r, "username")
 

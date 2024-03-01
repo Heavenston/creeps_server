@@ -46,7 +46,7 @@ func NewPlayer(
 
 	player.OwnerEntity.InitOwnedEntities()
 
-	player.server = server;
+	player.server = server
 	player.spawnPoint = spawnPoint
 	player.addr = addr
 	player.id = uid.GenUid()
@@ -211,7 +211,7 @@ func (player *Player) enemySpawnTick() {
 	player.lastEnemySpawnTick = currentTick
 
 	// finding spawn point can be costly so use another goroutine
-	go (func () {
+	go (func() {
 		NewRaid(player.server, player.id).Register()
 	})()
 }
@@ -236,7 +236,7 @@ func (player *Player) Tick() {
 	}
 
 	if !hasCitizens || !hasTownhalls {
-		player.Unregister();
+		player.Unregister()
 		return
 	}
 

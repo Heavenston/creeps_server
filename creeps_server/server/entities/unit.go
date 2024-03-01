@@ -259,7 +259,7 @@ func (unit *unit) Unregister() {
 	if !unit.registered.Swap(false) {
 		log.Warn().
 			Caller().
-			Type("unit_type",unit.this).
+			Type("unit_type", unit.this).
 			Str("unit_id", string(unit.id)).
 			Msg("Unit got double killed")
 		return

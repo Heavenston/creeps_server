@@ -6,14 +6,14 @@ import (
 	"sync"
 	"time"
 
-	. "github.com/heavenston/creeps_server/creeps_lib/geom"
-	"github.com/heavenston/creeps_server/creeps_server/server"
-	"github.com/heavenston/creeps_server/creeps_server/server/entities"
-	"github.com/heavenston/creeps_server/creeps_lib/terrain"
-	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/websocket"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/terrain"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	"github.com/heavenston/creeps_server/creeps_server/server"
+	"github.com/heavenston/creeps_server/creeps_server/server/entities"
 	"github.com/rs/zerolog/log"
 )
 
@@ -146,11 +146,11 @@ func (viewer *ViewerServer) handleClientSubscription(
 		return false
 	}
 
-	getActionData := func (action *server.Action) actionData {
+	getActionData := func(action *server.Action) actionData {
 		data := actionData{
 			ActionOpCode: action.OpCode,
-			ReportId: action.ReportId,
-			Parameter: action.Parameter,
+			ReportId:     action.ReportId,
+			Parameter:    action.Parameter,
 		}
 		return data
 	}

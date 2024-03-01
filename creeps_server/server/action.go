@@ -14,5 +14,5 @@ type Action struct {
 	ReportId      uid.Uid
 	Finised       atomic.Bool
 	// Contains the type returned by OpCode.ParameterType()
-	Parameter     any
+	Parameter any
 }
