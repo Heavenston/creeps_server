@@ -7,7 +7,7 @@ replace github.com/heavenston/creeps_server/creeps_lib => ../creeps_lib
 require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/gorilla/websocket v1.5.1
-	github.com/heavenston/creeps_server/creeps_lib v0.0.0
+	github.com/heavenston/creeps_server/creeps_lib v0.1.0
 	github.com/ojrac/opensimplex-go v1.0.2
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
