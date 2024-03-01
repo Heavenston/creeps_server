@@ -8,19 +8,19 @@ import (
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 )
 
-func registerTiles(tp *terrain.Tilemap, pos Point, tiles []uint16) {
+func registerTiles(client *Client, pos Point, tiles []uint16) {
 	size := int(math.Ceil(math.Sqrt(float64(len(tiles)))))
 	for i, val := range tiles {
 		x := i % size
 		y := i / size
-		tp.SetTile(pos.Plus(x-size/2, y-size/2), terrain.Tile{
+		client.tilemap.Load().SetTile(pos.Plus(x-size/2, y-size/2), terrain.Tile{
 			Kind:  terrain.TileKind(val >> 10),
 			Value: uint8(val & 0x3F),
 		})
 	}
 }
 
-func registerBuilding(tp *terrain.Tilemap, buildReport *model.BuildReport) {
+func registerBuilding(client *Client, buildReport *model.BuildReport) {
 	var tileKind terrain.TileKind
 
 	// FIXME: Make an 'enum' somewhere
@@ -39,39 +39,52 @@ func registerBuilding(tp *terrain.Tilemap, buildReport *model.BuildReport) {
 		return
 	}
 
-	tp.SetTile(buildReport.UnitPosition, terrain.Tile{
+	client.tilemap.Load().SetTile(buildReport.UnitPosition, terrain.Tile{
 		Kind:  tileKind,
 		Value: uint8(buildReport.Building.Player),
 	})
 }
 
-// Applies the tile modifications implied by the given report
-func RegisterReport(tp *terrain.Tilemap, report model.IReport) {
+// Applies the tile and resource modifications implied by the given report
+func RegisterReport(client *Client, report model.IReport) {
 	switch casted := report.(type) {
 	case *model.ObserveReport:
-		registerTiles(tp, casted.UnitPosition, casted.Tiles)
+		registerTiles(client, casted.UnitPosition, casted.Tiles)
 	case *model.MoveReport:
-		registerTiles(tp, casted.NewPosition, casted.Tiles)
+		registerTiles(client, casted.NewPosition, casted.Tiles)
+	case *model.RefineReport:
+		to := casted.OpCode.RefineEndResult()
+		client.playerResources.Modify(func(r model.Resources) model.Resources {
+			*r.OfKind(to)++
+			return r
+		})
 	case *model.GatherReport:
+		client.UnitResources(casted.UnitId).Modify(func(r model.Resources) model.Resources {
+			*r.OfKind(casted.Resource) += casted.Gathered
+			return r
+		})
+
 		if casted.ResourcesLeft == 0 {
-			tp.SetTile(casted.UnitPosition, terrain.Tile{
+			client.tilemap.Load().SetTile(casted.UnitPosition, terrain.Tile{
 				Kind:  terrain.TileGrass,
 				Value: 0,
 			})
 		} else {
-			tp.SetTile(casted.UnitPosition, terrain.Tile{
+			client.tilemap.Load().SetTile(casted.UnitPosition, terrain.Tile{
 				Kind:  terrain.TileFromResource(casted.Resource),
 				Value: uint8(casted.ResourcesLeft),
 			})
 		}
 	case *model.FarmReport:
-		tp.SetTile(casted.UnitPosition, terrain.Tile{
+		client.UnitResources(casted.UnitId)
+
+		client.tilemap.Load().SetTile(casted.UnitPosition, terrain.Tile{
 			Kind:  terrain.TileFromResource(model.Food),
 			Value: uint8(casted.FoodQuantity),
 		})
 	case *model.BuildReport:
-		registerBuilding(tp, casted)
+		registerBuilding(client, casted)
 	case *model.BuildHouseHoldReport:
-		registerBuilding(tp, &casted.BuildReport)
+		registerBuilding(client, &casted.BuildReport)
 	}
 }

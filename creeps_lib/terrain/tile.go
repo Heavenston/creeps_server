@@ -65,6 +65,16 @@ func (kind TileKind) GetResourceName() model.ResourceKind {
 	return ""
 }
 
+func (kind TileKind) CanRefine(resource model.ResourceKind) bool {
+	switch resource {
+	case model.Copper:
+		return kind == TileSmeltery
+	case model.WoodPlank:
+		return kind == TileSawMill
+	}
+	return true
+}
+
 type Tile struct {
 	Kind  TileKind
 	Value uint8

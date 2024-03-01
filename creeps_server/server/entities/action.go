@@ -1,8 +1,6 @@
 package entities
 
 import (
-	"fmt"
-
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
@@ -55,13 +53,14 @@ func observe(unit IUnit, into *model.ObserveReport) {
 // used by ApplyAction
 func refine(
 	unit IUnit,
-	requiredTile terrain.TileKind,
-	cost *model.CostResponse,
-	to model.ResourceKind,
+	opcode model.ActionOpCode,
 ) (report model.IReport) {
 	server := unit.GetServer()
 	ownerId := unit.GetOwner()
 	player := server.GetEntity(ownerId).(*Player)
+
+	to := opcode.RefineEndResult()
+	cost := opcode.GetCost(server.GetCosts(), unit.GetUpgradeCosts())
 
 	if player == nil {
 		log.Warn().Any("ownerId", ownerId).Msg("no player no refine")
@@ -69,13 +68,10 @@ func refine(
 	}
 
 	tile := unit.GetServer().Tilemap().GetTile(unit.GetPosition())
-	if tile.Kind != requiredTile {
+	if tile.Kind.CanRefine(to) {
 		report = &model.ErrorReport{
 			ErrorCode: "not-on-suitable-refinery",
-			Error: fmt.Sprintf(
-				"Wrong tile, found %v but require %v",
-				tile.Kind, requiredTile,
-			),
+			Error: "Tile cannot refine asked type",
 		}
 		return
 	}
@@ -433,9 +429,9 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 
 		report = &model.UpgradeReport{}
 	case model.OpCodeRefineCopper:
-		report = refine(unit, terrain.TileSmeltery, &server.GetCosts().RefineCopper, model.Copper)
+		fallthrough
 	case model.OpCodeRefineWoodPlank:
-		report = refine(unit, terrain.TileSawMill, &server.GetCosts().RefineWoodPlank, model.WoodPlank)
+		report = refine(unit, action.OpCode)
 	case model.OpCodeBuildTownHall:
 		report = build(unit, "town-hall", &server.GetCosts().BuildTownHall, terrain.TileTownHall)
 	case model.OpCodeBuildHousehold:
@@ -508,7 +504,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 
 end:
 	report.GetReport().ReportId = action.ReportId
-	report.GetReport().OpCode = string(action.OpCode)
+	report.GetReport().OpCode = action.OpCode
 	report.GetReport().UnitId = unit.GetId()
 	report.GetReport().UnitPosition = oldPosition
 	report.GetReport().Status = "SUCCESS"

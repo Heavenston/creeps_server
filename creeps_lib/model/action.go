@@ -211,3 +211,15 @@ func (opcode ActionOpCode) ParameterType() reflect.Type {
 		return nil
 	}
 }
+
+// returns empty string if not a refine opcode
+func (opcode ActionOpCode) RefineEndResult() ResourceKind {
+	switch opcode {
+	case OpCodeRefineCopper:
+		return Copper
+	case OpCodeRefineWoodPlank:
+		return WoodPlank
+	default:
+		return ""
+	}
+}

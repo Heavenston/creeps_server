@@ -30,12 +30,12 @@ type IReport interface {
 }
 
 type Report struct {
-	OpCode       string     `json:"opcode"`
-	ReportId     uid.Uid    `json:"reportId"`
-	UnitId       uid.Uid    `json:"unitId"`
-	Login        string     `json:"login"`
-	UnitPosition geom.Point `json:"unitPosition"`
-	Status       string     `json:"status"`
+	OpCode       ActionOpCode `json:"opcode"`
+	ReportId     uid.Uid      `json:"reportId"`
+	UnitId       uid.Uid      `json:"unitId"`
+	Login        string       `json:"login"`
+	UnitPosition geom.Point   `json:"unitPosition"`
+	Status       string       `json:"status"`
 }
 
 func (r *Report) GetReport() *Report {

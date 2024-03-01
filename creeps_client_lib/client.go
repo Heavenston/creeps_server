@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -15,14 +16,21 @@ import (
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 )
 
+type lockedResources struct {
+	lock      sync.RWMutex
+	resources model.Resources
+}
+
 type Client struct {
 	serverAddr string
 	apiPrefix  string
 	login      string
 
-	tilemap atomic.Pointer[terrain.Tilemap]
-
+	tilemap      atomic.Pointer[terrain.Tilemap]
 	initResponse atomic.Pointer[model.InitResponse]
+
+	playerResources    *model.AtomicResources
+	unitsResources     sync.Map
 }
 
 // error returned by Get*Report methods if they get a model.ReportError response
@@ -42,8 +50,14 @@ func (err *ErrCommand) Error() string {
 	return *err.response.ErrorCode
 }
 
+type ErrNotEnoughResources struct {
+}
+
+func (err *ErrNotEnoughResources) Error() string {
+	return "Not enough resources :("
+}
+
 // Creates a new client, makes no requests
-// You can opt in for all reports to be registred by calling SetTilemap
 //
 // example:
 // client := NewClient("localhost:1664", "heavenstone")
@@ -53,6 +67,7 @@ func NewClient(serverAddr string, login string) *Client {
 	client.serverAddr = serverAddr
 	client.apiPrefix = "http://" + serverAddr
 	client.login = login
+	client.playerResources = &model.AtomicResources{}
 
 	return client
 }
@@ -79,11 +94,20 @@ func (client *Client) TickDuration() time.Duration {
 }
 
 func (client *Client) SleepFor(ticks int) {
-	time.Sleep(client.TickDuration() * time.Duration(ticks) + time.Millisecond * 5)
+	time.Sleep(client.TickDuration()*time.Duration(ticks) + time.Millisecond*5)
 }
 
 func (client *Client) SetTilemap(tm *terrain.Tilemap) {
 	client.tilemap.Store(tm)
+}
+
+func (client *Client) PlayerResources() *model.AtomicResources {
+	return client.playerResources
+}
+
+func (client *Client) UnitResources(unitId uid.Uid) *model.AtomicResources {
+	val, _ := client.unitsResources.LoadOrStore(unitId, &model.AtomicResources{})
+	return val.(*model.AtomicResources)
 }
 
 func (client *Client) RawGet(url string) (*http.Response, error) {
@@ -154,6 +178,9 @@ func (client *Client) GetStatistics() (resp model.StatisticsResponse, err error)
 func (client *Client) PostInit() (resp *model.InitResponse, err error) {
 	err = client.Post("/init/"+client.login, &resp, nil)
 	client.initResponse.Store(resp)
+	if resp != nil && resp.Resources != nil {
+		client.PlayerResources().Store(*resp.Resources)
+	}
 	return
 }
 
@@ -212,9 +239,6 @@ func (client *Client) PostCommandWithBody(
 // Gets the report and fills the given variable
 // If the server responds with an error report a ReportError is returned
 //
-// Also gets reported if SetTilemap has been called before with a non-nil
-// value
-//
 // expample:
 // var report model.SpawnReport
 // err := client.GetReport(id, &report)
@@ -247,9 +271,8 @@ func (client *Client) GetReport(
 		return err
 	}
 
-	tm := client.tilemap.Load()
-	if rep, ok := reportOut.(model.IReport); ok && tm != nil {
-		RegisterReport(tm, rep)
+	if rep, ok := reportOut.(model.IReport); ok {
+		RegisterReport(client, rep)
 	}
 
 	return nil
@@ -258,13 +281,22 @@ func (client *Client) GetReport(
 func (client *Client) Command(
 	unitId uid.Uid,
 	opcode model.ActionOpCode,
+	upgradeCost *model.CostResponse,
 ) (model.IReport, error) {
+	cost := opcode.GetCost(client.InitResponse().Costs, upgradeCost)
+
+	if !client.playerResources.TrySub(cost.Resources) {
+		return nil, &ErrNotEnoughResources{}
+	}
+
 	cmd, err := client.PostCommand(unitId, opcode)
 	if err != nil {
+		// post fail so we credit the resources back
+		client.playerResources.Add(cost.Resources)
 		return nil, err
 	}
 
-	client.SleepFor(opcode.GetCost(client.InitResponse().Costs, nil).Cast)
+	client.SleepFor(cost.Cast)
 
 	report := reflect.New(opcode.GetReportType())
 	err = client.GetReport(*cmd.ReportId, report.Interface())
