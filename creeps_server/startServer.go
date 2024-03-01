@@ -24,7 +24,7 @@ func startServ() {
 		GcTickRate:         150,
 		EnableEnemies:      true,
 		EnemyTickRate:      8,
-		EnemyBaseTickRate:  150,
+		EnemyBaseTickRate:  300,
 		MaxLoad:            20,
 		MaxMissesPerPlayer: 200,
 		MaxMissesPerUnit:   200,
