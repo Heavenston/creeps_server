@@ -71,7 +71,7 @@ func refine(
 	if tile.Kind.CanRefine(to) {
 		report = &model.ErrorReport{
 			ErrorCode: "not-on-suitable-refinery",
-			Error: "Tile cannot refine asked type",
+			Error:     "Tile cannot refine asked type",
 		}
 		return
 	}
@@ -297,7 +297,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 					Msg("Gather on non-resources")
 				report = &model.ErrorReport{
 					ErrorCode: "not-resource-tile",
-					Error: "Not a resource tile :(",
+					Error:     "Not a resource tile :(",
 				}
 				return tile
 			}

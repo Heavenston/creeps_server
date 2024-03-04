@@ -98,8 +98,8 @@ func (res Resources) Size() int {
 }
 
 type AtomicResources struct {
-    lock sync.RWMutex
-    resources Resources
+	lock      sync.RWMutex
+	resources Resources
 }
 
 func NewAtomicResources(res Resources) AtomicResources {
@@ -109,44 +109,44 @@ func NewAtomicResources(res Resources) AtomicResources {
 }
 
 func (res *AtomicResources) Load() Resources {
-    res.lock.RLock()
-    defer res.lock.RUnlock()
-    return res.resources
+	res.lock.RLock()
+	defer res.lock.RUnlock()
+	return res.resources
 }
 
 // returns the previous value
 func (res *AtomicResources) Store(new Resources) Resources {
-    res.lock.Lock()
-    defer res.lock.Unlock()
-    last := res.resources
-    res.resources = new
-    return last
+	res.lock.Lock()
+	defer res.lock.Unlock()
+	last := res.resources
+	res.resources = new
+	return last
 }
 
 func (res *AtomicResources) Modify(cb func(Resources) Resources) {
-    res.lock.Lock()
-    defer res.lock.Unlock()
-    res.resources = cb(res.resources)
+	res.lock.Lock()
+	defer res.lock.Unlock()
+	res.resources = cb(res.resources)
 }
 
 func (res *AtomicResources) Sub(other Resources) {
-    res.lock.Lock()
-    defer res.lock.Unlock()
-    res.resources.Remove(other)
+	res.lock.Lock()
+	defer res.lock.Unlock()
+	res.resources.Remove(other)
 }
 
 func (res *AtomicResources) TrySub(other Resources) bool {
-    res.lock.Lock()
-    defer res.lock.Unlock()
-    if res.resources.EnoughFor(other) < 1 {
-        return false
-    }
-    res.resources.Remove(other)
-    return true
+	res.lock.Lock()
+	defer res.lock.Unlock()
+	if res.resources.EnoughFor(other) < 1 {
+		return false
+	}
+	res.resources.Remove(other)
+	return true
 }
 
 func (res *AtomicResources) Add(other Resources) {
-    res.lock.Lock()
-    defer res.lock.Unlock()
-    res.resources.Add(other)
+	res.lock.Lock()
+	defer res.lock.Unlock()
+	res.resources.Add(other)
 }

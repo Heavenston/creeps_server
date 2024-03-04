@@ -11,10 +11,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
-	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 )
 
 type lockedResources struct {
@@ -30,10 +30,10 @@ type Client struct {
 	tilemap      atomic.Pointer[terrain.Tilemap]
 	initResponse atomic.Pointer[model.InitResponse]
 
-	playerResources    *model.AtomicResources
-	unitsResources     sync.Map
+	playerResources *model.AtomicResources
+	unitsResources  sync.Map
 
-	unitsPositions     sync.Map
+	unitsPositions sync.Map
 }
 
 // error returned by Get*Report methods if they get a model.ReportError response
