@@ -443,13 +443,13 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 	case model.OpCodeBuildRoad:
 		report = build(unit, "road", &server.GetCosts().BuildRoad, terrain.TileRoad)
 	case model.OpCodeSpawnTurret:
-		report = spawn[*TurretUnit](
+		report = spawn(
 			unit,
 			&server.GetCosts().SpawnTurret,
 			NewTurretUnit(server, unit.GetOwner()),
 		)
 	case model.OpCodeSpawnBomberBot:
-		report = spawn[*TurretUnit](
+		report = spawn(
 			unit,
 			&server.GetCosts().SpawnTurret,
 			NewTurretUnit(server, unit.GetOwner()),
