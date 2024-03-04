@@ -218,38 +218,38 @@ func main() {
 		Timestamp().
 		Logger()
 
-	viper.SetEnvPrefix("CREEPS_")
+	viper.SetEnvPrefix("CREEPS")
 
 	viper.SetDefault("setup", &defaultSetup)
 	viper.SetDefault("costs", &defaultCosts)
 
 	rootCmd.Flags().Int("api-port", 1664, "Port for the epita-compatible api")
 	viper.BindPFlag("api.port", rootCmd.Flags().Lookup("api-port"))
-	viper.BindEnv("api.port", "API_PORT")
+	viper.BindEnv("api.port")
 
 	rootCmd.Flags().String(
 		"api-host", "localhost",
 		`Host (ip) for the epita-compitible api`,
 	)
 	viper.BindPFlag("api.host", rootCmd.Flags().Lookup("api-host"))
-	viper.BindEnv("api.host", "API_HOST")
+	viper.BindEnv("api.host")
 
 	rootCmd.Flags().Int("viewer-port", 1664, "Port for the epita-compatible viewer")
 	viper.BindPFlag("viewer.port", rootCmd.Flags().Lookup("viewer-port"))
-	viper.BindEnv("viewer.port", "VIEWER_PORT")
+	viper.BindEnv("viewer.port")
 
 	rootCmd.Flags().String(
 		"viewer-host", "localhost",
 		`Host (ip) for the viewer's api`,
 	)
 	viper.BindPFlag("viewer.host", rootCmd.Flags().Lookup("viewer-host"))
-	viper.BindEnv("viewer.host", "VIEWER_HOST")
+	viper.BindEnv("viewer.host")
 
 	rootCmd.Flags().Float64("tps", defaultSetup.TicksPerSecond,
 		`Overwrites config's setup ticks per seconds`,
 	)
 	viper.BindPFlag("tps", rootCmd.Flags().Lookup("tps"))
-	viper.BindEnv("tps", "TPS")
+	viper.BindEnv("tps")
 	
 	var level logLevel = logLevelInfo
 	rootCmd.Flags().VarP(&level, "loglevel", "l", `log level. Allowed values are "trace", "debug", "info", "warn" or "error"`)
