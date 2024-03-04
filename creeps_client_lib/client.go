@@ -114,8 +114,17 @@ func (client *Client) UnitResources(unitId uid.Uid) *model.AtomicResources {
 }
 
 func (client *Client) UnitPosition(unitId uid.Uid) *AtomicPoint {
-	val, _ := client.unitsPositions.LoadOrStore(unitId, &AtomicPoint{})
-	return val.(*AtomicPoint)
+	val, loaded := client.unitsPositions.LoadOrStore(unitId, &AtomicPoint{})
+	pos := val.(*AtomicPoint)
+	if !loaded {
+		if unitId == *client.InitResponse().Citizen1Id {
+			pos.Store(*client.InitResponse().HouseholdCoordinates)
+		}
+		if unitId == *client.InitResponse().Citizen2Id {
+			pos.Store(*client.InitResponse().HouseholdCoordinates)
+		}
+	}
+	return pos
 }
 
 func (client *Client) RawGet(url string) (*http.Response, error) {
