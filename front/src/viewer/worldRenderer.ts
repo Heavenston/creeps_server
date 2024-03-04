@@ -1,4 +1,4 @@
-import { vec, Vector2 } from "~/src/geom"
+import { vec, Vector2 } from "~/src/utils/geom"
 import * as map from "./map"
 import { OverlayRenderer } from "./overlayRenderer";
 import { TexturePack } from "./texturePack";

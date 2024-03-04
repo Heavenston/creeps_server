@@ -1,4 +1,4 @@
-import { Vector2 } from "~src/geom";
+import { Vector2 } from "~src/utils/geom";
 
 function splitmix32(a: number) {
     a |= 0; a = a + 0x9e3779b9 | 0;

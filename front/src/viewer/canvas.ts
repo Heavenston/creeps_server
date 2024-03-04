@@ -1,5 +1,5 @@
 import { MinzeElement } from "minze"
-import * as api from "~/src/api"
+import * as api from "~/src/viewer/api"
 
 import { Renderer } from "./worldRenderer"
 

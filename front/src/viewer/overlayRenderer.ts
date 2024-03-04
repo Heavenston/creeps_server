@@ -1,5 +1,5 @@
-import { vec } from "~/src/geom"
-import * as api from "~/src/api"
+import { vec } from "~/src/utils/geom"
+import * as api from "~/src/viewer/api"
 import { IRenderer, Renderer } from "./worldRenderer";
 
 export class OverlayRenderer implements IRenderer {

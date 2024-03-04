@@ -1,5 +1,5 @@
-import { vec, Vector2 } from "~/src/geom"
-import * as api from "~/src/api"
+import { vec, Vector2 } from "~/src/utils/geom"
+import * as api from "~/src/viewer/api"
 import * as map from "./map"
 import { IRenderer, Renderer } from "./worldRenderer";
 
