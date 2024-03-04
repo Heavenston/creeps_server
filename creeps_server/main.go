@@ -234,7 +234,7 @@ func main() {
 	viper.BindPFlag("api.host", rootCmd.Flags().Lookup("api-host"))
 	viper.BindEnv("api.host")
 
-	rootCmd.Flags().Int("viewer-port", 1664, "Port for the epita-compatible viewer")
+	rootCmd.Flags().Int("viewer-port", 1665, "Port for the epita-compatible viewer")
 	viper.BindPFlag("viewer.port", rootCmd.Flags().Lookup("viewer-port"))
 	viper.BindEnv("viewer.port")
 
