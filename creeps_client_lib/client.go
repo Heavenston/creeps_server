@@ -279,7 +279,7 @@ func (client *Client) GetReport(
 
 	var errResp model.ErrorReport
 	err = json.Unmarshal(body, &errResp)
-	if err != nil {
+	if err == nil && errResp.Status == "ERROR" {
 		return &ReportError{Report: &errResp}
 	}
 

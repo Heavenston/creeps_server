@@ -76,9 +76,13 @@ func RegisterReport(client *Client, report model.IReport) {
 				Value: uint8(casted.ResourcesLeft),
 			})
 		}
+	case *model.UnloadReport:
+		client.UnitResources(casted.UnitId).Store(model.Resources{})
+		client.PlayerResources().Modify(func(r model.Resources) model.Resources {
+			r.Add(casted.CreditedResources)
+			return r
+		})
 	case *model.FarmReport:
-		client.UnitResources(casted.UnitId)
-
 		client.tilemap.Load().SetTile(casted.UnitPosition, terrain.Tile{
 			Kind:  terrain.TileFromResource(model.Food),
 			Value: uint8(casted.FoodQuantity),
