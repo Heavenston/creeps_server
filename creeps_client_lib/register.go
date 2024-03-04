@@ -51,6 +51,7 @@ func RegisterReport(client *Client, report model.IReport) {
 	case *model.ObserveReport:
 		registerTiles(client, casted.UnitPosition, casted.Tiles)
 	case *model.MoveReport:
+		client.UnitPosition(casted.UnitId).Store(casted.NewPosition)
 		registerTiles(client, casted.NewPosition, casted.Tiles)
 	case *model.RefineReport:
 		to := casted.OpCode.RefineEndResult()

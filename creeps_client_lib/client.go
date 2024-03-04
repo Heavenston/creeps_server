@@ -14,6 +14,7 @@ import (
 	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 )
 
 type lockedResources struct {
@@ -31,6 +32,8 @@ type Client struct {
 
 	playerResources    *model.AtomicResources
 	unitsResources     sync.Map
+
+	unitsPositions     sync.Map
 }
 
 // error returned by Get*Report methods if they get a model.ReportError response
@@ -108,6 +111,11 @@ func (client *Client) PlayerResources() *model.AtomicResources {
 func (client *Client) UnitResources(unitId uid.Uid) *model.AtomicResources {
 	val, _ := client.unitsResources.LoadOrStore(unitId, &model.AtomicResources{})
 	return val.(*model.AtomicResources)
+}
+
+func (client *Client) UnitPosition(unitId uid.Uid) *AtomicPoint {
+	val, _ := client.unitsPositions.LoadOrStore(unitId, &AtomicPoint{})
+	return val.(*AtomicPoint)
 }
 
 func (client *Client) RawGet(url string) (*http.Response, error) {
