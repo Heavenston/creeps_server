@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
-	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
@@ -128,22 +127,8 @@ func (raider *RaiderUnit) Tick() {
 		return
 	}
 
-	diff := raider.target.Sub(position)
 	newAction := new(Action)
-
-	if mathutils.AbsInt(diff.X) > mathutils.AbsInt(diff.Y) {
-		if diff.X < 0 {
-			newAction.OpCode = model.OpCodeMoveLeft
-		} else {
-			newAction.OpCode = model.OpCodeMoveRight
-		}
-	} else {
-		if diff.Y < 0 {
-			newAction.OpCode = model.OpCodeMoveDown
-		} else {
-			newAction.OpCode = model.OpCodeMoveUp
-		}
-	}
+	newAction.OpCode = model.OpCodeFromMoveDirection(position.DirTowards(raider.target))
 
 	err := raider.StartAction(newAction, nil)
 	if err != nil {

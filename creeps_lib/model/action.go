@@ -201,6 +201,21 @@ func (opcode ActionOpCode) MoveDirection() Point {
 	}
 }
 
+func OpCodeFromMoveDirection(dir Point) ActionOpCode {
+	switch dir {
+	case Point{X: 0, Y: -1}:
+		return OpCodeMoveDown
+	case Point{X: 0, Y: 1}:
+		return OpCodeMoveUp
+	case Point{X: -1, Y: 0}:
+		return OpCodeMoveLeft
+	case Point{X: 1, Y: 0}:
+		return OpCodeMoveRight
+	default:
+		return ""
+	}
+}
+
 func (opcode ActionOpCode) ParameterType() reflect.Type {
 	switch opcode {
 	case OpCodeFireTurret:

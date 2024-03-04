@@ -87,3 +87,22 @@ func (a Point) Times(v int) Point {
 func (a Point) Dist(b Point) int {
 	return mathutils.AbsInt(a.X-b.X) + mathutils.AbsInt(a.Y-b.Y)
 }
+
+// Returns the direction a unit should move in order to move
+// towards the given target (can be converted to an opcode with model.OpCodeFromMoveDirection)
+func (a Point) DirTowards(target Point) Point {
+	diff := target.Sub(a)
+	if mathutils.AbsInt(diff.X) > mathutils.AbsInt(diff.Y) {
+		if diff.X < 0 {
+			return Point{X: -1}
+		} else {
+			return Point{X: 1}
+		}
+	} else {
+		if diff.Y < 0 {
+			return Point{Y: -1}
+		} else {
+			return Point{Y: 1}
+		}
+	}
+}
