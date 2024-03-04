@@ -18,6 +18,20 @@ const (
 	WoodPlank              = "woodPlank"
 )
 
+func (rk ResourceKind) GatherRate(setup *SetupResponse) int {
+	switch rk {
+	case Food:
+		return setup.FoodGatherRate
+	case Oil:
+		return setup.OilGatherRate
+	case Rock:
+		return setup.RockGatherRate
+	case Wood:
+		return setup.WoodGatherRate
+	}
+	return math.MaxInt
+}
+
 type Resources struct {
 	Rock      int `json:"rock"`
 	Wood      int `json:"wood"`

@@ -311,6 +311,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 				took := mathutils.Min(
 					maxInventorySize-res.Size(),
 					int(tile.Value),
+					resKind.GatherRate(server.GetSetup()),
 				)
 				*res.OfKind(resKind) += took
 
