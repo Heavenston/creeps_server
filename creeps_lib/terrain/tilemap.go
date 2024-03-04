@@ -7,7 +7,6 @@ import (
 	"time"
 
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
-	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
 	"github.com/rs/zerolog/log"
 )
 
@@ -121,14 +120,10 @@ func (t *Tilemap) ModifyTile(p Point, cb func(Tile) Tile) {
 	chunk.ModifyTile(Global2ChunkSubCoords(p), cb)
 }
 
-func (t *Tilemap) PrintRegion(w io.Writer, from Point, upto Point) {
-	min_x := mathutils.Min(from.X, upto.X)
-	min_y := mathutils.Min(from.Y, upto.Y)
-	max_x := mathutils.Max(from.X, upto.X)
-	max_y := mathutils.Max(from.Y, upto.Y)
-
-	for y := max_y - 1; y > min_y; y-- {
-		for x := min_x; x < max_x; x++ {
+func (t *Tilemap) PrintRegion(w io.Writer, aabb AABB) {
+	for dy := 0; dy < aabb.Size.Y; dy++ {
+		y := aabb.Upto().Y - dy - 1
+		for x := aabb.From.X; x < aabb.Upto().X; x++ {
 			t.GetTile(Point{X: x, Y: y}).Print(w)
 		}
 		fmt.Fprintln(w)
