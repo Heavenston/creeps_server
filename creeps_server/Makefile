@@ -1,3 +1,5 @@
+build: creeps_server
+
 SRC_FILES != find . -name "*.go"
 
 creeps_server: ${SRC_FILES}
@@ -12,4 +14,4 @@ dev:
 serve: creeps_server
 	./creeps_server ${CREEPS_ARGS}
 
-.PHONY: dev serve clean
+.PHONY: dev serve clean build
