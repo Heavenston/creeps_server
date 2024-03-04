@@ -293,9 +293,11 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 					Str("player_username", player.GetUsername()).
 					Any("player_id", player.GetId()).
 					Any("tile", tile).
+					Any("pos", position).
 					Msg("Gather on non-resources")
 				report = &model.ErrorReport{
 					ErrorCode: "not-resource-tile",
+					Error: "Not a resource tile :(",
 				}
 				return tile
 			}
