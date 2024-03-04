@@ -287,7 +287,7 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 		position := unit.GetPosition()
 
 		server.Tilemap().ModifyTile(position, func(tile terrain.Tile) terrain.Tile {
-			resKind := tile.Kind.GetResourceName()
+			resKind := tile.Kind.TileToResource()
 			if resKind == "" {
 				log.Trace().
 					Str("player_username", player.GetUsername()).

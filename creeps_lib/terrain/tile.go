@@ -53,12 +53,14 @@ func TileFromResource(res model.ResourceKind) TileKind {
 	return TileUnknown
 }
 
-func (kind TileKind) GetResourceName() model.ResourceKind {
+func (kind TileKind) TileToResource() model.ResourceKind {
 	switch kind {
 	case TileBush:
 		return model.Food
 	case TileTree:
 		return model.Wood
+	case TileStone:
+		return model.Rock
 	case TileOil:
 		return model.Oil
 	}
