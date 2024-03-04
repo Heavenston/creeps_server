@@ -1,7 +1,7 @@
 import { vec, Vector2 } from "~/src/utils/geom"
-import * as api from "~/src/viewer/api"
 import * as map from "./map"
 import { IRenderer, Renderer } from "./worldRenderer";
+import { Api } from "./api";
 
 export class TerrainRenderer implements IRenderer {
   private readonly renderer: Renderer;
@@ -17,7 +17,7 @@ export class TerrainRenderer implements IRenderer {
     this.eventAbort.abort();
   }
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer, public readonly api: Api) {
     this.renderer = renderer;
 
     document.body.addEventListener("keydown", k => {
@@ -32,7 +32,7 @@ export class TerrainRenderer implements IRenderer {
       if (event.message.kind != "fullchunk")      
         return;
       const pos = vec(event.message.content.chunkPos);
-      const chunk = map.getChunk(pos)
+      const chunk = api.tilemap.getChunk(pos)
       if (!chunk)
         return;
       // force redraw
@@ -44,8 +44,8 @@ export class TerrainRenderer implements IRenderer {
     api.addEventListener("message", event => {
       if (event.message.kind != "tileChange")      
         return;
-      const chunkPos = map.global2ContainingChunkCoords(vec(event.message.content.tilePos));
-      const chunk = map.getChunk(chunkPos);
+      const chunkPos = api.tilemap.global2ContainingChunkCoords(vec(event.message.content.tilePos));
+      const chunk = api.tilemap.getChunk(chunkPos);
       if (!chunk)
         return;
       // force redraw
@@ -57,7 +57,7 @@ export class TerrainRenderer implements IRenderer {
     this.renderer.texturePack.addEventListener("textureLoaded", () => {
       for (const chunkPos of this.chunksOnCamera)
       {
-        const chunk = map.getChunk(chunkPos);
+        const chunk = api.tilemap.getChunk(chunkPos);
         if (chunk != null)
           this.startRenderChunkCanvas(chunk);
       }
@@ -82,13 +82,13 @@ export class TerrainRenderer implements IRenderer {
     const end = this.renderer.screenBottomRightInWorldPos;
     // console.log({start, end})
     const cp = vec(start);
-    for (cp.x = start.x; cp.x-map.Chunk.chunkSize < end.x; cp.x += map.Chunk.chunkSize) {
-      for (cp.y = start.y; cp.y-map.Chunk.chunkSize < end.y; cp.y += map.Chunk.chunkSize) {
-        chunksOnCamera.push(map.global2ContainingChunkCoords(cp));
+    for (cp.x = start.x; cp.x-this.api.tilemap.chunkSize < end.x; cp.x += this.api.tilemap.chunkSize) {
+      for (cp.y = start.y; cp.y-this.api.tilemap.chunkSize < end.y; cp.y += this.api.tilemap.chunkSize) {
+        chunksOnCamera.push(this.api.tilemap.global2ContainingChunkCoords(cp));
       }
     }
 
-    map.setSubscribed(chunksOnCamera)
+    this.api.tilemap.setSubscribed(chunksOnCamera)
   }
 
   private startRenderChunkCanvas(chunk: map.Chunk) {
@@ -99,8 +99,8 @@ export class TerrainRenderer implements IRenderer {
     setTimeout(() => {
       const ts = this.renderer.texturePack.size;
       const canvas = new OffscreenCanvas(
-        map.Chunk.chunkSize * ts,
-        map.Chunk.chunkSize * ts,
+        this.api.tilemap.chunkSize * ts,
+        this.api.tilemap.chunkSize * ts,
       );
       const ctx = canvas.getContext("2d");
       if (ctx == undefined)
@@ -112,10 +112,10 @@ export class TerrainRenderer implements IRenderer {
       ctx.fillStyle = this.renderer.texturePack.fillColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      for (let sx = 0; sx < map.Chunk.chunkSize; sx++) {
-        for (let sy = 0; sy < map.Chunk.chunkSize; sy++) {
+      for (let sx = 0; sx < this.api.tilemap.chunkSize; sx++) {
+        for (let sy = 0; sy < this.api.tilemap.chunkSize; sy++) {
           const subTileCoord = vec(sx, sy);
-          const globalTileCoord = chunk.pos.times(map.Chunk.chunkSize).plus(subTileCoord);
+          const globalTileCoord = chunk.pos.times(this.api.tilemap.chunkSize).plus(subTileCoord);
 
           const value = chunk.getTileKind(subTileCoord)
 
@@ -133,7 +133,7 @@ export class TerrainRenderer implements IRenderer {
     // const start = this.screenTopLeftInWorldPos;
     // const end = this.screenBottomRightInWorldPos;
 
-    const chunk = map.getChunk(pos);
+    const chunk = this.api.tilemap.getChunk(pos);
     if (chunk == null)
       return;
 
@@ -144,18 +144,18 @@ export class TerrainRenderer implements IRenderer {
       return;
     }
 
-    const drawpos = pos.times(map.Chunk.chunkSize);
+    const drawpos = pos.times(this.api.tilemap.chunkSize);
     // console.log(pos, drawpos);
 
     const ctx = this.renderer.ctx;
 
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(canvas, drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize);
+    ctx.drawImage(canvas, drawpos.x, drawpos.y, this.api.tilemap.chunkSize, this.api.tilemap.chunkSize);
 
     if (this.enableChunkBorder) {
       ctx.strokeStyle = "black";
       ctx.lineWidth = 0.1;
-      ctx.strokeRect(drawpos.x, drawpos.y, map.Chunk.chunkSize, map.Chunk.chunkSize);
+      ctx.strokeRect(drawpos.x, drawpos.y, this.api.tilemap.chunkSize, this.api.tilemap.chunkSize);
     }
   }
 

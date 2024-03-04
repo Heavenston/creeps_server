@@ -1,21 +1,23 @@
 import { vec, Vector2 } from "~/src/utils/geom"
-import * as api from "~/src/viewer/api"
+import { Api } from "./api";
+
+function remEuclid(a: number, b: number): number {
+  return ((a % b) + b) % b;
+}
 
 export class Chunk {
-  public readonly pos: Vector2;
   private tiles: Uint8Array;
 
-  public constructor(data: string, pos: Vector2) {
+  public constructor(public readonly map: Tilemap, data: string, public readonly pos: Vector2) {
     this.tiles = Uint8Array.from(atob(data), c => c.charCodeAt(0));
-    this.pos = pos;
   }
 
-  public static get chunkSize(): number {
-    return api.getInitMessage()?.content.chunkSize ?? 8;
+  public get chunkSize(): number {
+    return this.map.chunkSize;
   }
 
   private getIndex(pos: Vector2): number {
-    return (Math.floor(pos.x) + Math.floor(pos.y) * Chunk.chunkSize) * 2;
+    return (Math.floor(pos.x) + Math.floor(pos.y) * this.chunkSize) * 2;
   }
 
   public getTileKind(pos: Vector2): number {
@@ -44,139 +46,143 @@ function fromKey(key: VecKey): Vector2 {
   return vec(a, b);
 }
 
-const subs = new Set<VecKey>()
-const chunks = new Map<VecKey, Chunk>()
+export class Tilemap {
+  #subs = new Set<VecKey>();
+  #chunks: Map<VecKey, Chunk> = new Map();
 
-api.addEventListener("connection_event", ce => {
-  if (!ce.isConnected) {
-    subs.clear();
-    chunks.clear();
-  }
-});
+  constructor(public readonly api: Api) {
+    api.addEventListener("connection_event", ce => {
+      if (!ce.isConnected) {
+        this.#subs.clear();
+        this.#chunks.clear();
+      }
+    });
 
-api.addEventListener("message", event => {
-  if (event.message.kind == "fullchunk") {
-    const content = event.message.content;
-    const pos = vec(content.chunkPos);
-    chunks.set(key(pos), new Chunk(content.tiles, pos));
+    api.addEventListener("message", event => {
+      if (event.message.kind == "fullchunk") {
+        const content = event.message.content;
+        const pos = vec(content.chunkPos);
+        this.#chunks.set(key(pos), new Chunk(this, content.tiles, pos));
+      }
+      if (event.message.kind == "tileChange") {
+        const content = event.message.content;
+        const tilePos = this.global2ChunkSubCoords(vec(content.tilePos));
+        const chunkPos = this.global2ContainingChunkCoords(vec(content.tilePos));
+        const chunk = this.#chunks.get(key(chunkPos))
+        if (!chunk) {
+          console.warn("received tile for unkown chunk");
+          return
+        }
+        chunk.updateTile(tilePos, content.kind, content.value);
+      }
+    })
   }
-  if (event.message.kind == "tileChange") {
-    const content = event.message.content;
-    const tilePos = global2ChunkSubCoords(vec(content.tilePos));
-    const chunkPos = global2ContainingChunkCoords(vec(content.tilePos));
-    const chunk = chunks.get(key(chunkPos))
-    if (!chunk) {
-      console.warn("received tile for unkown chunk");
-      return
+
+  public get chunkSize(): number {
+    return this.api.initMessage?.content.chunkSize ?? 8;
+  }
+
+  global2ContainingChunkCoords(global: Vector2): Vector2 {
+    return global
+      .mapped(Math.floor)
+      .mapped(x => Math.floor(x / this.chunkSize));
+  }
+
+  global2ChunkSubCoords(global: Vector2): Vector2 {
+    return global
+      .mapped(Math.floor)
+      .mapped(a => remEuclid(a, this.chunkSize))
+  }
+
+  subscribe(pos: Vector2) {
+    const k = key(pos);
+
+    if (!this.api.isConnected) {
+      console.warn("Tried to subscribe to", pos, "while not connected")
+      return;
     }
-    chunk.updateTile(tilePos, content.kind, content.value);
-  }
-})
-
-export function subscribe(pos: Vector2) {
-  const k = key(pos);
-
-  if (!api.isConnected()) {
-    console.warn("Tried to subscribe to", pos, "while not connected")
-    return;
-  }
-  if (subs.has(k)) {
-    console.warn("Tried to resubscribe to", pos)
-    return;
-  }
-
-  subs.add(k);
-  api.sendMessage({
-    kind: "subscribe",
-    content: {
-      chunkPos: { x: pos.x, y: pos.y }
+    if (this.#subs.has(k)) {
+      console.warn("Tried to resubscribe to", pos)
+      return;
     }
-  });
-}
 
-export function unsubscribe(pos: Vector2) {
-  const k = key(pos);
-
-  if (!api.isConnected()) {
-    console.warn("Tried to unsubscribe to", pos, "while not connected")
-    return;
-  }
-  if (!subs.has(k)) {
-    console.warn("Tried to reunsubscribe to", pos)
-    return;
+    this.#subs.add(k);
+    this.api.sendMessage({
+      kind: "subscribe",
+      content: {
+        chunkPos: { x: pos.x, y: pos.y }
+      }
+    });
   }
 
-  subs.delete(k);
-  chunks.delete(k);
-  api.sendMessage({
-    kind: "unsubscribe",
-    content: {
-      chunkPos: { x: pos.x, y: pos.y }
+  unsubscribe(pos: Vector2) {
+    const k = key(pos);
+
+    if (!this.api.isConnected) {
+      console.warn("Tried to unsubscribe to", pos, "while not connected")
+      return;
     }
-  });
-}
+    if (!this.#subs.has(k)) {
+      console.warn("Tried to reunsubscribe to", pos)
+      return;
+    }
 
-// Make sure the only subscribed chunks are the one listed
-export function setSubscribed(subed: Vector2[]) {
-  const toUnsub = new Set(subs);
-  for (const sub of subed) {
-    toUnsub.delete(key(sub));
-    if (!subs.has(key(sub)))
-      subscribe(sub);
+    this.#subs.delete(k);
+    this.#chunks.delete(k);
+    this.api.sendMessage({
+      kind: "unsubscribe",
+      content: {
+        chunkPos: { x: pos.x, y: pos.y }
+      }
+    });
   }
 
-  for (const unsub of toUnsub) {
-    unsubscribe(fromKey(unsub));
+  // Make sure the only subscribed chunks are the one listed
+  setSubscribed(subed: Vector2[]) {
+    const toUnsub = new Set(this.#subs);
+    for (const sub of subed) {
+      toUnsub.delete(key(sub));
+      if (!this.#subs.has(key(sub)))
+        this.subscribe(sub);
+    }
+
+    for (const unsub of toUnsub) {
+      this.unsubscribe(fromKey(unsub));
+    }
+  }
+
+  getChunk(chunkPos: Vector2): Chunk | null {
+    return this.#chunks.get(key(chunkPos)) ?? null;
+  }
+
+  /// get the tile at the given global position or -1 if unavailable
+  getTileKind(globalPos: Vector2): number {
+    const chunkPos = this.global2ContainingChunkCoords(globalPos);
+    const chunkSubPos = this.global2ChunkSubCoords(globalPos);
+    console.log({
+      globalPos: key(globalPos),
+      chunkPos: key(chunkPos),
+      chunkSubPos: key(chunkSubPos),
+    })
+
+    const chunk = this.#chunks.get(key(chunkPos));
+    if (!chunk)
+      return -1;
+
+    return chunk.getTileKind(chunkSubPos);
+  }
+
+  /// get the tile at the given global position or -1 if unavailable
+  getTileValue(globalPos: Vector2): number {
+    const chunkPos = this.global2ContainingChunkCoords(globalPos);
+    const chunkSubPos = this.global2ChunkSubCoords(globalPos);
+
+    const chunk = this.#chunks.get(key(chunkPos));
+    if (!chunk)
+      return -1;
+
+    return chunk.getTileValue(chunkSubPos);
   }
 }
 
-// euclidian remained
-function remEuclid(a: number, b: number): number {
-  return ((a % b) + b) % b;
-}
 
-// see the go server same function lol
-export function global2ContainingChunkCoords(global: Vector2): Vector2 {
-  return global
-    .mapped(Math.floor)
-    .mapped(x => Math.floor(x / Chunk.chunkSize));
-}
-
-export function global2ChunkSubCoords(global: Vector2): Vector2 {
-  return global
-    .mapped(Math.floor)
-    .mapped(a => remEuclid(a, Chunk.chunkSize))
-}
-
-export function getChunk(chunkPos: Vector2): Chunk | null {
-  return chunks.get(key(chunkPos)) ?? null;
-}
-
-/// get the tile at the given global position or -1 if unavailable
-export function getTileKind(globalPos: Vector2): number {
-  const chunkPos = global2ContainingChunkCoords(globalPos);
-  const chunkSubPos = global2ChunkSubCoords(globalPos);
-  console.log({
-    globalPos: key(globalPos),
-    chunkPos: key(chunkPos),
-    chunkSubPos: key(chunkSubPos),
-  })
-
-  const chunk = chunks.get(key(chunkPos));
-  if (!chunk)
-    return -1;
-
-  return chunk.getTileKind(chunkSubPos);
-}
-
-/// get the tile at the given global position or -1 if unavailable
-export function getTileValue(globalPos: Vector2): number {
-  const chunkPos = global2ContainingChunkCoords(globalPos);
-  const chunkSubPos = global2ChunkSubCoords(globalPos);
-
-  const chunk = chunks.get(key(chunkPos));
-  if (!chunk)
-    return -1;
-
-  return chunk.getTileValue(chunkSubPos);
-}

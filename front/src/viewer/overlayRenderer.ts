@@ -1,12 +1,12 @@
 import { vec } from "~/src/utils/geom"
-import * as api from "~/src/viewer/api"
 import { IRenderer, Renderer } from "./worldRenderer";
+import { Api, PlayerSpawnMessage } from "./api";
 
 export class OverlayRenderer implements IRenderer {
   private readonly renderer: Renderer;
 
   private eventAbort = new AbortController();
-  private players = new Map<string, api.PlayerSpawnMessage>();
+  private players = new Map<string, PlayerSpawnMessage>();
 
   private renderPlayerUsernames = true;
 
@@ -14,7 +14,7 @@ export class OverlayRenderer implements IRenderer {
     this.eventAbort.abort();
   }
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer, api: Api) {
     this.renderer = renderer;
 
     document.body.addEventListener("keypress", event => {

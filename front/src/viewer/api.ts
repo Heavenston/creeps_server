@@ -1,15 +1,6 @@
-export const WEBSOCKET_URL: string =
-  process.env.PREVIEW_WEBSOCKET_URL ?? "ws://localhost:1665/websocket";
+import { Tilemap } from "./map";
 
-let events: EventTarget = new EventTarget();
 const RETRY_INTERVAL: number = 5000;
-let ws: WebSocket | null = null;
-let isWsConnected: boolean = false;
-
-let initMessage: InitMessage | null = null;
-export function getInitMessage(): InitMessage | null {
-  return initMessage;
-}
 
 export type Point = {
   x: number,
@@ -59,28 +50,6 @@ export type Costs = {
   [action: string]: undefined | Cost,
 }
 
-export function getActionCost(opcode: string): Cost|null {
-  const initMsg = getInitMessage();
-  if (!initMsg)
-    return null;
-
-  let name = null;
-  switch (opcode) {
-    case "move:left":
-    case "move:right":
-    case "move:up":
-    case "move:down":
-      name = "move";
-      break
-    case "fire:turret":
-      name = "fireTurret";
-      break
-  }
-  if (name == null)
-    return null;
-  return initMsg.content.costs[name] ?? null;
-}
-
 export type InitMessage = {
   kind: "init",
   content: {
@@ -91,13 +60,6 @@ export type InitMessage = {
       ticksPerSecond: number,
     },
   }
-}
-
-export function getSecondsPerTicks(): number {
-  const init = getInitMessage();
-  if (!init)
-    return 1;
-  return 1 / init.content.setup.ticksPerSecond;
 }
 
 export type SubscribeMessage = {
@@ -216,99 +178,164 @@ export class ConnectionEvent extends Event {
   }
 }
 
-export function addEventListener(
-  name: "connection_event",
-  cb: (e: ConnectionEvent) => void,
-  cfg?: AddEventListenerOptions
-): void;
-export function addEventListener(
-  name: "message",
-  cb: (e: MessageEvent) => void,
-  cfg?: AddEventListenerOptions
-): void;
+export class Api { 
+  public readonly url: string;
 
-export function addEventListener(name: string, cb: (e: any) => void, cfg?: AddEventListenerOptions): void {
-  events.addEventListener(name, cb, cfg);
-}
-
-export function removeEventListener(name: string, cb: (e: any) => void): void {
-  events.removeEventListener(name, cb);
-}
-
-export function sendMessage(message: SendMessage) {
-  if (ws == null)
-  {
-    console.warn("could not send message, not connected", message);
-    return;
+  #closed: boolean = false;
+  get closed(): boolean {
+    return this.#closed;
   }
 
-  ws.send(JSON.stringify(message));
-}
-
-export function isConnected(): boolean {
-  return isWsConnected;
-}
-
-connect();
-function connect() {
-  if (ws != null)
-    return;
-
-  events.dispatchEvent(new ConnectionEvent(false, "connecting..."));
-  console.log("connecting to websocket");
-
-  try {
-    ws = new WebSocket(WEBSOCKET_URL);
+  #events: EventTarget = new EventTarget();
+  #ws: WebSocket | null = null;
+  #isConnected: boolean = false;
+  get isConnected(): boolean {
+    return this.#isConnected;
   }
-  catch(e) {
-    ws = null;
-    events.dispatchEvent(new ConnectionEvent(false, "connect error, retry in 5s"));
-    console.error("connect error", e, "retry in 5s")
-    setTimeout(connect, RETRY_INTERVAL);
-    return;
+  #initMessage: InitMessage | null = null;
+  get initMessage(): InitMessage | null {
+    return this.#initMessage;
+  }
+  #tilemap: Tilemap;
+  get tilemap(): Tilemap {
+    return this.#tilemap;
   }
 
-  ws.addEventListener("open", (e) => {
-    isWsConnected = true;
-    events.dispatchEvent(new ConnectionEvent(true, "connected!"));
-    console.info("connected to websocket", e);
-  });
+  constructor(url: string) {
+    this.url = url;
+    this.connect();
+    this.#tilemap = new Tilemap(this);
+  }
 
-  ws.addEventListener("message", (e) => {
+  public close() {
+    if (this.#closed) {
+      console.warn("tried to double close api");
+      return;
+    }
+    this.#ws?.close();
+    this.#ws = null;
+    this.#closed = true;
+  }
+
+  private connect() {
+    if (this.#closed)
+      return;
+    if (this.#ws != null)
+      return;
+
+    this.#events.dispatchEvent(new ConnectionEvent(false, "connecting..."));
+    console.log("connecting to websocket");
+
     try {
-      const c = JSON.parse(e.data);
-      console.debug("message", c)
-      if (!("kind" in c)) {
-        throw new Error("invalid input, missing kind");
-      }
-      if (!("content" in c)) {
-        throw new Error("invalid input, missing content");
-      }
-      if (c.kind == "init")
-        initMessage = c;
-      events.dispatchEvent(new MessageEvent(c));
+      this.#ws = new WebSocket(this.url);
     }
-    catch (e) {
-      console.warn("invalid json received", e);
+    catch(e) {
+      this.#ws = null;
+      this.#events.dispatchEvent(new ConnectionEvent(false, "connect error, retry in 5s"));
+      console.error("connect error", e, "retry in 5s")
+      setTimeout(this.connect.bind(this), RETRY_INTERVAL);
+      return;
     }
-  });
 
-  ws.addEventListener("error", (e) => {
-    isWsConnected = false;
-    events.dispatchEvent(new ConnectionEvent(false, "connection error, reconnecting in 5s"));
-    if (ws == null)
+    this.#ws.addEventListener("open", (e) => {
+      this.#isConnected = true;
+      this.#events.dispatchEvent(new ConnectionEvent(true, "connected!"));
+      console.info("connected to websocket", e);
+    });
+
+    this.#ws.addEventListener("message", (e) => {
+      try {
+        const c = JSON.parse(e.data);
+        console.debug("message", c)
+        if (!("kind" in c)) {
+          throw new Error("invalid input, missing kind");
+        }
+        if (!("content" in c)) {
+          throw new Error("invalid input, missing content");
+        }
+        if (c.kind == "init")
+          this.#initMessage = c;
+        this.#events.dispatchEvent(new MessageEvent(c));
+      }
+      catch (e) {
+        console.warn("invalid json received", e);
+      }
+    });
+
+    this.#ws.addEventListener("error", (e) => {
+      this.#isConnected = false;
+      this.#events.dispatchEvent(new ConnectionEvent(false, "connection error, reconnecting in 5s"));
+      if (this.#ws == null)
+        return;
+      console.error("websocket error", e, "reconnecting retry in 5s");
+      this.#ws = null;
+      setTimeout(this.connect.bind(this), RETRY_INTERVAL);
+    });
+
+    this.#ws.addEventListener("close", (e) => {
+      this.#isConnected = false;
+      this.#events.dispatchEvent(new ConnectionEvent(false, "connection error, reconnecting in 5s"));
+      if (this.#ws == null)
+        return;
+      console.info("dirconnected from the websocket", e, "reconnecting in 5s");
+      this.#ws = null;
+      setTimeout(this.connect.bind(this), RETRY_INTERVAL);
+    });
+  }
+
+  getActionCost(opcode: string): Cost | null {
+    const initMsg = this.#initMessage;
+    if (!initMsg)
+      return null;
+
+    let name = null;
+    switch (opcode) {
+      case "move:left":
+      case "move:right":
+      case "move:up":
+      case "move:down":
+        name = "move";
+        break
+      case "fire:turret":
+        name = "fireTurret";
+        break
+    }
+    if (name == null)
+      return null;
+    return initMsg.content.costs[name] ?? null;
+  }
+
+  secondsPerTicks(): number {
+    if (!this.#initMessage)
+      return 1;
+    return 1 / this.#initMessage.content.setup.ticksPerSecond;
+  }
+
+  public addEventListener(
+    name: "connection_event",
+    cb: (e: ConnectionEvent) => void,
+    cfg?: AddEventListenerOptions
+  ): void;
+  public addEventListener(
+    name: "message",
+    cb: (e: MessageEvent) => void,
+    cfg?: AddEventListenerOptions
+  ): void;
+
+  addEventListener(name: string, cb: (e: any) => void, cfg?: AddEventListenerOptions): void {
+    this.#events.addEventListener(name, cb, cfg);
+  }
+
+  removeEventListener(name: string, cb: (e: any) => void): void {
+    this.#events.removeEventListener(name, cb);
+  }
+
+  sendMessage(message: SendMessage) {
+    if (this.#ws == null) {
+      console.warn("could not send message, not connected", message);
       return;
-    console.error("websocket error", e, "reconnecting retry in 5s");
-    ws = null;
-    setTimeout(connect, RETRY_INTERVAL);
-  });
-  ws.addEventListener("close", (e) => {
-    isWsConnected = false;
-    events.dispatchEvent(new ConnectionEvent(false, "connection error, reconnecting in 5s"));
-    if (ws == null)
-      return;
-    console.info("dirconnected from the websocket", e, "reconnecting in 5s");
-    ws = null;
-    setTimeout(connect, RETRY_INTERVAL);
-  });
+    }
+  
+    this.#ws.send(JSON.stringify(message));
+  }
 }

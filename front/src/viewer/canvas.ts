@@ -1,7 +1,7 @@
 import { MinzeElement } from "minze"
-import * as api from "~/src/viewer/api"
 
 import { Renderer } from "./worldRenderer"
+import { Api } from "./api"
 
 (class extends MinzeElement {
   // html template
@@ -17,6 +17,7 @@ import { Renderer } from "./worldRenderer"
   private canvas: HTMLCanvasElement | null = null;
   private worldRenderer: Renderer | null = null;
   private animationFrameId: number = -1;
+  private api: Api | null = null;
 
   private lastTime = 0;
 
@@ -52,10 +53,15 @@ import { Renderer } from "./worldRenderer"
       return;
     }
 
-    api.addEventListener("connection_event", c => {
+    this.api = new Api("ws://localhost:1665/websocket");
+
+    this.api.addEventListener("connection_event", c => {
+      if (!this.api)
+        return;
+
       if (c.isConnected) {
         if (this.canvas != null)
-          this.worldRenderer = new Renderer(this.canvas);
+          this.worldRenderer = new Renderer(this.canvas, this.api);
         this.resizeCanvas();
       }
       else {

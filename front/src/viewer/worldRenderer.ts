@@ -1,9 +1,9 @@
 import { vec, Vector2 } from "~/src/utils/geom"
-import * as map from "./map"
 import { OverlayRenderer } from "./overlayRenderer";
 import { TexturePack } from "./texturePack";
 import { UnitRenderer } from "./unitRenderer";
 import { TerrainRenderer } from "./terrainRenderer";
+import { Api } from "./api";
 
 export interface IRenderer {
   render(dt: number): void;
@@ -58,7 +58,7 @@ export class Renderer {
       r.cleanup();
   }
 
-  public constructor(canvas: HTMLCanvasElement) {
+  public constructor(canvas: HTMLCanvasElement, api: Api) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
     if (!ctx) {
@@ -68,10 +68,10 @@ export class Renderer {
     this.ctx = ctx;
 
     // order is significant: render order
-    this.renderers.push(new TerrainRenderer(this));
-    this.renderers.push(new UnitRenderer(this));
-    this.renderers.push(new OverlayRenderer(this));
-
+    this.renderers.push(new TerrainRenderer(this, api));
+    this.renderers.push(new UnitRenderer(this, api));
+    this.renderers.push(new OverlayRenderer(this, api));
+    
     let clickMouseStart: Vector2 | null = null;
     let clickCameraStart: Vector2 | null = null;
     this.canvas.addEventListener("mousedown", ev => {
@@ -79,8 +79,8 @@ export class Renderer {
       console.log("Cliked tile: ", {
         position: [this.mouseWorldPos.x, this.mouseWorldPos.y].join(" "),
         flooredPosition: [tile.x, tile.y].join(" "),
-        kind: map.getTileKind(tile),
-        value: map.getTileValue(tile),
+        kind: api.tilemap.getTileKind(tile),
+        value: api.tilemap.getTileValue(tile),
       });
       clickMouseStart = vec(ev.clientX, ev.clientY);
       clickCameraStart = vec(this.cameraPos);

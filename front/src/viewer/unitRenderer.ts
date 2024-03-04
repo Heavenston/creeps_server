@@ -1,9 +1,9 @@
-import { vec, Vector2 } from "~/src/utils/geom"
-import * as api from "~/src/viewer/api"
+import { vec } from "~/src/utils/geom"
+import { Api, Action, UnitMessage, isMoveReport } from "~/src/viewer/api"
 import { IRenderer, Renderer } from "./worldRenderer";
 
 type RunningAction = {
-  action: api.Action,
+  action: Action,
   elapsed: number,
 } & ({
   state: "running",
@@ -17,14 +17,14 @@ export class UnitRenderer implements IRenderer {
 
   private eventAbort = new AbortController();
 
-  private lastUnitMessage: Map<string, api.UnitMessage> = new Map();
+  private lastUnitMessage: Map<string, UnitMessage> = new Map();
   private unitsActions: Map<string, RunningAction> = new Map();
 
   public cleanup() {
     this.eventAbort.abort();
   }
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer, private readonly api: Api) {
     this.renderer = renderer;
 
     api.addEventListener("message", event => {
@@ -47,7 +47,7 @@ export class UnitRenderer implements IRenderer {
           break;
         }
         case "unitFinishedAction": {
-          if (api.isMoveReport(event.message.content.report)) {
+          if (isMoveReport(event.message.content.report)) {
             const unit = this.lastUnitMessage.get(event.message.content.unitId);
             if (!unit) {
               console.warn("received finished action for unkown unit", event.message);
@@ -88,13 +88,13 @@ export class UnitRenderer implements IRenderer {
     }
   }
 
-  private renderUnit(unit: api.UnitMessage) {
+  private renderUnit(unit: UnitMessage) {
     let pos = vec(unit.content.position);
     const action = this.unitsActions.get(unit.content.unitId);
-    const cost = action == null ? null : api.getActionCost(action.action.actionOpCode);
+    const cost = action == null ? null : this.api.getActionCost(action.action.actionOpCode);
     
     if (action != null && cost != null && action.state == "running") {
-      let prop = action.elapsed / (cost.cast * api.getSecondsPerTicks());
+      let prop = action.elapsed / (cost.cast * this.api.secondsPerTicks());
       prop = Math.min(Math.max(prop, 0), 1);
       // to add cases here make sure they are handled in api.getActionCost too
       switch (action.action.actionOpCode) {
