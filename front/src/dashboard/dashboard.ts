@@ -1,6 +1,8 @@
 import { MinzeElement } from "minze"
 
 (class HeaderComp extends MinzeElement {
+  attrs = [["no-css-reset", ""]] as any;
+  
   html = () => `
   <div class="start">
     <h1>Heav's Creeps</h1>
@@ -58,8 +60,8 @@ import { MinzeElement } from "minze"
 
 (class DashboardComp extends MinzeElement {
   html = () => `
-    <creeps-header no-css-reset></creeps-header>
-    <div style="flex-grow: 1;"></div>
+    <creeps-header></creeps-header>
+    <slot></slot>
   `
 
   css = () => `

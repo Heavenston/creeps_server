@@ -10,7 +10,8 @@ import { Api } from "./api"
   // scoped stylesheet
   css = () => `
   :host {
-    height: 100%;
+    position: absolute;
+    inset: 0;
   }
   `
 

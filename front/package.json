@@ -1,7 +1,7 @@
 {
   "name": "creeps_front",
   "type": "module",
-  "source": "src/index.html",
+  "source": ["src/index.html", "src/game.html"],
   "devDependencies": {
     "@types/node": "^20.11.19",
     "parcel": "^2.11.0",
