@@ -4,4 +4,5 @@ use (
 	./creeps_client_lib
 	./creeps_lib
 	./creeps_server
+	./creeps_manager
 )
