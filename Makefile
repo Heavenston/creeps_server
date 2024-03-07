@@ -1,10 +1,10 @@
 
 dev:
-	@export CREEPS_ARGS="-l debug"; \
+	@export CREEPS_ARGS="-v"; \
 	./parallel.sh dev
 
 trace:
-	@export CREEPS_ARGS="-l trace"; \
+	@export CREEPS_ARGS="-vv"; \
 	./parallel.sh dev
 
 serve:

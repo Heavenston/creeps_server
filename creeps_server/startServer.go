@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/alecthomas/kong"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
 	. "github.com/heavenston/creeps_server/creeps_lib/terrain"
@@ -12,36 +13,38 @@ import (
 	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/heavenston/creeps_server/creeps_server/viewer"
 	"github.com/rs/zerolog"
-	"github.com/spf13/viper"
 )
 
-func startServ() {
-	switch logLevel(viper.GetString("loglevel")) {
-	case logLevelTrace:
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-	case logLevelDebug:
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	case logLevelInfo:
+func startServ(*kong.Context) {
+	switch CLI.Verbose {
+	case 0:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	case logLevelWarn:
+	case 1:
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	}
+	if CLI.Quiet {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	case logLevelError:
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	}
 
 	generator := generator.NewNoiseGenerator(time.Now().UnixMilli())
 	tilemap := NewTilemap(generator)
 
-	var setup *model.SetupResponse
-	viper.UnmarshalKey("setup", &setup)
-	var costs *model.CostsResponse
-	viper.UnmarshalKey("costs", &costs)
+	setup := defaultSetup
+	costs := defaultCosts
 
-	if viper.IsSet("tps") {
-		setup.TicksPerSecond = viper.GetFloat64("tps")
+	if CLI.Tps > 0 {
+		setup.TicksPerSecond = CLI.Tps
+	}
+	if CLI.Hector != nil {
+		setup.EnableGC = *CLI.Hector
+	}
+	if CLI.Enemies != nil {
+		setup.EnableEnemies = *CLI.Enemies
 	}
 
-	srv := NewServer(&tilemap, setup, costs)
+	srv := NewServer(&tilemap, &setup, &costs)
 	srv.SetDefaultPlayerResources(model.Resources{
 		Rock:      30,
 		Wood:      30,
@@ -52,13 +55,13 @@ func startServ() {
 	})
 
 	api_server := &epita_api.ApiServer{
-		Addr:   fmt.Sprintf("%s:%d", viper.GetString("api.host"), viper.GetInt("api.port")),
+		Addr:   fmt.Sprintf("%s:%d", CLI.ApiHost, CLI.ApiPort),
 		Server: srv,
 	}
 	go api_server.Start()
 
 	viewer_server := &viewer.ViewerServer{
-		Addr:   fmt.Sprintf("%s:%d", viper.GetString("viewer.host"), viper.GetInt("viewer.port")),
+		Addr:   fmt.Sprintf("%s:%d", CLI.ViewerHost, CLI.ViewerPort),
 		Server: srv,
 	}
 	go viewer_server.Start()
