@@ -40,7 +40,7 @@ func main() {
 		log.Fatal().Err(err).Msg("DB Error")
 	}
 
-	db.AutoMigrate(&model.UserModel{})
+	db.AutoMigrate(&model.User{})
 
 	log.Info().Str("url", CLI.Db).Msg("Connected to database")
 }

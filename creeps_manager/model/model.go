@@ -1,8 +1,19 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"time"
 
-type UserModel struct {
-    gorm.Model
-    username string
+	"gorm.io/gorm"
+)
+
+type UserDiscordAuth struct {
+	AccessToken  string
+	TokenExpires time.Time
+	RefreshToken string
+	Scopes       string
+}
+
+type User struct {
+	gorm.Model
+	DiscordAuth UserDiscordAuth `gorm:"embedded;embeddedPrefix:discord_"`
 }
