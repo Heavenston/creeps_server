@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"github.com/Heavenston/creeps_server/creeps_manager/api"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
@@ -35,6 +37,15 @@ func main() {
 		log.Fatal().Err(ctx.Error).Msg("CLI error")
 	}
 
+	switch CLI.Verbose {
+	case 0:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case 1:
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	}
+
 	db, err := gorm.Open(sqlite.Open(CLI.Db), &gorm.Config{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("DB Error")
@@ -43,4 +54,12 @@ func main() {
 	db.AutoMigrate(&model.User{})
 
 	log.Info().Str("url", CLI.Db).Msg("Connected to database")
+
+	err = api.Start(api.ApiCfg{
+		Db: db,
+		TargetAddr: fmt.Sprintf("%s:%d", CLI.Host, CLI.Port),
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("HTTP Start Error")
+	}
 }

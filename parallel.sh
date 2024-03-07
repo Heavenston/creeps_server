@@ -6,10 +6,10 @@ stty -tostop
 
 PIDS=""
 
-make -C front $1 &
-PIDS="$! $PIDS"
-make -C creeps_server $1 &
-PIDS="$! $PIDS"
+for folder in "${@:2}"; do
+    make -C $folder $1 &
+    PIDS="$! $PIDS"
+done
 
 killall() {
     kill $PIDS &> /dev/null
