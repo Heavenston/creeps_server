@@ -68,6 +68,12 @@ export function login(): Promise<void> {
   return loginPromise;
 }
 
+export class RequestError extends Error {
+  constructor(public readonly response: Response) {
+    super("request error");
+  }
+}
+
 async function get<T>(url: string): Promise<T> {
   const headers = new Headers();
   if (isLoggedIn()) {
@@ -82,7 +88,7 @@ async function get<T>(url: string): Promise<T> {
       await logout();
   }
   if (!resp.ok) {
-    throw new Error("req error");
+    throw new RequestError(resp);
   }
   return resp.json();
 }
@@ -103,7 +109,7 @@ async function post<T>(url: string, body: any): Promise<T> {
       await logout();
   }
   if (!resp.ok) {
-    throw new Error("req error");
+    throw new RequestError(resp);
   }
   return resp.json();
 }
@@ -122,9 +128,9 @@ export async function getUserSelf(): Promise<User> {
 }
 
 export async function getGames(): Promise<Game[]> {
-  return await get("/games");
+  return get("/games");
 }
 
 export async function createGame(name: String): Promise<Game> {
-  return await post("/games", { name });
+  return post("/games", { name });
 }

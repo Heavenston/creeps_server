@@ -12,6 +12,8 @@ export class PopupComp extends MinzeElement {
   createdAt: number = 0;
   forceHide: boolean = false;
 
+  static popups: PopupComp[] = [];
+
   html = () => `
     <slot></slot>
   `
@@ -34,6 +36,7 @@ export class PopupComp extends MinzeElement {
       padding-bottom: 1rem;
 
       min-width: 10rem;
+      height: 3rem;
 
       border-radius: 0.15rem;
 
@@ -42,7 +45,8 @@ export class PopupComp extends MinzeElement {
       cursor: pointer;
 
       opacity: 0;
-      transition: opacity 150ms, filter 150ms;
+      transform: translateY(0);
+      transition: opacity 150ms, filter 150ms, transform 150ms;
     }
 
     :host::after {
@@ -71,6 +75,14 @@ export class PopupComp extends MinzeElement {
     }
   `
 
+  updateIndex() {
+    this.style.transform = `translateY(${this.myIndex()*4}rem)`;
+  }
+
+  myIndex() {
+    return PopupComp.popups.findIndex(a => a === this);
+  }
+
   frame() {
     const elapsed = Date.now() - this.createdAt;
     const progress = (elapsed/this.duration)*100;
@@ -81,7 +93,11 @@ export class PopupComp extends MinzeElement {
       this.classList.add("hide");
       setTimeout(() => {
         this.remove();
-      }, 2000);
+        PopupComp.popups.splice(this.myIndex(), 1);
+        for (const popup of PopupComp.popups) {
+          popup.updateIndex();
+        }
+      }, 175);
     }
     else {
       requestAnimationFrame(this.frame.bind(this));
@@ -91,11 +107,16 @@ export class PopupComp extends MinzeElement {
   onReady() {
     setTimeout(() => {
       this.classList.add("show");
-    });
+    }, 100);
     this.createdAt = Date.now();
     requestAnimationFrame(this.frame.bind(this));
 
     this.addEventListener("click", this.handleClick.bind(this));
+
+    PopupComp.popups.push(this);
+    for (const popup of PopupComp.popups) {
+      popup.updateIndex();
+    }
   }
 
   handleClick() {

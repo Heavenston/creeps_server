@@ -1,7 +1,7 @@
 import { MinzeElement } from "minze";
 import "./dashboard"
 import * as mapi from "~/src/manager_api"
-import "~/src/popup";
+import { createPopup } from "~/src/popup";
 
 (class IndexComp extends MinzeElement {
   #games: mapi.Game[] = []
@@ -121,6 +121,13 @@ import "~/src/popup";
   handleCreate() {
     mapi.createGame("lol")
       .then(() => mapi.getGames())
-      .then(this.updateGames.bind(this));
+      .then(this.updateGames.bind(this))
+      .catch((e) => {
+        if (e instanceof mapi.RequestError) {
+          e.response.json().then(body => {
+            createPopup("error", body["message"] ?? body["error"] ?? `Could not create game (${e.response.status})`)
+          });
+        }
+      });
   }
 }).define("creeps-index");
