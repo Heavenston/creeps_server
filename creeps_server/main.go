@@ -192,60 +192,6 @@ func main() {
 		Timestamp().
 		Logger()
 
-	// viper.SetEnvPrefix("CREEPS")
-
-	// viper.SetDefault("setup", &defaultSetup)
-	// viper.SetDefault("costs", &defaultCosts)
-
-	// rootCmd.Flags().Int("api-port", 1664, "")
-	// viper.BindPFlag("api.port", rootCmd.Flags().Lookup("api-port"))
-	// viper.BindEnv("api.port")
-
-	// rootCmd.Flags().String(
-	// 	"api-host", "localhost",
-	// 	`Host (ip) for the epita-compitible api`,
-	// )
-	// viper.BindPFlag("api.host", rootCmd.Flags().Lookup("api-host"))
-	// viper.BindEnv("api.host")
-
-	// rootCmd.Flags().Int("viewer-port", 1665, "Port for the epita-compatible viewer")
-	// viper.BindPFlag("viewer.port", rootCmd.Flags().Lookup("viewer-port"))
-	// viper.BindEnv("viewer.port")
-
-	// rootCmd.Flags().String(
-	// 	"viewer-host", "localhost",
-	// 	`Host (ip) for the viewer's api`,
-	// )
-	// viper.BindPFlag("viewer.host", rootCmd.Flags().Lookup("viewer-host"))
-	// viper.BindEnv("viewer.host")
-
-	// rootCmd.Flags().Float64("tps", defaultSetup.TicksPerSecond,
-	// 	`Overwrites config's setup ticks per seconds`,
-	// )
-	// viper.BindPFlag("tps", rootCmd.Flags().Lookup("tps"))
-	// viper.BindEnv("tps")
-	
-	// var level logLevel = logLevelInfo
-	// rootCmd.Flags().VarP(&level, "loglevel", "l", `log level. Allowed values are "trace", "debug", "info", "warn" or "error"`)
-	// viper.BindPFlag("loglevel", rootCmd.Flags().Lookup("loglevel"))
-	// viper.BindEnv("loglevel", "LOGLEVEL")
-
-	// viper.SetConfigName("heavcreeps") 
-	// viper.SetConfigType("yaml") 
-	// viper.AddConfigPath("$HOME/.heavcreeps")  
-	// viper.AddConfigPath(".")               
-	// err := viper.ReadInConfig() 
-	// if err != nil {
-	// 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-	// 	} else {
-	// 		panic(fmt.Errorf("fatal error config file: %w", err))
-	// 	}
-	// }
-
-	// if err := rootCmd.Execute(); err != nil {
-	// 	log.Fatal().Err(err).Msg("cli error")
-	// }
-
 	ctx := kong.Parse(&CLI)
 	startServ(ctx)
 }
