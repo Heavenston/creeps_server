@@ -20,7 +20,7 @@ type loginHandle struct {
 
 func (h *loginHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var allowedRedirects []string = []string{
-		"http://localhost:1234?token={{token}}",
+		"http://localhost:1234/?token={{token}}",
 	}
 
 	code := r.URL.Query().Get("code")
@@ -35,7 +35,7 @@ func (h *loginHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !slices.Contains(allowedRedirects, state) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(400)
-		fmt.Fprintf(w, `{"error": "invalid_redirect", "message": "this redirect is forbidden"}`)
+		fmt.Fprintf(w, `{"error": "invalid_redirect", "message": "this redirect is forbidden", "redirect": "`+state+`"}`)
 		return
 	}
 

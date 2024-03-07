@@ -1,5 +1,5 @@
 const API_BASE_URL = process.env.MANAGER_API_BASE_URL ?? "http://localhost:16969/api";
-const LOGIN_URl = process.env.LOGIN_URL ?? "http://example.com";
+const LOGIN_URL = process.env.LOGIN_URL ?? "http://example.com";
 
 let loginPromise: Promise<void> | null = null;
 
@@ -11,18 +11,36 @@ export type User = {
   username: string,
 };
 
+export type GameConfig = {
+  can_join_after_start: boolean,
+  private: boolean,
+  is_local: boolean,
+};
+
+export type Game = {
+  id: number,
+  name: string,
+
+  creator: User,
+  players: User[],
+
+  config: GameConfig,
+
+  started_at?: number,
+  ended_at?: number,
+};
+
 export async function logout() {
   localStorage.removeItem("token");
   setTimeout(() => document.location.reload());
-  await new Promise(() => {})
+  await new Promise(() => { })
 }
 
 export function isLoggedIn(): boolean {
   try {
     const usp = new URLSearchParams(document.location.search);
     const token = usp.get("token");
-    if (token != null)
-    {
+    if (token != null) {
       localStorage.setItem("token", token);
       document.location.search = "";
     }
@@ -33,18 +51,13 @@ export function isLoggedIn(): boolean {
 }
 
 async function makeLogin() {
-  try {
-    const usp = new URLSearchParams(document.location.search);
-    const token = usp.get("token");
-    if (token != null)
-      localStorage.setItem("token", token);
-  }
-  catch (e) { }
+  if (isLoggedIn())
+    return;
 
   const token = localStorage.getItem("token");
   if (token == null) {
-    document.location.href = LOGIN_URl;
-    await new Promise(() => {});
+    document.location.href = LOGIN_URL;
+    await new Promise(() => { });
   }
 }
 
@@ -65,7 +78,29 @@ async function get<T>(url: string): Promise<T> {
     headers,
   });
   if (resp.status == 403) {
-    await logout();
+    if (isLoggedIn())
+      await logout();
+  }
+  if (!resp.ok) {
+    throw new Error("req error");
+  }
+  return resp.json();
+}
+
+async function post<T>(url: string, body: any): Promise<T> {
+  const headers = new Headers();
+  headers.set("content-type", "application/json");
+  if (isLoggedIn()) {
+    headers.set("Authorization", localStorage.getItem("token") ?? "");
+  }
+  const resp = await fetch(API_BASE_URL + url, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers,
+  });
+  if (resp.status == 403) {
+    if (isLoggedIn())
+      await logout();
   }
   if (!resp.ok) {
     throw new Error("req error");
@@ -84,4 +119,12 @@ export async function getUserSelf(): Promise<User> {
   const m: User = await get("/users/@me");
   sessionStorage.setItem("user", JSON.stringify(m));
   return m;
+}
+
+export async function getGames(): Promise<Game[]> {
+  return await get("/games");
+}
+
+export async function createGame(name: String): Promise<Game> {
+  return await post("/games", { name });
 }

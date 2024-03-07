@@ -1,11 +1,16 @@
 {
   "name": "creeps_front",
   "type": "module",
-  "source": ["src/index.html", "src/game.html"],
+  "source": [
+    "src/index.html",
+    "src/game.html"
+  ],
   "devDependencies": {
     "@types/node": "^20.11.19",
     "parcel": "^2.11.0",
-    "parcel-reporter-static-files-copy": "^1.5.3"
+    "parcel-reporter-static-files-copy": "^1.5.3",
+    "process": "^0.11.10",
+    "timers-browserify": "^2.0.12"
   },
   "scripts": {
     "dev": "parcel",

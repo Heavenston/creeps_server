@@ -1,12 +1,15 @@
-@import url(npm:ress/dist/ress.min.css);
 
-html {
+html, body {
   height: 100%;
+}
+
+html, body {
+  padding: 0;
+  margin: 0;
 }
 
 body {
   font-family: Sans-Serif;
   background-color: #111111;
   color: white;
-  height: 100%;
 }

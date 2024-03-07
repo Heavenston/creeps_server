@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/model/discordmodel"
 	"github.com/ajg/form"
@@ -125,22 +126,31 @@ func MakeAccessTokenRequest(
 	return atr, err
 }
 
+type userCacheEntry struct {
+	user discordmodel.User
+	time time.Time
+}
 var userCache sync.Map
 
 func GetCurrentUser(auth IDiscordAuth) (user discordmodel.User, err error) {
 	if ba, ok := auth.(*DiscordBearerAuth); ok && ba.DiscordId != nil {
-		val, ok := userCache.Load(ba.DiscordId)
+		val, ok := userCache.Load(*ba.DiscordId)
 		if ok {
-			user = *val.(*discordmodel.User)
+			entry := val.(userCacheEntry)
+			if time.Since(entry.time) > time.Minute * 2 {
+				userCache.Delete(*&ba.DiscordId)
+				go GetCurrentUser(auth)
+			}
+			user = entry.user
 			return
 		}
 	}
 
 	err = get(auth, "/users/@me", &user)
-
-	if err == nil {
-		userCache.Store(user.Id, &user)
-	}
+	userCache.Store(user.Id, userCacheEntry {
+		user: user,
+		time: time.Now(),
+	})
 
 	return
 }

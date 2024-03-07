@@ -6,6 +6,10 @@ stty -tostop
 
 PIDS=""
 
+if [ -f .env ]; then
+    export $(cat .env | xargs)
+fi
+
 for folder in "${@:2}"; do
     make -C $folder $1 &
     PIDS="$! $PIDS"

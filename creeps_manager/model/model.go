@@ -38,7 +38,7 @@ type Game struct {
 	Name string
 
 	CreatorID int
-	Creator   User
+	Creator   *User
 
 	Players []User `gorm:"many2many:game_players;"`
 

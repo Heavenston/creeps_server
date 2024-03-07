@@ -103,6 +103,21 @@ func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var count int64
+	rs := h.cfg.Db.Model(&model.Game{}).Where("creator_id = ?", user.ID).Count(&count)
+	if rs.Error != nil {
+		log.Error().Err(rs.Error).Msg("fetch error")
+		w.WriteHeader(500)
+		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
+		return
+	}
+
+	if count > 0 {
+		w.WriteHeader(400)
+		w.Write([]byte(`{"error":"too_much", "message": "you already made more games than allowed"}`))
+		return
+	}
+
 	var request apimodel.CreateGameRequest
 	err = json.Unmarshal(body, &request)
 	if err != nil {
@@ -126,13 +141,15 @@ func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	rs := h.cfg.Db.Create(&game).Preload("clause.Associations")
+	rs = h.cfg.Db.Create(&game)
 	if rs.Error != nil {
 		log.Error().Err(rs.Error).Msg("create error")
 		w.WriteHeader(500)
 		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
 		return
 	}
+
+	game.Creator = &user
 
 	resp, err := apimodel.GameFromModel(game)
 	if err != nil {

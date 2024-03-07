@@ -44,33 +44,35 @@ func UserFromModel(user model.User) (result User, err error) {
 }
 
 type GameConfig struct {
-	CanJoinAfterStart bool `json:"canJoinAfterStart"`
+	CanJoinAfterStart bool `json:"can_join_after_start"`
 	Private           bool `json:"private"`
-	IsLocal           bool `json:"isLocal"`
+	IsLocal           bool `json:"is_local"`
 }
 
 type Game struct {
 	Id int `json:"id"`
+	Name string `json:"name"`
+	Config GameConfig `json:"config"`
 
 	Creator User   `json:"creator"`
 	Players []User `json:"players"`
 
-	Config GameConfig `json:"config"`
-
-	StartedAt *int64 `json:"startedAt,omitempty"`
-	EndedAt   *int64 `json:"endedAt,omitempty"`
+	StartedAt *int64 `json:"started_at,omitempty"`
+	EndedAt   *int64 `json:"ended_at,omitempty"`
 }
 
 func GameFromModel(game model.Game) (result Game, err error) {
 	result.Id = int(game.ID)
+	result.Name = game.Name
 	result.Config = GameConfig(game.Config)
 
-	result.Creator, err = UserFromModel(game.Creator)
+	result.Creator, err = UserFromModel(*game.Creator)
 	if err != nil {
 		result = Game{}
 		return
 	}
 
+	result.Players = []User{}
 	for _, player := range game.Players {
 		var p User
 		p, err = UserFromModel(player)

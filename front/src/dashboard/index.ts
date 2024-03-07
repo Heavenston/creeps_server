@@ -1,20 +1,28 @@
 import { MinzeElement } from "minze";
 import "./dashboard"
+import * as mapi from "~/src/manager_api"
+import "~/src/popup";
 
 (class IndexComp extends MinzeElement {
+  #games: mapi.Game[] = []
+
   attrs = [["no-css-reset", ""]] as any;
 
   html = () => `
     <section>
       <h1><span>Active games</span><span class="line"></span></h1>
       <div class="content">
-        <button class="item item-game" on:click="join">
-          <div>Game1</div>
-          <div class="players">5 players</div>
-        </button>
-        <button class="item item-new">
-          <span>+</span>
-        </button>
+        ${this.#games.map(game => `
+          <button class="item item-game" on:click="join">
+            <div>${game.name}</div>
+            <div class="players">${game.players.length} players</div>
+          </button>
+        `).join("")}
+        ${mapi.isLoggedIn() ? `
+          <button class="item item-new" on:click="handleCreate">
+            <span>+</span>
+          </button>
+        ` : ``}
       </div>
     </section>
     <section>
@@ -97,7 +105,22 @@ import "./dashboard"
     }
   `
 
+  updateGames(games: mapi.Game[]) {
+    this.#games = games;
+    this.rerender();
+  }
+
+  onReady() {
+    mapi.getGames().then(this.updateGames.bind(this));
+  }
+
   join() {
-    document.location.href = "/game"
+    document.location.href = "/game";
+  }
+
+  handleCreate() {
+    mapi.createGame("lol")
+      .then(() => mapi.getGames())
+      .then(this.updateGames.bind(this));
   }
 }).define("creeps-index");
