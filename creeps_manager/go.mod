@@ -1,10 +1,11 @@
-module github.com/Heavenston/creeps_server
+module github.com/Heavenston/creeps_server/creeps_manager
 
 go 1.22.0
 
 require github.com/rs/zerolog v1.32.0
 
 require (
+	github.com/alecthomas/kong v0.8.1 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
