@@ -1,23 +1,83 @@
-import { Attrs, MinzeElement } from "minze"
+import { Attrs, MinzeElement, Reactive } from "minze"
 
 import { Renderer } from "./worldRenderer"
 import { Api } from "./api"
 
 export interface CreepsCanvasComp {
-  url: string;
+  url: string | null;
+  panelOpened: boolean;
 }
 
 export class CreepsCanvasComp extends MinzeElement {
+  reactive: Reactive = [["panelOpened", false]];
   attrs: Attrs = [["url", null]]
   
   // html template
-  html = () => `<canvas>`
+  html = () => `
+    <canvas></canvas>
+    <div class="panel ${this.panelOpened ? "open" : "close"}">
+      <button class="closePanel" on:click="handleTogglePanel">
+        <span> ${this.panelOpened ? '>' : "<"} </span>
+      </button>
+      <div class="internal">
+      </div>
+    </div>
+
+  `
 
   // scoped stylesheet
   css = () => `
   :host {
+    flex-grow: 1;
+    position: relative;
+  }
+
+  canvas {
     position: absolute;
     inset: 0;
+  }
+
+  .panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+
+    background-color: rgba(255, 255, 255, 0.07);
+    background-color: #212121;
+
+    display: flex;
+    flex-direction: row;
+  }
+
+  .panel .internal {
+    overflow: hidden;
+    transition: width 150ms;
+  }
+
+  .panel.close .internal {
+    width: 0rem;
+  }
+
+  .panel.open .internal {
+    width: 30rem;
+  }
+
+  .closePanel {
+    cursor: pointer;
+    width: 2rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .closePanel > span {
+    transform: scaleY(10);
+  }
+
+  .internal {
+    flex-grow: 1;
   }
   `
 
@@ -52,6 +112,10 @@ export class CreepsCanvasComp extends MinzeElement {
     this.animationFrameId = requestAnimationFrame(this.renderCanvas.bind(this));
   }
 
+  handleTogglePanel() {
+    this.panelOpened = !this.panelOpened;
+  }
+
   onReady() {
     this.canvas = this.select("canvas") ?? document.createElement("canvas");
     const ctx = this.canvas.getContext("2d")
@@ -60,7 +124,7 @@ export class CreepsCanvasComp extends MinzeElement {
       return;
     }
 
-    this.api = new Api(this.url);
+    this.api = new Api(this.url ?? "");
 
     this.api.addEventListener("connection_event", c => {
       if (!this.api)
