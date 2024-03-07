@@ -6,19 +6,22 @@ import { createPopup } from "~src/popup";
 
 export interface GameComp {
   game: mapi.Game | null;
+  panelOpened: boolean;
 }
 
 export class GameComp extends MinzeElement {
-  reactive: Reactive = [["game", null]];
+  reactive: Reactive = [["game", null], ["panelOpened", false]];
   
   html = () => `
     ${this.game != null && this.game.viewer_port ? `
       <creeps-canvas url="ws://localhost:${this.game.viewer_port}/websocket">
       </creeps-canvas>
-      <div class="panel">
-        <button class="close">
-          X
+      <div class="panel ${this.panelOpened ? "open" : "close"}">
+        <button class="closePanel" on:click="handleTogglePanel">
+          <span> ${this.panelOpened ? '>' : "<"} </span>
         </button>
+        <div class="internal">
+        </div>
       </div>
     ` : ``}
   `;
@@ -34,22 +37,42 @@ export class GameComp extends MinzeElement {
     top: 0;
     bottom: 0;
     right: 0;
-    width: 30rem;
+
     background-color: rgba(255, 255, 255, 0.07);
     background-color: #212121;
+
+    display: flex;
+    flex-direction: row;
   }
 
-  .close {
-    display: block;
+  .panel .internal {
+    overflow: hidden;
+    transition: width 150ms;
+  }
 
-    position: absolute;
-    top: 0;
-    left: 0;
+  .panel.close .internal {
+    width: 0rem;
+  }
 
-    height: 2rem;
+  .panel.open .internal {
+    width: 30rem;
+  }
+
+  .closePanel {
+    cursor: pointer;
     width: 2rem;
 
-    background-color: #C23B22;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .closePanel > span {
+    transform: scaleY(10);
+  }
+
+  .internal {
+    flex-grow: 1;
   }
   `
 
@@ -67,6 +90,10 @@ export class GameComp extends MinzeElement {
         createPopup("error", "An error occured");
       }
     });
+  }
+
+  handleTogglePanel() {
+    this.panelOpened = !this.panelOpened;
   }
 }
 
