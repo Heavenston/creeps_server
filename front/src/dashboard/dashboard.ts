@@ -1,17 +1,26 @@
 import { MinzeElement } from "minze"
+import * as mapi from "~/src/manager_api"
 
 (class HeaderComp extends MinzeElement {
+  #user: mapi.User | null = null;
+
   attrs = [["no-css-reset", ""]] as any;
   
   html = () => `
-  <div class="start">
-    <h1>Heav's Creeps</h1>
-  </div>
-  <div style="flex-grow: 1;"></div>
-  <div class="end">
-    <span class="username">Heavenstone</span>
-    <span class="image"></span>
-  </div>
+    <div class="start">
+      <h1>Heav's Creeps</h1>
+    </div>
+    <div style="flex-grow: 1;"></div>
+    ${mapi.isLoggedIn() && this.#user ? `
+      <button class="end" on:click="handleLogout">
+        <span class="username">${this.#user.username}</span>
+        <span class="image" style="background-image: url(${this.#user.avatar_url});"></span>
+      </button>
+    ` : `
+      <button class="end" on:click="handleLogin">
+        Login
+      </button>
+    `}
   `;
 
   css = () => `
@@ -49,13 +58,28 @@ import { MinzeElement } from "minze"
 
     .image {
       display: inline-block;
-      background-image: url(https://0.gravatar.com/avatar/568a630daeef28607806fc21b9344800cbaf11120d53d503adf7dbb25e56b79c?size=256);
       background-size: contain;
       height: 2rem;
       width: 2rem;
       border-radius: 10%;
     }
   `;
+
+  onReady() {
+    if (mapi.isLoggedIn()) {
+      mapi.getUserSelf().then(user => {
+        this.#user = user;
+        this.rerender();
+      })
+    }
+  }
+
+  handleLogin() {
+    mapi.login();
+  }
+  handleLogout() {
+    mapi.logout();
+  }
 }).define("creeps-header");
 
 (class DashboardComp extends MinzeElement {

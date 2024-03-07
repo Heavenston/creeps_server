@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/model/discordmodel"
 	"github.com/ajg/form"
@@ -28,6 +29,7 @@ func (a *DiscordAppAuth) AuthHeader() string {
 
 type DiscordBearerAuth struct {
 	AccessToken string
+	DiscordId *string
 }
 
 func (a *DiscordBearerAuth) AuthHeader() string {
@@ -123,7 +125,22 @@ func MakeAccessTokenRequest(
 	return atr, err
 }
 
+var userCache sync.Map
+
 func GetCurrentUser(auth IDiscordAuth) (user discordmodel.User, err error) {
+	if ba, ok := auth.(*DiscordBearerAuth); ok && ba.DiscordId != nil {
+		val, ok := userCache.Load(ba.DiscordId)
+		if ok {
+			user = *val.(*discordmodel.User)
+			return
+		}
+	}
+
 	err = get(auth, "/users/@me", &user)
+
+	if err == nil {
+		userCache.Store(user.Id, &user)
+	}
+
 	return
 }
