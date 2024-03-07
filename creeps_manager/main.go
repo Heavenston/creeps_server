@@ -9,6 +9,7 @@ import (
 
 	"github.com/Heavenston/creeps_server/creeps_manager/api"
 	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
+	gamemanager "github.com/Heavenston/creeps_server/creeps_manager/game_manager"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
@@ -16,13 +17,14 @@ import (
 )
 
 var CLI struct {
-	Db string `short:"d" default:":memory:" help:"The sqlite connection string to the database"`
+	Db string `env:"CREEPS_MANAGER_DB" short:"d" default:":memory:" help:"The sqlite connection string to the database"`
 
 	Host string `short:"t" default:"localhost" help:"Target hostname for the api"`
 	Port uint16 `short:"p" default:"16969" help:"Target port for the api"`
 
-	ClientId     string `env:"CREEPS_MANAGER_CLIENT_ID" required:"" help:"Discord client id"`
-	ClientSecret string `env:"CREEPS_MANAGER_CLIENT_SECRET" required:"" help:"Discord client secret"`
+	ClientId         string `env:"CREEPS_MANAGER_CLIENT_ID" required:"" help:"Discord client id"`
+	ClientSecret     string `env:"CREEPS_MANAGER_CLIENT_SECRET" required:"" help:"Discord client secret"`
+	ServerBinaryPath string `env:"CREEPS_MANAGER_SERVER_BINARY" default:"creeps_server" help:"Path to the binary of the creeps server"`
 
 	Verbose int  `short:"v" type:"counter" help:"Once to enable debug logs, twice for trace logs"`
 	Quiet   bool `short:"q" help:"If present overrides verbose and disables info logs and under"`
@@ -61,9 +63,12 @@ func main() {
 
 	log.Info().Str("url", CLI.Db).Msg("Connected to database")
 
+	gameManager := gamemanager.NewGameManager(db, CLI.ServerBinaryPath)
+
 	err = api.Start(api.ApiCfg{
 		Db:         db,
 		TargetAddr: fmt.Sprintf("%s:%d", CLI.Host, CLI.Port),
+		GameManager: gameManager,
 
 		DiscordAuth: &discordapi.DiscordAppAuth{
 			ClientId:     CLI.ClientId,

@@ -28,7 +28,7 @@ func (h *getGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := apimodel.GameFromModel(game)
+	result, err := apimodel.GameFromModel(game, h.cfg.GameManager.GetRunningGame(game.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("game convert error")
 		w.WriteHeader(500)
@@ -59,7 +59,7 @@ func (h *getGamesHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var results []apimodel.Game = make([]apimodel.Game, 0, len(games))
 	for _, game := range games {
-		result, err := apimodel.GameFromModel(game)
+		result, err := apimodel.GameFromModel(game, h.cfg.GameManager.GetRunningGame(game.ID))
 		if err != nil {
 			log.Error().Err(err).Msg("game convert error")
 			w.WriteHeader(500)
@@ -141,6 +141,8 @@ func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	log.Debug().Any("game", game).Msg("Creating game")
+
 	rs = h.cfg.Db.Create(&game)
 	if rs.Error != nil {
 		log.Error().Err(rs.Error).Msg("create error")
@@ -149,9 +151,18 @@ func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Info().Any("game", game).Msg("Created game")
 	game.Creator = &user
 
-	resp, err := apimodel.GameFromModel(game)
+	started, err := h.cfg.GameManager.StartGame(game)
+	if err != nil {
+		log.Error().Err(err).Msg("start game error")
+		w.WriteHeader(500)
+		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
+		return
+	}
+
+	resp, err := apimodel.GameFromModel(game, started)
 	if err != nil {
 		log.Error().Err(err).Msg("convert error")
 		w.WriteHeader(500)

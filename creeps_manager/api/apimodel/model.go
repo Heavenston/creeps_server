@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
+	gamemanager "github.com/Heavenston/creeps_server/creeps_manager/game_manager"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 )
 
@@ -50,8 +51,8 @@ type GameConfig struct {
 }
 
 type Game struct {
-	Id int `json:"id"`
-	Name string `json:"name"`
+	Id     int        `json:"id"`
+	Name   string     `json:"name"`
 	Config GameConfig `json:"config"`
 
 	Creator User   `json:"creator"`
@@ -59,17 +60,22 @@ type Game struct {
 
 	StartedAt *int64 `json:"started_at,omitempty"`
 	EndedAt   *int64 `json:"ended_at,omitempty"`
+
+	ApiPort    *int `json:"api_port,omitempty"`
+	ViewerPort *int `json:"viewer_port,omitempty"`
 }
 
-func GameFromModel(game model.Game) (result Game, err error) {
+func GameFromModel(game model.Game, rg *gamemanager.RunningGame) (result Game, err error) {
 	result.Id = int(game.ID)
 	result.Name = game.Name
 	result.Config = GameConfig(game.Config)
 
-	result.Creator, err = UserFromModel(*game.Creator)
-	if err != nil {
-		result = Game{}
-		return
+	if game.Creator != nil {
+		result.Creator, err = UserFromModel(*game.Creator)
+		if err != nil {
+			result = Game{}
+			return
+		}
 	}
 
 	result.Players = []User{}
@@ -90,6 +96,11 @@ func GameFromModel(game model.Game) (result Game, err error) {
 	if game.EndedAt != nil {
 		tm := game.EndedAt.Unix()
 		result.EndedAt = &tm
+	}
+
+	if rg != nil {
+		result.ApiPort = &rg.ApiPort
+		result.ViewerPort = &rg.ViewerPort
 	}
 
 	return

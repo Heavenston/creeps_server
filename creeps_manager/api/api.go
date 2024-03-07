@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
+	gamemanager "github.com/Heavenston/creeps_server/creeps_manager/game_manager"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -14,8 +15,9 @@ import (
 )
 
 type ApiCfg struct {
-	Db         *gorm.DB
-	TargetAddr string
+	Db          *gorm.DB
+	TargetAddr  string
+	GameManager *gamemanager.GameManager
 
 	DiscordAuth *discordapi.DiscordAppAuth
 }
