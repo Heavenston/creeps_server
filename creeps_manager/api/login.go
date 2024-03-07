@@ -79,7 +79,7 @@ func (h *loginHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"duid": user.DiscordId,
-		"uid": user.ID,
+		"uid":  user.ID,
 	})
 	strToken, err := token.SignedString(keys.JWTSecret)
 	if err != nil {

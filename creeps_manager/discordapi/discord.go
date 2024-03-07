@@ -29,7 +29,7 @@ func (a *DiscordAppAuth) AuthHeader() string {
 
 type DiscordBearerAuth struct {
 	AccessToken string
-	DiscordId *string
+	DiscordId   *string
 }
 
 func (a *DiscordBearerAuth) AuthHeader() string {
@@ -38,7 +38,7 @@ func (a *DiscordBearerAuth) AuthHeader() string {
 
 type ErrNonOk struct {
 	status int
-	body string
+	body   string
 }
 
 func (e *ErrNonOk) Error() string {
@@ -52,7 +52,7 @@ func applyAuth(auth IDiscordAuth, req *http.Request) {
 }
 
 func get(auth IDiscordAuth, uri string, out any) error {
-	req, err := http.NewRequest("GET", API_BASE_URI + uri, nil)
+	req, err := http.NewRequest("GET", API_BASE_URI+uri, nil)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func get(auth IDiscordAuth, uri string, out any) error {
 	if resp.StatusCode != 200 {
 		return &ErrNonOk{
 			status: resp.StatusCode,
-			body: string(body),
+			body:   string(body),
 		}
 	}
 

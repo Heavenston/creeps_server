@@ -44,7 +44,7 @@ func (h *getGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type","application/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(200)
 	w.Write(body)
 }
@@ -77,7 +77,7 @@ func (h *getGamesHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type","application/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(200)
 	w.Write(body)
 }
@@ -111,7 +111,7 @@ func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	game := model.Game {
+	game := model.Game{
 		Name: request.Name,
 
 		CreatorID: int(user.ID),
@@ -121,8 +121,8 @@ func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		game.Config = model.GameConfig{
 			CanJoinAfterStart: true,
-			Private: false,
-			IsLocal: false,
+			Private:           false,
+			IsLocal:           false,
 		}
 	}
 

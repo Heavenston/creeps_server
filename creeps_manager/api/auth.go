@@ -50,4 +50,3 @@ func auth(db *gorm.DB, w http.ResponseWriter, req *http.Request) (user model.Use
 	}
 	return
 }
-
