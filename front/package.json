@@ -3,7 +3,8 @@
   "type": "module",
   "source": [
     "src/index.html",
-    "src/game.html"
+    "src/game.html",
+    "src/createGame.html"
   ],
   "devDependencies": {
     "@types/node": "^20.11.19",

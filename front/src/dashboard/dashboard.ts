@@ -7,9 +7,9 @@ import * as mapi from "~/src/manager_api"
   attrs = [["no-css-reset", ""]] as any;
   
   html = () => `
-    <div class="start">
+    <a class="start" href="/">
       <h1>Heav's Creeps</h1>
-    </div>
+    </a>
     <div style="flex-grow: 1;"></div>
     ${mapi.isLoggedIn() && this.#user ? `
       <button class="end" on:click="handleLogout">

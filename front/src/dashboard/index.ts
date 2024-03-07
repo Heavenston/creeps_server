@@ -19,9 +19,9 @@ import { createPopup } from "~/src/popup";
           </button>
         `).join("")}
         ${mapi.isLoggedIn() ? `
-          <button class="item item-new" on:click="handleCreate">
+          <a class="item item-new" href="/createGame">
             <span>+</span>
-          </button>
+          </a>
         ` : ``}
       </div>
     </section>
@@ -116,18 +116,5 @@ import { createPopup } from "~/src/popup";
 
   join() {
     document.location.href = "/game";
-  }
-
-  handleCreate() {
-    mapi.createGame("lol")
-      .then(() => mapi.getGames())
-      .then(this.updateGames.bind(this))
-      .catch((e) => {
-        if (e instanceof mapi.RequestError) {
-          e.response.json().then(body => {
-            createPopup("error", body["message"] ?? body["error"] ?? `Could not create game (${e.response.status})`)
-          });
-        }
-      });
   }
 }).define("creeps-index");
