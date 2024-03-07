@@ -2,21 +2,19 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/api/apimodel"
-	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
-type usersHandle struct {
+type getUserHandle struct {
 	cfg *ApiCfg
 }
 
-func (h *usersHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *getUserHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     userId := chi.URLParam(r, "userId")
 
     var user model.User
@@ -36,33 +34,17 @@ func (h *usersHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    discordUser, err := discordapi.GetCurrentUser(&discordapi.DiscordBearerAuth{
-        DiscordId: &user.DiscordId,
-        AccessToken: user.DiscordAuth.AccessToken,
-    })
+    result, err := apimodel.UserFromModel(user)
     if err != nil {
+        log.Error().Err(err).Msg("user convert error")
+        w.WriteHeader(500)
+        w.Write([]byte(`{"erro":"internal_error", "message": "internal error"}`))
         return
-    }
-
-    result := apimodel.User{
-    	Id: int(user.ID),
-    	DiscordId: user.DiscordId,
-    	DiscordTag: discordUser.Discriminator,
-        AvatarUrl: nil,
-    	Username: discordUser.Username,
-    }
-
-    if discordUser.Avatar != nil {
-        url := fmt.Sprintf(
-            "https://cdn.discordapp.com/avatars/%s/%s.png",
-            discordUser.Id, *discordUser.Avatar,
-        )
-        result.AvatarUrl = &url
     }
 
     data, err := json.Marshal(result)
     if err != nil {
-        log.Warn().Err(err).Msg("serialization error")
+        log.Error().Err(err).Msg("serialization error")
         w.WriteHeader(500)
         w.Write([]byte(`{"erro":"internal_error", "message": "internal error"}`))
         return
