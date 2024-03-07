@@ -1,11 +1,17 @@
-import { MinzeElement } from "minze"
+import { Attrs, MinzeElement } from "minze"
 
 import { Renderer } from "./worldRenderer"
 import { Api } from "./api"
 
-(class extends MinzeElement {
+export interface CreepsCanvasComp {
+  url: string;
+}
+
+export class CreepsCanvasComp extends MinzeElement {
+  attrs: Attrs = [["url", null]]
+  
   // html template
-  html = () => `<canvas/> `
+  html = () => `<canvas>`
 
   // scoped stylesheet
   css = () => `
@@ -54,7 +60,7 @@ import { Api } from "./api"
       return;
     }
 
-    this.api = new Api("ws://localhost:1665/websocket");
+    this.api = new Api(this.url);
 
     this.api.addEventListener("connection_event", c => {
       if (!this.api)
@@ -86,4 +92,6 @@ import { Api } from "./api"
     cancelAnimationFrame(this.animationFrameId);
     this.eventAbort.abort();
   }
-}).define("creeps-canvas")
+}
+
+CreepsCanvasComp.define("creeps-canvas")

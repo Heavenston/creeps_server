@@ -28,6 +28,9 @@ export type Game = {
 
   started_at?: number,
   ended_at?: number,
+  
+  api_port?: number,
+  viewer_port?: number,
 };
 
 export async function logout() {
@@ -125,6 +128,10 @@ export async function getUserSelf(): Promise<User> {
   const m: User = await get("/users/@me");
   sessionStorage.setItem("user", JSON.stringify(m));
   return m;
+}
+
+export async function getGame(id: string): Promise<Game> {
+  return get(`/games/${id}`);
 }
 
 export async function getGames(): Promise<Game[]> {

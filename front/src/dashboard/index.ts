@@ -1,7 +1,6 @@
 import { MinzeElement } from "minze";
 import "./dashboard"
 import * as mapi from "~/src/manager_api"
-import { createPopup } from "~/src/popup";
 
 (class IndexComp extends MinzeElement {
   #games: mapi.Game[] = []
@@ -13,10 +12,10 @@ import { createPopup } from "~/src/popup";
       <h1><span>Active games</span><span class="line"></span></h1>
       <div class="content">
         ${this.#games.map(game => `
-          <button class="item item-game" on:click="join">
+          <a class="item item-game" on:click="join" href="/game#${game.id}">
             <div>${game.name}</div>
             <div class="players">${game.players.length} players</div>
-          </button>
+          </a>
         `).join("")}
         ${mapi.isLoggedIn() ? `
           <a class="item item-new" href="/createGame">
@@ -65,6 +64,7 @@ import { createPopup } from "~/src/popup";
     section .content {
       display: flex;
       flex-direction: row;
+      flex-wrap: wrap;
       gap: 1rem;
 
       padding: 1rem;
@@ -114,7 +114,9 @@ import { createPopup } from "~/src/popup";
     mapi.getGames().then(this.updateGames.bind(this));
   }
 
-  join() {
-    document.location.href = "/game";
+  join(event: MouseEvent) {
+    const el = event.target as HTMLElement;
+    const game_id = el.getAttribute("data-game-id");
+    document.location.href = "/game#"+game_id;
   }
 }).define("creeps-index");

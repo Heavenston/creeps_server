@@ -112,7 +112,7 @@ func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if count > 0 {
+	if count >= 5 {
 		w.WriteHeader(400)
 		w.Write([]byte(`{"error":"too_much", "message": "you already made more games than allowed"}`))
 		return

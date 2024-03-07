@@ -1,10 +1,21 @@
-import { MinzeElement } from "minze";
+import { MinzeElement, Reactive } from "minze";
+import * as mapi from "~/src/manager_api"
 import "./dashboard"
 import "../viewer/canvas"
+import { createPopup } from "~src/popup";
 
-(class GameComp extends MinzeElement {
+export interface GameComp {
+  game: mapi.Game | null;
+}
+
+export class GameComp extends MinzeElement {
+  reactive: Reactive = [["game", null]];
+  
   html = () => `
-    <creeps-canvas/>
+    ${this.game != null && this.game.viewer_port ? `
+      <creeps-canvas url="ws://localhost:${this.game.viewer_port}/websocket">
+      </creeps-canvas>
+    ` : ``}
   `;
 
   css = () => `
@@ -13,5 +24,20 @@ import "../viewer/canvas"
       position: relative;
     }
   `
-}).define("creeps-game")
+
+  onReady() {
+    const gameId = document.location.hash.slice(1);
+    mapi.getGame(gameId).then(game => {
+      this.game = game;
+    }).catch(e => {
+      if (e instanceof mapi.RequestError) {
+        e.response.json().then(body => {
+          createPopup("error", body["message"] ?? body["error"] ?? "An error occured");
+        });
+      }
+    });
+  }
+}
+
+GameComp.define("creeps-game");
 
