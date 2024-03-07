@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/api"
+	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
@@ -19,6 +20,9 @@ var CLI struct {
 
 	Host string `short:"t" default:"localhost" help:"Target hostname for the api"`
 	Port uint16 `short:"p" default:"16969" help:"Target port for the api"`
+
+	ClientId string `env:"CREEPS_MANAGER_CLIENT_ID" required:"" help:"Discord client id"`
+	ClientSecret string `env:"CREEPS_MANAGER_CLIENT_SECRET" required:"" help:"Discord client secret"`
 
 	Verbose int  `short:"v" type:"counter" help:"Once to enable debug logs, twice for trace logs"`
 	Quiet   bool `short:"q" help:"If present overrides verbose and disables info logs and under"`
@@ -60,6 +64,11 @@ func main() {
 	err = api.Start(api.ApiCfg{
 		Db: db,
 		TargetAddr: fmt.Sprintf("%s:%d", CLI.Host, CLI.Port),
+
+		DiscordAuth: &discordapi.DiscordAppAuth{
+			ClientId: CLI.ClientId,
+			ClientSecret: CLI.ClientSecret,
+		},
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("HTTP Start Error")

@@ -1,56 +1,58 @@
 package discordmodel
 
+import "fmt"
+
 type User struct {
 	// the user's id
-	id string
+	Id string `json:"id"`
 	// the user's username, not unique across the platform
-	username string
+	Username string `json:"username"`
 	// the user's Discord-tag
-	discriminator string
+	Discriminator string `json:"discriminator"`
 	// the user's display name, if it is set. For bots, this is the application name
-	global_name *string
+	GlobalName *string `json:"global_name"`
 	// the user's avatar hash
-	avatar *string
+	Avatar *string `json:"avatar"`
 	// whether the user belongs to an OAuth2 application
-	bot *bool
+	Bot *bool `json:"bot"`
 	// whether the user is an Official Discord System user (part of the urgent message system)
-	system *bool
+	System *bool `json:"system"`
 	// whether the user has two factor enabled on their account
-	mfa_enabled *bool
+	MfaEnabled *bool `json:"mfa_enabled"`
 	// the user's banner hash
-	banner *string
+	Banner *string `json:"banner"`
 	// the user's banner color encoded as an integer representation of hexadecimal color code
-	accent_color *int
+	AccentColor *int `json:"accent_color"`
 	// the user's chosen language option
-	locale *string
+	Locale *string `json:"locale"`
 	// whether the email on this account has been verified
-	verified *bool
+	Verified *bool `json:"verified"`
 	// the user's email
-	email *string
+	Email *string `json:"email"`
 	// the flags on a user's account
-	flags *int
+	Flags *int `json:"flags"`
 	// the type of Nitro subscription on a user's account
-	premium_type *int
+	PremiumType *int `json:"premium_type"`
 	// the public flags on a user's account
-	public_flags *int
+	PublicFlags *int `json:"public_flags"`
 	// the user's avatar decoration hash
-	avatar_decoration *string
+	AvatarDecoration *string `json:"avatar_decoration"`
 }
 
 type AccessTokenRequest struct {
 	// Must be set to 'authorization_code'
-	GrantType string `json:"grant_type"`
+	GrantType string `form:"grant_type"`
 	// The code from the querystring
-	Code string `json:"code"`
+	Code string `form:"code"`
 	// The 'redirect_uri' associated with this authorization, usually from your authorization URL
-	RedirectUri string `json:"redirect_uri"`
+	RedirectUri string `form:"redirect_uri"`
 }
 
 type RefreshTokenRequest struct {
 	// Must be set to 'refresh_token'
-	GrantType string `json:"grant_type"`
+	GrantType string `form:"grant_type"`
 	// The user's refresh token
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `form:"refresh_token"`
 }
 
 type AccessTokenResponse struct {
@@ -59,4 +61,8 @@ type AccessTokenResponse struct {
 	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
 	Scope        string `json:"scope"`
+}
+
+func (a *AccessTokenResponse) AuthHeader() string {
+	return fmt.Sprintf("Bearer %s", a.AccessToken)
 }
