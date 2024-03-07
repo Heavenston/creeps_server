@@ -24,7 +24,7 @@ func (h *getGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if rs.RowsAffected == 0 {
 		w.Header().Add("content-type", "application/json")
 		w.WriteHeader(404)
-		w.Write([]byte(`{"error": "not_found", message: "not game has the given id"}`))
+		w.Write([]byte(`{"error": "not_found", "message": "not game has the given id"}`))
 		return
 	}
 
@@ -181,4 +181,32 @@ func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("content-type", "application/json")
 	w.WriteHeader(200)
 	w.Write(respBody)
+}
+
+type joinGameHandle struct {
+	cfg *ApiCfg
+}
+
+func (h *joinGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	gameId := chi.URLParam(r, "gameId")
+
+	user, err := auth(h.cfg.Db, w, r)
+	if err != nil {
+		return
+	}
+
+	err = h.cfg.Db.Model(&model.Game{}).Where("id = ?", gameId).
+		Association("Players").
+		Append(&user)
+
+	if err != nil {
+		log.Warn().Err(err).Msg("join error")
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(`{"error": "conflict"}`))
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.Write([]byte(`{"result": "success"}`))
 }

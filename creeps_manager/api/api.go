@@ -32,6 +32,7 @@ func apiRouter(cfg *ApiCfg) http.Handler {
 	router.Route("/games", func(r chi.Router) {
 		r.Route("/{gameId}", func(r chi.Router) {
 			r.Get("/", (&getGameHandle{cfg: cfg}).ServeHTTP)
+			r.Post("/join", (&joinGameHandle{cfg: cfg}).ServeHTTP)
 		})
 		r.Get("/", (&getGamesHandle{cfg: cfg}).ServeHTTP)
 		r.Post("/", (&postGameHandle{cfg: cfg}).ServeHTTP)
