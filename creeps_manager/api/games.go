@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/api/apimodel"
@@ -31,7 +32,7 @@ func (h *getGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("game convert error")
 		w.WriteHeader(500)
-		w.Write([]byte(`{"erro":"internal_error", "message": "internal error"}`))
+		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
 		return
 	}
 
@@ -39,7 +40,7 @@ func (h *getGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("serialization error")
 		w.WriteHeader(500)
-		w.Write([]byte(`{"erro":"internal_error", "message": "internal error"}`))
+		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
 		return
 	}
 
@@ -62,7 +63,7 @@ func (h *getGamesHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error().Err(err).Msg("game convert error")
 			w.WriteHeader(500)
-			w.Write([]byte(`{"erro":"internal_error", "message": "internal error"}`))
+			w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
 			return
 		}
 		results = append(results, result)
@@ -72,11 +73,84 @@ func (h *getGamesHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("serialization error")
 		w.WriteHeader(500)
-		w.Write([]byte(`{"erro":"internal_error", "message": "internal error"}`))
+		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
 		return
 	}
 
 	w.Header().Add("Content-Type","application/json")
 	w.WriteHeader(200)
 	w.Write(body)
+}
+
+type postGameHandle struct {
+	cfg *ApiCfg
+}
+
+func (h *postGameHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	user, err := auth(h.cfg.Db, w, r)
+	if err != nil {
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+
+	if r.Header.Get("Content-Type") != "application/json" {
+		w.WriteHeader(415)
+		w.Write([]byte(`{"error":"invalid_content_type", "message": "only application/json is supported"}`))
+		return
+	}
+
+	var request apimodel.CreateGameRequest
+	err = json.Unmarshal(body, &request)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte(`{"error":"invalid_request", "message": "request's body is in the wrong format"}`))
+		return
+	}
+
+	game := model.Game {
+		Name: request.Name,
+
+		CreatorID: int(user.ID),
+	}
+	if request.Config != nil {
+		game.Config = model.GameConfig(*request.Config)
+	} else {
+		game.Config = model.GameConfig{
+			CanJoinAfterStart: true,
+			Private: false,
+			IsLocal: false,
+		}
+	}
+
+	rs := h.cfg.Db.Create(&game).Preload("clause.Associations")
+	if rs.Error != nil {
+		log.Error().Err(rs.Error).Msg("create error")
+		w.WriteHeader(500)
+		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
+		return
+	}
+
+	resp, err := apimodel.GameFromModel(game)
+	if err != nil {
+		log.Error().Err(err).Msg("convert error")
+		w.WriteHeader(500)
+		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
+		return
+	}
+
+	respBody, err := json.Marshal(resp)
+	if err != nil {
+		log.Error().Err(err).Msg("marshal error")
+		w.WriteHeader(500)
+		w.Write([]byte(`{"error":"internal_error", "message": "internal error"}`))
+		return
+	}
+
+	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(200)
+	w.Write(respBody)
 }

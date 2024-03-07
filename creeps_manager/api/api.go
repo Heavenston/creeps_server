@@ -32,6 +32,7 @@ func apiRouter(cfg *ApiCfg) http.Handler {
 			r.Get("/", (&getGameHandle{cfg: cfg}).ServeHTTP)
 		})
 		r.Get("/", (&getGamesHandle{cfg: cfg}).ServeHTTP)
+		r.Get("/", (&postGameHandle{cfg: cfg}).ServeHTTP)
 	})
 
 	return router

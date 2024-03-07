@@ -16,29 +16,29 @@ type User struct {
 }
 
 func UserFromModel(user model.User) (result User, err error) {
-    discordUser, err := discordapi.GetCurrentUser(&discordapi.DiscordBearerAuth{
-        DiscordId: &user.DiscordId,
-        AccessToken: user.DiscordAuth.AccessToken,
-    })
-    if err != nil {
-        return
-    }
+	discordUser, err := discordapi.GetCurrentUser(&discordapi.DiscordBearerAuth{
+		DiscordId:   &user.DiscordId,
+		AccessToken: user.DiscordAuth.AccessToken,
+	})
+	if err != nil {
+		return
+	}
 
-    result = User{
-    	Id: int(user.ID),
-    	DiscordId: user.DiscordId,
-    	DiscordTag: discordUser.Discriminator,
-        AvatarUrl: nil,
-    	Username: discordUser.Username,
-    }
+	result = User{
+		Id:         int(user.ID),
+		DiscordId:  user.DiscordId,
+		DiscordTag: discordUser.Discriminator,
+		AvatarUrl:  nil,
+		Username:   discordUser.Username,
+	}
 
-    if discordUser.Avatar != nil {
-        url := fmt.Sprintf(
-            "https://cdn.discordapp.com/avatars/%s/%s.png",
-            discordUser.Id, *discordUser.Avatar,
-        )
-        result.AvatarUrl = &url
-    }
+	if discordUser.Avatar != nil {
+		url := fmt.Sprintf(
+			"https://cdn.discordapp.com/avatars/%s/%s.png",
+			discordUser.Id, *discordUser.Avatar,
+		)
+		result.AvatarUrl = &url
+	}
 
 	return
 }
@@ -52,7 +52,7 @@ type GameConfig struct {
 type Game struct {
 	Id int `json:"id"`
 
-	Creator User `json:"creator"`
+	Creator User   `json:"creator"`
 	Players []User `json:"players"`
 
 	Config GameConfig `json:"config"`
