@@ -52,6 +52,8 @@ func main() {
 	}
 
 	db.AutoMigrate(&model.User{})
+	db.AutoMigrate(&model.Role{})
+	db.AutoMigrate(&model.Game{})
 
 	log.Info().Str("url", CLI.Db).Msg("Connected to database")
 
