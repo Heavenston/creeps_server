@@ -12,17 +12,17 @@ import (
 )
 
 var CLI struct {
-	ApiPort int16 `help:"Port for the epita-compatible api" default:"1664"`
-	ApiHost string `help:"Host for the epita-compatible api" default:"localhost"`
-	ViewerPort int16 `help:"Port for the viewer's api" default:"1665"`
+	ApiPort    int16  `help:"Port for the epita-compatible api" default:"1664"`
+	ApiHost    string `help:"Host for the epita-compatible api" default:"localhost"`
+	ViewerPort int16  `help:"Port for the viewer's api" default:"1665"`
 	ViewerHost string `help:"Host for the viewer's api" default:"localhost"`
 
-	Tps float64 `help:"Overrides the ticks per seconds"`
-	Enemies *bool `negatable:"" help:"Overrides wether enemies are enables"`
-	Hector *bool `negatable:"" help:"Overrides wether the garbage collector is enabled"`
+	Tps     float64 `help:"Overrides the ticks per seconds"`
+	Enemies *bool   `negatable:"" help:"Overrides wether enemies are enables"`
+	Hector  *bool   `negatable:"" help:"Overrides wether the garbage collector is enabled"`
 
-	Verbose int `short:"v" type:"counter" help:"Once for debug prints, twice for trace"`
-	Quiet bool `short:"q" help:"Overrites verbose, disables info logs and under"`
+	Verbose int  `short:"v" type:"counter" help:"Once for debug prints, twice for trace"`
+	Quiet   bool `short:"q" help:"Overrites verbose, disables info logs and under"`
 }
 
 var defaultSetup model.SetupResponse = model.SetupResponse{

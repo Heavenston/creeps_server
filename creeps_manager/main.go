@@ -66,8 +66,8 @@ func main() {
 	gameManager := gamemanager.NewGameManager(db, CLI.ServerBinaryPath)
 
 	err = api.Start(api.ApiCfg{
-		Db:         db,
-		TargetAddr: fmt.Sprintf("%s:%d", CLI.Host, CLI.Port),
+		Db:          db,
+		TargetAddr:  fmt.Sprintf("%s:%d", CLI.Host, CLI.Port),
 		GameManager: gameManager,
 
 		DiscordAuth: &discordapi.DiscordAppAuth{

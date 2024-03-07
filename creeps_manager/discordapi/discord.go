@@ -130,6 +130,7 @@ type userCacheEntry struct {
 	user discordmodel.User
 	time time.Time
 }
+
 var userCache sync.Map
 
 func GetCurrentUser(auth IDiscordAuth) (user discordmodel.User, err error) {
@@ -137,7 +138,7 @@ func GetCurrentUser(auth IDiscordAuth) (user discordmodel.User, err error) {
 		val, ok := userCache.Load(*ba.DiscordId)
 		if ok {
 			entry := val.(userCacheEntry)
-			if time.Since(entry.time) > time.Minute * 2 {
+			if time.Since(entry.time) > time.Minute*2 {
 				userCache.Delete(*&ba.DiscordId)
 				go GetCurrentUser(auth)
 			}
@@ -147,7 +148,7 @@ func GetCurrentUser(auth IDiscordAuth) (user discordmodel.User, err error) {
 	}
 
 	err = get(auth, "/users/@me", &user)
-	userCache.Store(user.Id, userCacheEntry {
+	userCache.Store(user.Id, userCacheEntry{
 		user: user,
 		time: time.Now(),
 	})
