@@ -1,5 +1,5 @@
 import { MinzeElement } from "minze";
-import "./dashboard"
+import "~/src/dashboard/dashboard.ts"
 import * as mapi from "~/src/manager_api"
 import { createPopup } from "~/src/popup";
 

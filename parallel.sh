@@ -21,6 +21,7 @@ killall() {
 
 trap killall EXIT
 trap killall SIGINT
+trap killall SIGTERM
 
 # -n to exit when any for the processes exits
 wait -n $PIDS

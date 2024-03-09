@@ -18,64 +18,64 @@ export class TexturePack extends EventTarget {
   private tilesUrlTable: (string|string[]|null)[] = [
     // Grass
     [
-      "/kenney_micro_roguelike/grass1.png",
-      "/kenney_micro_roguelike/grass2.png",
-      "/kenney_micro_roguelike/grass3.png",
-      "/kenney_micro_roguelike/grass4.png",
-      "/kenney_micro_roguelike/grass5.png",
+      "/viewer/kenney_micro_roguelike/grass1.png",
+      "/viewer/kenney_micro_roguelike/grass2.png",
+      "/viewer/kenney_micro_roguelike/grass3.png",
+      "/viewer/kenney_micro_roguelike/grass4.png",
+      "/viewer/kenney_micro_roguelike/grass5.png",
     ],
     // Water
-    "/kenney_micro_roguelike/water.png",
+    "/viewer/kenney_micro_roguelike/water.png",
     // Stone
     [
-      "/tinyranch/rock1.png",
-      "/tinyranch/rock2.png",
-      "/tinyranch/rock3.png",
+      "/viewer/tinyranch/rock1.png",
+      "/viewer/tinyranch/rock2.png",
+      "/viewer/tinyranch/rock3.png",
     ],
     // Tree
     [
-      "/kenney_micro_roguelike/tree1.png",
-      "/kenney_micro_roguelike/tree2.png",
+      "/viewer/kenney_micro_roguelike/tree1.png",
+      "/viewer/kenney_micro_roguelike/tree2.png",
     ],
     // Bush
     [
-      "/bush.png",
-      "/bush2.png",
+      "/viewer/bush.png",
+      "/viewer/bush2.png",
     ],
     // Oil
-    "/kenney_micro_roguelike/oil.png",
+    "/viewer/kenney_micro_roguelike/oil.png",
     // TownHall
-    "/kenney_micro_roguelike/castle.png",
+    "/viewer/kenney_micro_roguelike/castle.png",
     // Household
-    "/kenney_micro_roguelike/house.png",
+    "/viewer/kenney_micro_roguelike/house.png",
     // Smeltery
-    "/smeltery.png",
+    "/viewer/smeltery.png",
     // SawMill
-    "/sawmill.png",
+    "/viewer/sawmill.png",
     // RaiderCamp
     [
-      "/raidercamp1.png",
-      "/raidercamp2.png",
+      "/viewer/raidercamp1.png",
+      "/viewer/raidercamp2.png",
     ],
     // RaiderBorder
     null,
     // Road
-    "/road.png",
+    "/viewer/road.png",
   ];
   private unitsUrlTable: {[key: string]: string|string[]|undefined} = {
     "citizen": [
-      "/kenney_micro_roguelike/citizen_basic.png",
-      "/kenney_micro_roguelike/citizen_woman.png",
+      "/viewer/kenney_micro_roguelike/citizen_basic.png",
+      "/viewer/kenney_micro_roguelike/citizen_woman.png",
     ],
     "citizen:upgraded": [
-      "/kenney_micro_roguelike/citizen_adventurer.png",
-      "/kenney_micro_roguelike/citizen_woman2.png",
+      "/viewer/kenney_micro_roguelike/citizen_adventurer.png",
+      "/viewer/kenney_micro_roguelike/citizen_woman2.png",
     ],
-    "turret": "/kenney_micro_roguelike/red_robot.png",
-    "raider": "/kenney_micro_roguelike/zombie.png",
+    "turret": "/viewer/kenney_micro_roguelike/red_robot.png",
+    "raider": "/viewer/kenney_micro_roguelike/zombie.png",
     "bomber-bot": [
-      "/bomberbot1.png",
-      "/bomberbot2.png",
+      "/viewer/bomberbot1.png",
+      "/viewer/bomberbot2.png",
     ],
   };
   private textureCache = new Map<string, "loading" | ImageBitmap>();

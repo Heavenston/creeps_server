@@ -10,8 +10,7 @@ src_files := $(shell find src -name "*.ts" -o -name "*.html" -o -name "*.css")
 dist: node_modules ${src_files}
 	npm run build > /dev/null
 
-dev: node_modules
-	npm run dev
+dev: serve
 
 serve: dist
 	npm run serve

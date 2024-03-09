@@ -1,3 +1,4 @@
+(window as any).process = { env: {} };
 const API_BASE_URL = process.env.MANAGER_API_BASE_URL ?? "http://localhost:16969/api";
 const LOGIN_URL = process.env.LOGIN_URL ?? "http://example.com";
 

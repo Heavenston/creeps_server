@@ -1,5 +1,4 @@
 import { Attrs, MinzeElement } from "minze";
-import { setTimeout } from "timers";
 
 export interface PopupComp {
   kind: "info" | "error";

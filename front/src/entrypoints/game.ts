@@ -1,8 +1,8 @@
 import { MinzeElement, Reactive } from "minze";
 import * as mapi from "~/src/manager_api"
-import "./dashboard"
+import "~/src/dashboard/dashboard.ts"
 import "../viewer/canvas"
-import { createPopup } from "~src/popup";
+import { createPopup } from "~/src/popup";
 
 export interface GameComp {
   game: mapi.Game | null;

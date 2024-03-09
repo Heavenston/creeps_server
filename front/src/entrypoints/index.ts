@@ -1,5 +1,5 @@
 import { MinzeElement } from "minze";
-import "./dashboard"
+import "~/src/dashboard/dashboard"
 import * as mapi from "~/src/manager_api"
 
 (class IndexComp extends MinzeElement {
