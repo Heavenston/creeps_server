@@ -1,9 +1,9 @@
 
 manage:
 	@export CREEPS_MANAGER_ARGS="-vv"; \
-	./parallel.sh dev creeps_manager front
+	make -C creeps_manager dev
 
 clean:
-	@./parallel.sh clean creeps_server creeps_manager front
+	@./parallel.sh clean creeps_server creeps_manager
 
 .PHONY: dev serve clean

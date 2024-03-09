@@ -7,11 +7,11 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/Heavenston/creeps_server/creeps_manager/api"
 	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
 	gamemanager "github.com/Heavenston/creeps_server/creeps_manager/game_manager"
 	"github.com/Heavenston/creeps_server/creeps_manager/keys"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
+	"github.com/Heavenston/creeps_server/creeps_manager/webserver"
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -21,7 +21,7 @@ var CLI struct {
 	Db string `env:"CREEPS_MANAGER_DB" short:"d" default:":memory:" help:"The sqlite connection string to the database"`
 
 	Host string `short:"t" default:"localhost" help:"Target hostname for the api"`
-	Port uint16 `short:"p" default:"16969" help:"Target port for the api"`
+	Port uint16 `short:"p" default:"1234" help:"Target port for the api"`
 
 	ClientId         string `env:"CREEPS_MANAGER_CLIENT_ID" required:"" help:"Discord client id"`
 	ClientSecret     string `env:"CREEPS_MANAGER_CLIENT_SECRET" required:"" help:"Discord client secret"`
@@ -72,16 +72,15 @@ func main() {
 
 	gameManager := gamemanager.NewGameManager(db, CLI.ServerBinaryPath)
 
-	err = api.Start(api.ApiCfg{
+	err = (&webserver.WebServer{
 		Db:          db,
-		TargetAddr:  fmt.Sprintf("%s:%d", CLI.Host, CLI.Port),
 		GameManager: gameManager,
 
 		DiscordAuth: &discordapi.DiscordAppAuth{
 			ClientId:     CLI.ClientId,
 			ClientSecret: CLI.ClientSecret,
 		},
-	})
+	}).Start(fmt.Sprintf("%s:%d", CLI.Host, CLI.Port))
 	if err != nil {
 		log.Fatal().Err(err).Msg("HTTP Start Error")
 	}

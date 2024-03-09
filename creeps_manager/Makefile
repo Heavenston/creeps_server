@@ -1,4 +1,4 @@
-build: creeps_manager
+build: front_build creeps_manager
 
 SRC_FILES != find . -name "*.go"
 
@@ -6,12 +6,13 @@ creeps_manager: ${SRC_FILES}
 	go build
 
 clean:
+	make -C front clean
 	go clean
 
-dev:
+dev: front_build
 	go run -race . ${CREEPS_MANAGER_ARGS}
 
-serve: creeps_manager
+serve: front_build creeps_manager
 	./creeps_manager ${CREEPS_MANAGER_ARGS}
 
-.PHONY: dev serve clean build
+.PHONY: dev serve clean build front_build

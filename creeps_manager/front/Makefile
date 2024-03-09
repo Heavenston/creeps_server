@@ -5,18 +5,13 @@ node_modules: package.json package-lock.json
 	# make sure the folder is marked as up to date
 	@touch -m node_modules
 
-src_files := $(shell find src -name "*.ts" -o -name "*.html" -o -name "*.css")
+src_files := $(shell find src static -type f)
 
 dist: node_modules ${src_files}
 	npm run build > /dev/null
-
-dev: serve
-
-serve: dist
-	npm run serve
 
 clean:
 	rm -rf dist
 	rm -rf .parcel-cache
 
-.PHONY: build clean serve
+.PHONY: build clean
