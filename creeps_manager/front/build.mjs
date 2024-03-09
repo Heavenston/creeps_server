@@ -1,4 +1,5 @@
 import * as esbuild from "esbuild";
+import { tailwindPlugin } from 'esbuild-plugin-tailwindcss';
 import { glob } from "glob";
 import { $ } from "zx";
 
@@ -27,5 +28,13 @@ await Promise.all([
   esbuild.build({
     entryPoints: await glob("src/**/*.css"),
     outdir: "dist",
+
+    minify: true,
+    treeShaking: true,
+    sourcemap: "inline",
+
+    plugins: [
+      tailwindPlugin({ }),
+    ],
   }),
 ]);

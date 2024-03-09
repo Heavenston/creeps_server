@@ -5,10 +5,10 @@ node_modules: package.json package-lock.json
 	# make sure the folder is marked as up to date
 	@touch -m node_modules
 
-src_files := $(shell find src static -type f)
+src_files := $(shell find src static -type f) $(shell find .. -name "*.templ")
 
-dist: node_modules ${src_files}
-	npm run build > /dev/null
+dist: node_modules ${src_files} build.mjs tailwind.config.js
+	npm run build
 
 clean:
 	rm -rf dist

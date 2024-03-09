@@ -1,0 +1,14 @@
+package templates
+
+templ indexHeader() {
+	<script type="module" src="/index.js" defer></script>
+}
+
+templ Index() {
+  @layout("Heav Creeps", indexHeader()) {
+    @header()
+    <div>
+      BITE
+    </div>
+  }
+}

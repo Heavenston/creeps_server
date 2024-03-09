@@ -1,6 +1,9 @@
 package discordmodel
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type User struct {
 	// the user's id
@@ -37,6 +40,15 @@ type User struct {
 	PublicFlags *int `json:"public_flags"`
 	// the user's avatar decoration hash
 	AvatarDecoration *string `json:"avatar_decoration"`
+}
+
+func (user *User) AvatarUrl() string {
+	if user.Avatar != nil {
+		return fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", user.Id, *user.Avatar)
+	} else {
+		id, _ := strconv.ParseInt(user.Id, 10, 64)
+		return fmt.Sprintf("https://cdn.discordapp.com/embed/avatars/%d.png", (id >> 22) % 6)
+	}
 }
 
 type AccessTokenRequest struct {

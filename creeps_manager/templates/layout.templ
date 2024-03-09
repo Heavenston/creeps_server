@@ -1,0 +1,52 @@
+package templates
+
+import (
+	"github.com/Heavenston/creeps_server/creeps_manager/model/discordmodel"
+)
+
+css avatar(url string) {
+	background-image: { "url(\"" + url + "\")" };
+}
+
+templ header() {
+	<header class="flex justify-start items-center bg-dark-two">
+		<a class="block p-2.5 px-3" href="/">
+			<h1 class="text-xl">
+				Heav creeps
+			</h1>
+		</a>
+		<div class="flex-grow" />
+		if discordUser, ok := ctx.Value("discordUser").(discordmodel.User); ok {
+			<a
+				href="/logout"
+				class="p-2.5 px-3 flex items-center gap-3 hover:bg-dark-three cursor-pointer"
+			>
+				<span>{ discordUser.Username }</span>
+				<span
+					class={ avatar(discordUser.AvatarUrl()), "rounded", "inline-block", "bg-cover", "h-9", "w-9" }
+				/>
+			</a>
+		} else {
+				<a
+					href="/login"
+					class="p-2.5 px-3 block hover:bg-dark-three cursor-pointer"
+				>
+					Login
+				</a>
+		}
+	</header>
+}
+
+templ layout(title string, head templ.Component) {
+	<html lang="fr">
+		<head>
+			<meta charset="utf-8"/>
+			<title>{ title }</title>
+			<link rel="stylesheet" href="/index.css"/>
+			@head
+		</head>
+		<body class="bg-dark-one">
+			{ children... }
+		</body>
+	</html>
+}

@@ -1,3 +1,6 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 html, body {
   height: 100%;
@@ -10,6 +13,5 @@ html, body {
 
 body {
   font-family: Sans-Serif;
-  background-color: #111111;
   color: white;
 }

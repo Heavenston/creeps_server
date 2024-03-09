@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 
 	"gorm.io/driver/sqlite"
@@ -26,6 +27,7 @@ var CLI struct {
 	ClientId         string `env:"CREEPS_MANAGER_CLIENT_ID" required:"" help:"Discord client id"`
 	ClientSecret     string `env:"CREEPS_MANAGER_CLIENT_SECRET" required:"" help:"Discord client secret"`
 	ServerBinaryPath string `env:"CREEPS_MANAGER_SERVER_BINARY" default:"creeps_server" help:"Path to the binary of the creeps server"`
+	LoginURL *url.URL `env:"LOGIN_URL" required:"" help:"Discord Login url"`
 
 	JWTSecret *string `env:"CREEPS_MANAGER_JWT_SECRET" help:"If present this overrides the generated jwt secret, intended for debugging use only"`
 
@@ -75,6 +77,7 @@ func main() {
 	err = (&webserver.WebServer{
 		Db:          db,
 		GameManager: gameManager,
+		LoginURL: CLI.LoginURL,
 
 		DiscordAuth: &discordapi.DiscordAppAuth{
 			ClientId:     CLI.ClientId,
