@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 var PrivKey *rsa.PrivateKey
@@ -28,4 +30,9 @@ func init() {
 		fmt.Printf("Could not generate jwt secret: %e", err)
 		os.Exit(1)
 	}
+}
+
+func SetJwtSecret(val []byte) {
+	JWTSecret = val
+	log.Warn().Msg("JWTSecret has been overriden, please only do this for debugging purposes")
 }

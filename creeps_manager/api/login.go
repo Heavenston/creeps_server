@@ -7,10 +7,9 @@ import (
 	"strings"
 	"time"
 
+	creepsjwt "github.com/Heavenston/creeps_server/creeps_manager/creeps_jwt"
 	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
-	"github.com/Heavenston/creeps_server/creeps_manager/keys"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 )
 
@@ -77,15 +76,11 @@ func (h *loginHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}).
 		FirstOrCreate(&user)
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"duid": user.DiscordId,
-		"uid":  user.ID,
-	})
-	strToken, err := token.SignedString(keys.JWTSecret)
+	strToken, err := creepsjwt.Encode(int(user.ID))
 	if err != nil {
-		log.Error().Err(err).Msg("JWT Sign error")
-		w.WriteHeader(500)
-		fmt.Fprintf(w, `{"error": "internal_error", "message": "An internal error has occured"}`)
+		log.Error().Err(err).Msg("Token sign error")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, `{"error": "internal_server_error"}`)
 		return
 	}
 

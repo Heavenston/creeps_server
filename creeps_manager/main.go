@@ -10,6 +10,7 @@ import (
 	"github.com/Heavenston/creeps_server/creeps_manager/api"
 	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
 	gamemanager "github.com/Heavenston/creeps_server/creeps_manager/game_manager"
+	"github.com/Heavenston/creeps_server/creeps_manager/keys"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
@@ -26,6 +27,8 @@ var CLI struct {
 	ClientSecret     string `env:"CREEPS_MANAGER_CLIENT_SECRET" required:"" help:"Discord client secret"`
 	ServerBinaryPath string `env:"CREEPS_MANAGER_SERVER_BINARY" default:"creeps_server" help:"Path to the binary of the creeps server"`
 
+	JWTSecret *string `env:"CREEPS_MANAGER_JWT_SECRET" help:"If present this overrides the generated jwt secret, intended for debugging use only"`
+
 	Verbose int  `short:"v" type:"counter" help:"Once to enable debug logs, twice for trace logs"`
 	Quiet   bool `short:"q" help:"If present overrides verbose and disables info logs and under"`
 }
@@ -41,6 +44,10 @@ func main() {
 	ctx := kong.Parse(&CLI)
 	if ctx.Error != nil {
 		log.Fatal().Err(ctx.Error).Msg("CLI error")
+	}
+
+	if CLI.JWTSecret != nil {
+		keys.SetJwtSecret([]byte(*CLI.JWTSecret))
 	}
 
 	switch CLI.Verbose {
