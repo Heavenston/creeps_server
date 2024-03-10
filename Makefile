@@ -1,12 +1,14 @@
 
 manage:
-	@export CREEPS_MANAGER_ARGS="-vv"; \
-	./parallel.sh dev creeps_manager
+	if [ -f .env ]; then export $$(cat .env | xargs); fi; \
+	make -C creeps_manager dev
 
 build:
-	./parallel.sh build creeps_manager
+	make -C creeps_manager build
+	make -C creeps_server build
 
 clean:
-	@./parallel.sh clean creeps_server creeps_manager
+	make -C creeps_manager clean
+	make -C creeps_server clean
 
 .PHONY: dev serve clean
