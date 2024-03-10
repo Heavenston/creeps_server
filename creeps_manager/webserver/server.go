@@ -30,6 +30,7 @@ func (self *WebServer) Start(addr string) error {
     router.Get("/createGame", self.getCreateGame)
     router.Get("/login", self.getLogin)
     router.Get("/logout", self.getLogout)
+    router.Get("/game/{gameId}", self.getGame)
 
     router.Route("/htmx", func(r chi.Router) {
         r.Use(self.htmxMiddleware)

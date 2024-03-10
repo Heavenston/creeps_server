@@ -1,0 +1,9 @@
+package templates
+
+templ GameHeader() {
+	<script type="module" src="/game.js" defer></script>
+}
+
+templ Game(url string) {
+  <creeps-canvas url={ url } />
+}
