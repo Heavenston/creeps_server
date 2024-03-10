@@ -31,7 +31,7 @@ templ IndexHeader() {
 	<script type="module" src="/index.js" defer></script>
 }
 
-templ Index(games []model.Game) {
+templ index(games []model.Game) {
   <div class="flex flex-wrap items-start justify-start p-5 gap-5">
     for _, game := range games {
       @indexGame(game)
@@ -46,4 +46,15 @@ templ Index(games []model.Game) {
       }
     }
   </div>
+}
+
+func Index(games []model.Game) templ.Component {
+  rg := []model.Game{}
+  for _, game := range games {
+    if game.EndedAt == nil {
+      rg = append(rg, game)
+    }
+  }
+
+  return index(rg)
 }

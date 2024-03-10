@@ -74,6 +74,11 @@ func main() {
 
 	gameManager := gamemanager.NewGameManager(db, CLI.ServerBinaryPath)
 
+	err = gameManager.Restore()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Could not resore games")
+	}
+
 	err = (&webserver.WebServer{
 		Db:          db,
 		GameManager: gameManager,

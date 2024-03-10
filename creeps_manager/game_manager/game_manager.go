@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -40,6 +41,21 @@ func NewGameManager(db *gorm.DB, binaryPath string) *GameManager {
 		port: 1664,
 	}
 	return m
+}
+
+// Called once to go through games in the db
+func (self *GameManager) Restore() error {
+	time := time.Now()
+	rs := self.db.Model(model.Game{}).
+		Where("started_at IS NOT null AND ended_at IS null").
+		Update("ended_at", &time)
+	if rs.Error != nil {
+		return rs.Error
+	}
+
+	log.Info().Any("count", rs.RowsAffected).Msg("Resored games")
+
+	return nil
 }
 
 func (self *GameManager) GetRunningGame(id uint) *RunningGame {

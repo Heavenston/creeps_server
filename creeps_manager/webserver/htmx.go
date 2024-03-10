@@ -29,6 +29,7 @@ func (self *WebServer) postHtmxCreateGame(w http.ResponseWriter, r *http.Request
     var count int64
     rs := self.Db.Model(&model.Game{}).
         Where("creator_id = ?", user.ID).
+        Where("ended_at <> NULL").
         Count(&count)
     if rs.Error != nil {
         log.Error().Err(rs.Error).Msg("DB Error")
