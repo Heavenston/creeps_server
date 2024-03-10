@@ -22,7 +22,6 @@ export class CreepsCanvasComp extends MinzeElement {
       <div class="internal">
       </div>
     </div>
-
   `
 
   // scoped stylesheet

@@ -10,7 +10,7 @@ css avatar(url string) {
 
 templ Header() {
 	<header id="header" class="flex justify-start items-center bg-dark-two">
-		<a class="block p-2.5 px-3" href="/">
+		<a hx-boost="true" href="/" class="block p-2.5 px-3">
 			<h1 class="text-xl">
 				Heav creeps
 			</h1>
@@ -47,7 +47,7 @@ templ Layout(head templ.Component) {
 			<script type="module" src="/global.js" defer></script>
 			@head
 		</head>
-		<body class="bg-dark-one flex flex-col">
+		<body hx-ext="head-support" class="bg-dark-one flex flex-col">
 			@Header()
 			{ children... }
 		</body>
