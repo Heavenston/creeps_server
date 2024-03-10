@@ -9,7 +9,29 @@ templ CreateGameHeader() {
 
 templ CreateGame() {
   <div class="flex justify-center items-center flex-grow p-4">
-    <form hx-post="/htmx/game" hx-target="body" hx-swap="afterend">
+    <form
+      hx-post="/htmx/createGame" hx-target="body" hx-swap="afterend"
+      class="flex flex-col gap-6 min-w-20"
+    >
+      <h1 class="text-center text-lg">
+        Create a game
+      </h1>
+      <div class="flex flex-col gap-4">
+        <label class="flex items-center flex-row gap-2">
+          <span>Name</span>
+          <input
+            name="game_name"
+            type="text"
+            class="flex-grow bg-dark-two rounded outline-none focus:bg-dark-three p-1 px-2"
+          />
+        </label>
+      </div>
+      <button
+        type="submit"
+        class="rounded bg-primary-one hover:bg-primary-two transition p-1 px-2"
+      >
+        Create
+      </button>
     </form>
   </div>
 }

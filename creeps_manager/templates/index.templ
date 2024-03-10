@@ -6,7 +6,11 @@ import (
 )
 
 templ indexItem(href string) {
-  <a class="inline-block bg-dark-two hover:bg-dark-three h-40 w-56 rounded relative flex justify-center items-center" href={ templ.SafeURL(href) }>
+  <a
+    class="inline-block bg-dark-two hover:bg-dark-three h-40 w-56 rounded relative flex justify-center items-center"
+    hx-boost="true"
+    href={ templ.SafeURL(href) }
+  >
     { children... }
   </a>
 }

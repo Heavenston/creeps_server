@@ -18,6 +18,7 @@ templ Header() {
 		<div class="flex-grow" />
 		if discordUser, ok := ctx.Value("discordUser").(discordmodel.User); ok {
 			<a
+				hx-boost="true"
 				href="/logout"
 				class="p-2.5 px-3 flex items-center gap-3 hover:bg-dark-three cursor-pointer"
 			>
@@ -43,6 +44,7 @@ templ Layout(head templ.Component) {
 			<meta charset="utf-8"/>
 			<title>Heav Creeps</title>
 			<link rel="stylesheet" href="/index.css"/>
+			<script type="module" src="/global.js" defer></script>
 			@head
 		</head>
 		<body class="bg-dark-one flex flex-col">
