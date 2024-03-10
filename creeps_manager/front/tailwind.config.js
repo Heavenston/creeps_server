@@ -10,6 +10,7 @@ export default {
           one: "#101010",
           two: "#191919",
           three: "#262626",
+          text: "#777777"
         },
         primary: {
           one: colors.default.blue["500"],

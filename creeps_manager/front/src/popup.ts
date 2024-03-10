@@ -21,6 +21,8 @@ export class PopupComp extends MinzeElement {
     :host {
       display: block;
 
+      color: white;
+
       position: absolute;
       top: 1rem;
       right: 1rem;
@@ -113,9 +115,7 @@ export class PopupComp extends MinzeElement {
     this.addEventListener("click", this.handleClick.bind(this));
 
     PopupComp.popups.push(this);
-    for (const popup of PopupComp.popups) {
-      popup.updateIndex();
-    }
+    this.updateIndex();
   }
 
   handleClick() {

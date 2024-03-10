@@ -5,20 +5,25 @@ import (
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 )
 
-templ indexItem(href string) {
+templ indexItem(href string, boost bool) {
   <a
-    class="inline-block bg-dark-two hover:bg-dark-three h-40 w-56 rounded relative flex justify-center items-center"
-    hx-boost="true"
+    class="inline-block bg-dark-two hover:bg-dark-three h-40 w-56 rounded
+          relative flex justify-center items-center"
     href={ templ.SafeURL(href) }
+    if boost {
+      hx-boost="true"
+    }
   >
     { children... }
   </a>
 }
 
 templ indexGame(game model.Game) {
-  @indexItem(fmt.Sprintf("/game/%d", game.ID)) {
+  @indexItem(fmt.Sprintf("/game/%d", game.ID), true) {
     <div>{game.Name}</div>
-    <div class="players">{ fmt.Sprintf("%d", len(game.Players)) }</div>
+    <div class="absolute bottom-2 right-4 text-dark-text">
+      Players { fmt.Sprint(len(game.Players)) }
+    </div>
   }
 }
 
@@ -27,16 +32,16 @@ templ IndexHeader() {
 }
 
 templ Index(games []model.Game) {
-  <div class="flex flex-wrap flex-grow p-5">
+  <div class="flex flex-wrap items-start justify-start p-5 gap-5">
     for _, game := range games {
       @indexGame(game)
     }
     if _, ok := ctx.Value("user").(model.User); ok {
-      @indexItem("/createGame") {
+      @indexItem("/createGame", true) {
         <span class="text-5xl">+</span>
       }
     } else {
-      @indexItem("/login") {
+      @indexItem("/login", false) {
         <span>Login to create a game</span>
       }
     }
