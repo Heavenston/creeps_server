@@ -11,6 +11,7 @@ import (
 	gamemanager "github.com/Heavenston/creeps_server/creeps_manager/game_manager"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 	"github.com/Heavenston/creeps_server/creeps_manager/templates"
+	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -27,7 +28,18 @@ type WebServer struct {
 }
 
 func (self *WebServer) getIndex(w http.ResponseWriter, r *http.Request) {
-    templates.Index().Render(r.Context(), w)
+    var games []model.Game
+    self.Db.Find(&games)
+
+    ctx := templ.WithChildren(r.Context(), templates.Index(games))
+    templates.Layout(templates.IndexHeader()).
+        Render(ctx, w)
+}
+
+func (self *WebServer) getCreateGame(w http.ResponseWriter, r *http.Request) {
+    ctx := templ.WithChildren(r.Context(), templates.CreateGame())
+    templates.Layout(templates.CreateGameHeader()).
+        Render(ctx, w)
 }
 
 func (self *WebServer) getLogin(w http.ResponseWriter, r *http.Request) {
@@ -174,6 +186,7 @@ func (self *WebServer) Start(addr string) error {
     })
 
     router.Get("/", self.getIndex)
+    router.Get("/createGame", self.getCreateGame)
     router.Get("/login", self.getLogin)
     router.Get("/logout", self.getLogout)
 

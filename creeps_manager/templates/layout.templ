@@ -8,8 +8,8 @@ css avatar(url string) {
 	background-image: { "url(\"" + url + "\")" };
 }
 
-templ header() {
-	<header class="flex justify-start items-center bg-dark-two">
+templ Header() {
+	<header id="header" class="flex justify-start items-center bg-dark-two">
 		<a class="block p-2.5 px-3" href="/">
 			<h1 class="text-xl">
 				Heav creeps
@@ -37,15 +37,16 @@ templ header() {
 	</header>
 }
 
-templ layout(title string, head templ.Component) {
+templ Layout(head templ.Component) {
 	<html lang="fr">
 		<head>
 			<meta charset="utf-8"/>
-			<title>{ title }</title>
+			<title>Heav Creeps</title>
 			<link rel="stylesheet" href="/index.css"/>
 			@head
 		</head>
-		<body class="bg-dark-one">
+		<body class="bg-dark-one flex flex-col">
+			@Header()
 			{ children... }
 		</body>
 	</html>

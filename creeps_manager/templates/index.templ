@@ -1,14 +1,40 @@
 package templates
 
-templ indexHeader() {
+import (
+  "fmt"
+	"github.com/Heavenston/creeps_server/creeps_manager/model"
+)
+
+templ indexItem(href string) {
+  <a class="inline-block bg-dark-two hover:bg-dark-three h-40 w-56 rounded relative flex justify-center items-center" href={ templ.SafeURL(href) }>
+    { children... }
+  </a>
+}
+
+templ indexGame(game model.Game) {
+  @indexItem(fmt.Sprintf("/game/%d", game.ID)) {
+    <div>{game.Name}</div>
+    <div class="players">{ fmt.Sprintf("%d", len(game.Players)) }</div>
+  }
+}
+
+templ IndexHeader() {
 	<script type="module" src="/index.js" defer></script>
 }
 
-templ Index() {
-  @layout("Heav Creeps", indexHeader()) {
-    @header()
-    <div>
-      BITE
-    </div>
-  }
+templ Index(games []model.Game) {
+  <div class="flex flex-wrap flex-grow p-5">
+    for _, game := range games {
+      @indexGame(game)
+    }
+    if _, ok := ctx.Value("user").(model.User); ok {
+      @indexItem("/createGame") {
+        <span class="text-5xl">+</span>
+      }
+    } else {
+      @indexItem("/login") {
+        <span>Login to create a game</span>
+      }
+    }
+  </div>
 }

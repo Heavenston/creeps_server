@@ -1,0 +1,15 @@
+package templates
+
+import (
+)
+
+templ CreateGameHeader() {
+	<script type="module" src="/createGame.js" defer></script>
+}
+
+templ CreateGame() {
+  <div class="flex justify-center items-center flex-grow p-4">
+    <form hx-post="/htmx/game" hx-target="body" hx-swap="afterend">
+    </form>
+  </div>
+}
