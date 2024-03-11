@@ -47,7 +47,7 @@ func (user *User) AvatarUrl() string {
 		return fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", user.Id, *user.Avatar)
 	} else {
 		id, _ := strconv.ParseInt(user.Id, 10, 64)
-		return fmt.Sprintf("https://cdn.discordapp.com/embed/avatars/%d.png", (id >> 22) % 6)
+		return fmt.Sprintf("https://cdn.discordapp.com/embed/avatars/%d.png", (id>>22)%6)
 	}
 }
 

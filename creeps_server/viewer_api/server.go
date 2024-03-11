@@ -23,7 +23,7 @@ type ViewerServer struct {
 	Addr   string
 
 	AdminPassword string
-	AdminAddrs []string
+	AdminAddrs    []string
 }
 
 func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
@@ -35,7 +35,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 	log.Debug().Any("addr", conn.RemoteAddr()).Msg("New websocket connection")
 
 	connection := connection{
-		viewer: viewer,
+		viewer:           viewer,
 		socket:           conn,
 		subscribedChunks: make(map[Point]bool),
 		knownUnits:       make(map[uid.Uid]bool),

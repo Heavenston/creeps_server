@@ -39,16 +39,16 @@ type S2CFullChunk struct {
 
 type S2CTileChange struct {
 	TilePos geom.Point `json:"tilePos"`
-	Kind    byte  `json:"kind" tstype:"number"`
-	Value   byte  `json:"value" tstype:"number"`
+	Kind    byte       `json:"kind" tstype:"number"`
+	Value   byte       `json:"value" tstype:"number"`
 }
 
 type S2CUnit struct {
-	OpCode   string  `json:"opCode"`
-	UnitId   uid.Uid `json:"unitId"`
-	Owner    uid.Uid `json:"owner"`
-	Position geom.Point   `json:"position"`
-	Upgraded bool    `json:"upgraded"`
+	OpCode   string     `json:"opCode"`
+	UnitId   uid.Uid    `json:"unitId"`
+	Owner    uid.Uid    `json:"owner"`
+	Position geom.Point `json:"position"`
+	Upgraded bool       `json:"upgraded"`
 }
 
 type S2CUnitDespawn struct {
@@ -68,7 +68,7 @@ type S2CUnitFinishedAction struct {
 
 type S2CPlayerSpawn struct {
 	Id            uid.Uid         `json:"id"`
-	SpawnPosition geom.Point           `json:"spawnPosition"`
+	SpawnPosition geom.Point      `json:"spawnPosition"`
 	Username      string          `json:"username"`
 	Resources     model.Resources `json:"resources"`
 }

@@ -103,7 +103,6 @@ func (conn *connection) sendUnit(unit server.IUnit) bool {
 	return false
 }
 
-
 func (conn *connection) sendPlayer(player *entities.Player) bool {
 	conn.playersLock.Lock()
 	// get the lock for the entire duration to make sure we don't double send
@@ -133,63 +132,63 @@ func (conn *connection) handleServerEvent(event server.IServerEvent) {
 	}
 
 	switch e := event.(type) {
-		case *server.UnitSpawnEvent:
-			conn.sendUnit(e.Unit)
-		case *server.UnitDespawnEvent:
+	case *server.UnitSpawnEvent:
+		conn.sendUnit(e.Unit)
+	case *server.UnitDespawnEvent:
+		conn.sendMessage("unitDespawned", S2CUnitDespawn{
+			UnitId: e.Unit.GetId(),
+		})
+		conn.setIsUnitKnown(e.Unit.GetId(), false)
+	case *server.UnitMovedEvent:
+		newChunk := terrain.Global2ContainingChunkCoords(e.To)
+
+		// unit is now out of bounds so we need to make the client forget
+		// about it
+		if !conn.subedToChunk(newChunk) {
 			conn.sendMessage("unitDespawned", S2CUnitDespawn{
 				UnitId: e.Unit.GetId(),
 			})
 			conn.setIsUnitKnown(e.Unit.GetId(), false)
-		case *server.UnitMovedEvent:
-			newChunk := terrain.Global2ContainingChunkCoords(e.To)
+		}
+		// the acutal information that the unit moved is done through the
+		// report
+	case *server.UnitStartedActionEvent:
+		// note: we do skip the action...
+		if conn.sendUnit(e.Unit) {
+			break
+		}
 
-			// unit is now out of bounds so we need to make the client forget
-			// about it
-			if !conn.subedToChunk(newChunk) {
-				conn.sendMessage("unitDespawned", S2CUnitDespawn{
-					UnitId: e.Unit.GetId(),
-				})
-				conn.setIsUnitKnown(e.Unit.GetId(), false)
-			}
-			// the acutal information that the unit moved is done through the 
-			// report
-		case *server.UnitStartedActionEvent:
-			// note: we do skip the action...
-			if conn.sendUnit(e.Unit) {
-				break
-			}
+		conn.sendMessage("unitStartedAction", S2CUnitStartedAction{
+			UnitId: e.Unit.GetId(),
+			Action: getActionData(e.Action),
+		})
+	case *server.UnitFinishedActionEvent:
+		// note: if it didn't know about the unit it won't know about
+		//       the action
+		if conn.sendUnit(e.Unit) {
+			break
+		}
 
-			conn.sendMessage("unitStartedAction", S2CUnitStartedAction{
-				UnitId: e.Unit.GetId(),
-				Action: getActionData(e.Action),
-			})
-		case *server.UnitFinishedActionEvent:
-			// note: if it didn't know about the unit it won't know about
-			//       the action
-			if conn.sendUnit(e.Unit) {
-				break
-			}
+		content := S2CUnitFinishedAction{
+			UnitId: e.Unit.GetId(),
+			Action: getActionData(e.Action),
+			Report: e.Report,
+		}
 
-			content := S2CUnitFinishedAction{
-				UnitId: e.Unit.GetId(),
-				Action: getActionData(e.Action),
-				Report: e.Report,
-			}
-
-			conn.sendMessage("unitFinishedAction", content)
-		case *entities.PlayerSpawnEvent:
-			conn.sendPlayer(e.Player)
-		case *entities.PlayerDespawnEvent:
-			conn.playersLock.Lock()
-			// don't double send
-			if !conn.knownPlayers[e.Player.GetId()] {
-				conn.playersLock.Unlock()
-				break
-			}
-			conn.sendMessage("playerDespawn", S2CPlayerDespawn{
-				Id: e.Player.GetId(),
-			})
-			delete(conn.knownPlayers, e.Player.GetId())
+		conn.sendMessage("unitFinishedAction", content)
+	case *entities.PlayerSpawnEvent:
+		conn.sendPlayer(e.Player)
+	case *entities.PlayerDespawnEvent:
+		conn.playersLock.Lock()
+		// don't double send
+		if !conn.knownPlayers[e.Player.GetId()] {
 			conn.playersLock.Unlock()
+			break
+		}
+		conn.sendMessage("playerDespawn", S2CPlayerDespawn{
+			Id: e.Player.GetId(),
+		})
+		delete(conn.knownPlayers, e.Player.GetId())
+		conn.playersLock.Unlock()
 	}
 }

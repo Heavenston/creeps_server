@@ -14,32 +14,32 @@ import (
 var DIST_FOLDER = "./front/dist"
 
 type WebServer struct {
-    Db *gorm.DB
-    GameManager *gamemanager.GameManager
-    LoginURL *url.URL
+	Db          *gorm.DB
+	GameManager *gamemanager.GameManager
+	LoginURL    *url.URL
 
-    DiscordAuth *discordapi.DiscordAppAuth
+	DiscordAuth *discordapi.DiscordAppAuth
 }
 
 func (self *WebServer) Start(addr string) error {
-    router := chi.NewRouter()
-    router.Use(self.fillCtxMiddleware)
-    router.Use(self.authMiddleware)
+	router := chi.NewRouter()
+	router.Use(self.fillCtxMiddleware)
+	router.Use(self.authMiddleware)
 
-    router.Get("/", self.getIndex)
-    router.Get("/createGame", self.getCreateGame)
-    router.Get("/login", self.getLogin)
-    router.Get("/logout", self.getLogout)
-    router.Get("/game/{gameId}", self.getGame)
+	router.Get("/", self.getIndex)
+	router.Get("/createGame", self.getCreateGame)
+	router.Get("/login", self.getLogin)
+	router.Get("/logout", self.getLogout)
+	router.Get("/game/{gameId}", self.getGame)
 
-    router.Route("/htmx", func(r chi.Router) {
-        r.Use(self.htmxMiddleware)
+	router.Route("/htmx", func(r chi.Router) {
+		r.Use(self.htmxMiddleware)
 
-        r.Post("/createGame", self.postHtmxCreateGame)
-    })
+		r.Post("/createGame", self.postHtmxCreateGame)
+	})
 
-    router.Handle("/*", http.FileServer(http.Dir(DIST_FOLDER)))
+	router.Handle("/*", http.FileServer(http.Dir(DIST_FOLDER)))
 
-    log.Info().Str("address", addr).Msg("Starting web server")
-    return http.ListenAndServe(addr, router)
+	log.Info().Str("address", addr).Msg("Starting web server")
+	return http.ListenAndServe(addr, router)
 }

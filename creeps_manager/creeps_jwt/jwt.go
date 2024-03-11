@@ -9,31 +9,31 @@ import (
 )
 
 type Payload struct {
-    UserId int `json:"uid"`
+	UserId int `json:"uid"`
 }
 
 type Claims struct {
-    jwt.RegisteredClaims
-    Payload
+	jwt.RegisteredClaims
+	Payload
 }
 
 func Encode(userId int) (string, error) {
-    claims := Claims {
-        RegisteredClaims: jwt.RegisteredClaims{
-            IssuedAt: jwt.NewNumericDate(time.Now()),
-            ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 2)),
-        },
-        Payload: Payload{
-            UserId: userId,
-        },
-    }
+	claims := Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 2)),
+		},
+		Payload: Payload{
+			UserId: userId,
+		},
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	strToken, err := token.SignedString(keys.JWTSecret)
 	if err != nil {
-        return strToken, err
+		return strToken, err
 	}
-    return strToken, err
+	return strToken, err
 }
 
 func Decode(strToken string) (Claims, error) {
@@ -48,10 +48,10 @@ func Decode(strToken string) (Claims, error) {
 		return Claims{}, err
 	}
 
-    claims, ok := token.Claims.(*Claims)
-    if !ok {
-        return Claims{}, fmt.Errorf("Invalid claims")
-    }
-    
-    return *claims, nil
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		return Claims{}, fmt.Errorf("Invalid claims")
+	}
+
+	return *claims, nil
 }

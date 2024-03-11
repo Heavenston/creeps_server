@@ -104,7 +104,7 @@ func (self *GameManager) StartGame(game model.Game) (*RunningGame, error) {
 	now := time.Now()
 	self.db.Model(&game).Where("id = ?", game.ID).Update("started_at", &now)
 
-    log.Info().
+	log.Info().
 		Str("binary_path", self.binaryPath).
 		Str("logs", logFile).
 		Str("name", game.Name).

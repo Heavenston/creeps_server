@@ -92,4 +92,3 @@ func (conn *connection) handleClientSubscription(chunkPos Point) {
 		}
 	}
 }
-

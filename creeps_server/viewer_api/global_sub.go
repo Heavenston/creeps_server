@@ -41,5 +41,3 @@ func (conn *connection) handleClientGlobalEvents() {
 		}
 	}
 }
-
-
