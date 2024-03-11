@@ -35,6 +35,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 	log.Debug().Any("addr", conn.RemoteAddr()).Msg("New websocket connection")
 
 	connection := connection{
+		viewer: viewer,
 		socket:           conn,
 		subscribedChunks: make(map[Point]bool),
 		knownUnits:       make(map[uid.Uid]bool),
@@ -112,7 +113,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 		}
 	}
 
-	go viewer.handleClientGlobalEvents(&connection)
+	go connection.handleClientGlobalEvents()
 
 	for {
 		var mess Message
@@ -145,7 +146,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 				Msg("Subscribed to a chunk")
 
 			connection.chunksLock.Unlock()
-			go viewer.handleClientSubscription(content.ChunkPos, &connection)
+			go connection.handleClientSubscription(content.ChunkPos)
 		case "unsubscribe":
 			var content C2SUnsubscribeRequest
 			err = json.Unmarshal(mess.Content, &content)

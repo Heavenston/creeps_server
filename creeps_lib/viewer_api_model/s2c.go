@@ -17,6 +17,7 @@ export type S2CMessage =
 | { kind: "unitStartedAction"; content: S2CUnitStartedAction; }
 | { kind: "unitFinishedAction"; content: S2CUnitFinishedAction; }
 | { kind: "playerSpawn"; content: S2CPlayerSpawn; }
+| { kind: "playerDespawn"; content: S2CPlayerDespawn; }
 ;
 `
 
@@ -70,4 +71,8 @@ type S2CPlayerSpawn struct {
 	SpawnPosition geom.Point           `json:"spawnPosition"`
 	Username      string          `json:"username"`
 	Resources     model.Resources `json:"resources"`
+}
+
+type S2CPlayerDespawn struct {
+	Id uid.Uid `json:"id"`
 }
