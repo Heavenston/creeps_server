@@ -8,7 +8,7 @@ import (
 templ indexItem(href string, boost bool) {
   <a
     class="inline-block bg-dark-two hover:bg-dark-three h-40 w-56 rounded
-          relative flex justify-center items-center"
+          relative flex justify-center items-center p-3"
     href={ templ.SafeURL(href) }
     if boost {
       hx-boost="true"
@@ -20,7 +20,12 @@ templ indexItem(href string, boost bool) {
 
 templ indexGame(game model.Game) {
   @indexItem(fmt.Sprintf("/game/%d", game.ID), true) {
-    <div>{game.Name}</div>
+    <div class="
+      break-words max-w-full max-h-full overflow-hidden text-center
+      text-clip
+    ">
+      {game.Name}
+    </div>
     <div class="absolute bottom-2 right-4 text-dark-text">
       Players { fmt.Sprint(len(game.Players)) }
     </div>
