@@ -29,6 +29,15 @@ templ indexGame(game model.Game) {
     <div class="absolute bottom-2 right-4 text-dark-text">
       Players { fmt.Sprint(len(game.Players)) }
     </div>
+    <div class="absolute top-2 right-2 flex justify-center gap-2">
+      { game.Creator.DiscordUser.Username }
+			<span
+				class={
+          avatar(game.Creator.DiscordUser.AvatarUrl()),
+          "rounded", "inline-block", "bg-cover", "h-6", "w-6"
+        }
+			/>
+    </div>
   }
 }
 

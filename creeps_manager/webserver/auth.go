@@ -54,6 +54,7 @@ func (self *WebServer) getLogin(w http.ResponseWriter, r *http.Request) {
 				RefreshToken: atr.RefreshToken,
 				Scope:        atr.Scope,
 			},
+			DiscordUser: discordUser,
 		}).
 		FirstOrCreate(&user)
 

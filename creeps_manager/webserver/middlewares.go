@@ -7,6 +7,7 @@ import (
 	creepsjwt "github.com/Heavenston/creeps_server/creeps_manager/creeps_jwt"
 	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
+	"gorm.io/gorm"
 )
 
 func (self *WebServer) fillCtxMiddleware(next http.Handler) http.Handler {
@@ -58,6 +59,12 @@ func (self *WebServer) authMiddleware(next http.Handler) http.Handler {
 			AccessToken: user.DiscordAuth.AccessToken,
 			DiscordId:   &user.DiscordId,
 		})
+		user.DiscordUser = discordUser
+		self.Db.Model(&user).
+			Updates(model.User{
+				Model: gorm.Model{ID: user.ID},
+				DiscordUser: discordUser,
+			})
 
 		if err != nil {
 			http.SetCookie(w, &http.Cookie{

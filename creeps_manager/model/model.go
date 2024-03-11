@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/Heavenston/creeps_server/creeps_manager/model/discordmodel"
 	"gorm.io/gorm"
 )
 
@@ -15,8 +16,9 @@ type UserDiscordAuth struct {
 
 type User struct {
 	gorm.Model
-	DiscordId   string          `gorm:"uniqueIndex"`
-	DiscordAuth UserDiscordAuth `gorm:"embedded;embeddedPrefix:discord_"`
+	DiscordId   string            `gorm:"uniqueIndex"`
+	DiscordAuth UserDiscordAuth   `gorm:"embedded;embeddedPrefix:discord_"`
+	DiscordUser discordmodel.User `gorm:"serializer:json"`
 
 	RoleID *int
 	Role   *Role `gorm:"constraint:OnDelete:SET NULL;"`

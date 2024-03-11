@@ -5,7 +5,7 @@ export interface SidePanelComp {
 }
 
 export class SidePanelComp extends MinzeElement {
-  reactive: Reactive = [["panelOpened", false]];
+  reactive: Reactive = [["panelOpened", true]];
 
   html = () => `
     <button class="closePanel" on:click="handleTogglePanel">
@@ -35,11 +35,11 @@ export class SidePanelComp extends MinzeElement {
   }
 
   :host(.closed) .internal {
-    width: 0rem;
+    width: 0;
   }
 
-  :host(.open) .internal {
-    width: 30rem;
+  :host(.opened) .internal {
+    width: 500px;
   }
 
   .closePanel {

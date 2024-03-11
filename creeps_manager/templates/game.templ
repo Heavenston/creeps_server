@@ -1,14 +1,30 @@
 package templates
 
+import (
+	"github.com/Heavenston/creeps_server/creeps_manager/model"
+)
+
 templ GameHeader() {
 	<script type="module" src="/game.js" defer></script>
 }
 
-templ Game(url string) {
+templ Game(url string, game model.Game) {
 	<div class="flex-grow relative flex">
 	  <creeps-canvas url={ url } />
 		<side-panel>
-			Bonojur
+			<div class="p-3 pl-0 w-[500px]">
+				<div class="inline-block">
+					<h2 class="text-lg">
+						Game Infos
+					</h2>
+					<div class="grid grid-cols-2">
+						<span class="bl-3 text-dark-text">Name</span>
+						<span class="">{ game.Name }</span>
+						<span class="bl-3 text-dark-text">Creator</span>
+						<span class="">{"@"}{ *game.Creator.DiscordUser.GlobalName }</span>
+					</div>
+				</div>
+			</div>
 		</side-panel>
 	</div>
 }
