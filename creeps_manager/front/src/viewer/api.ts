@@ -1,167 +1,17 @@
 import { Tilemap } from "./map";
+import * as vmod from "~/src/models/viewer"
+import * as emod from "~/src/models/epita"
 
 const RETRY_INTERVAL: number = 5000;
 
-export type Point = {
-  x: number,
-  y: number,
-}
-
-export type Action = {
-  actionOpCode: string,
-  reportId: string,
-  // hahahah...
-  parameter?: any,
-}
-
-export type CreepsReport = {
-  reportId: string,
-  unitId: string,
-  login: string,
-  unitPosition: Point,
-  status: "SUCCESS" | "ERROR",
-}
-
-export type MoveReport = CreepsReport & {
-  opcode: `move:${string}`,
-  newPosition: Point,
-}
-
-export function isMoveReport(report: (CreepsReport & {opcode: string})): report is MoveReport {
+export function isMoveReport(report: (emod.Report & {opcode: string})): report is emod.MoveReport {
   return report.opcode.startsWith("move:");
 }
 
-export type AnyReport = MoveReport;
-
-export type Resources = {
-	rock: number,
-	wood: number,
-	food: number,
-	oil: number,
-	copper: number,
-	woodPlank: number,
-}
-
-export type Cost = Resources & {
-  cast: number,
-}
-
-export type Costs = {
-  [action: string]: undefined | Cost,
-}
-
-export type S2cInitMessage = {
-  kind: "init",
-  content: {
-    chunkSize: number,
-    costs: Costs,
-    // TODO: describe
-    setup: {
-      ticksPerSecond: number,
-    },
-  }
-}
-
-export type C2sSubscribeMessage = {
-  kind: "subscribe",
-  content: {
-    chunkPos: Point
-  }
-}
-
-export type C2sUnsubscribeMessage = {
-  kind: "unsubscribe",
-  content: {
-    chunkPos: Point
-  }
-}
-
-export type S2cFullchunkMessage = {
-  kind: "fullchunk",
-  content: {
-    chunkPos: Point,
-    tiles: string,
-  }
-}
-
-export type S2cTileChangeMessage = {
-  kind: "tileChange",
-  content: {
-  	tilePos: Point,
-  	kind: number,
-  	value: number,
-  },
-}
-
-export type S2cUnitMessage = {
-  kind: "unit",
-  content: {
-    opCode: string,
-    unitId: string,
-    owner: string,
-    position: Point,
-    upgraded: boolean,
-  }
-}
-
-export type S2cUnitDespawnedMessage = {
-  kind: "unitDespawned",
-  content: {
-    unitId: string,
-  }
-}
-
-export type S2cUnitStartedActionMessage = {
-  kind: "unitStartedAction",
-  content: {
-    unitId: string,
-    action: Action,
-  }
-}
-
-export type S2cUnitFinishedActionMessage = {
-  kind: "unitFinishedAction",
-  content: {
-    unitId: string,
-    action: Action,
-    report: AnyReport,
-  }
-}
-
-export type S2cPlayerSpawnMessage = {
-  kind: "playerSpawn",
-  content: {
-  	id: string,
-  	spawnPosition: Point,
-  	username: string,
-    // TODO: Describe
-  	resources: unknown,
-  }
-}
-
-export type S2cPlayerDespawnMessage = {
-  kind: "playerDespawn",
-  content: {
-  	id: string,
-  }
-}
-
-export type RecvMessage =
-  | S2cInitMessage
-  | S2cFullchunkMessage
-  | S2cTileChangeMessage
-  | S2cUnitMessage
-  | S2cUnitDespawnedMessage
-  | S2cUnitStartedActionMessage
-  | S2cUnitFinishedActionMessage
-  | S2cPlayerSpawnMessage
-  | S2cPlayerDespawnMessage;
-export type SendMessage = C2sSubscribeMessage | C2sUnsubscribeMessage;
-
 export class MessageEvent extends Event {
-  public readonly message: RecvMessage;
+  public readonly message: vmod.S2CMessage;
 
-  constructor(message: RecvMessage) {
+  constructor(message: vmod.S2CMessage) {
     super("message");
     this.message = message;
   }
@@ -192,8 +42,8 @@ export class Api {
   get isConnected(): boolean {
     return this.#isConnected;
   }
-  #initMessage: S2cInitMessage | null = null;
-  get initMessage(): S2cInitMessage | null {
+  #initMessage: vmod.S2CInit | null = null;
+  get initMessage(): vmod.S2CInit | null {
     return this.#initMessage;
   }
   #tilemap: Tilemap;
@@ -245,7 +95,7 @@ export class Api {
 
     this.#ws.addEventListener("message", (e) => {
       try {
-        const c = JSON.parse(e.data);
+        const c = JSON.parse(e.data) as vmod.S2CMessage;
         console.debug("message", c)
         if (!("kind" in c)) {
           throw new Error("invalid input, missing kind");
@@ -254,7 +104,7 @@ export class Api {
           throw new Error("invalid input, missing content");
         }
         if (c.kind == "init")
-          this.#initMessage = c;
+          this.#initMessage = c.content;
         this.#events.dispatchEvent(new MessageEvent(c));
       }
       catch (e) {
@@ -283,12 +133,12 @@ export class Api {
     });
   }
 
-  getActionCost(opcode: string): Cost | null {
+  getActionCost(opcode: string): emod.CostResponse | null {
     const initMsg = this.#initMessage;
     if (!initMsg)
       return null;
 
-    let name = null;
+    let name: keyof emod.CostsResponse|null = null;
     switch (opcode) {
       case "move:left":
       case "move:right":
@@ -302,13 +152,13 @@ export class Api {
     }
     if (name == null)
       return null;
-    return initMsg.content.costs[name] ?? null;
+    return initMsg.costs[name] ?? null;
   }
 
   secondsPerTicks(): number {
     if (!this.#initMessage)
       return 1;
-    return 1 / this.#initMessage.content.setup.ticksPerSecond;
+    return 1 / this.#initMessage.setup.ticksPerSecond;
   }
 
   public addEventListener(
@@ -330,7 +180,7 @@ export class Api {
     this.#events.removeEventListener(name, cb);
   }
 
-  sendMessage(message: SendMessage) {
+  sendMessage(message: vmod.C2SMessage) {
     if (this.#ws == null) {
       console.warn("could not send message, not connected", message);
       return;

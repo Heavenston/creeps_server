@@ -1,0 +1,23 @@
+packages:
+  - path: "github.com/heavenston/creeps_server/creeps_lib/model"
+    output_path: "creeps_manager/front/src/models/epita.ts"
+    type_mappings:
+      geom.Point: "{ x: number; y: number; }"
+      uid.Uid: "string"
+
+  - path: "github.com/heavenston/creeps_server/creeps_lib/viewer_api_model"
+    output_path: "creeps_manager/front/src/models/viewer.ts"
+
+    frontmatter: |
+      import { Resources, IReport, ActionOpCode, SetupResponse, CostsResponse } from "./epita"
+    type_mappings:
+      geom.Point: "{ x: number; y: number; }"
+      uid.Uid: "string"
+      model.Resources: "Resources"
+      model.IReport: "IReport"
+      model.ActionOpCode: "ActionOpCode"
+      model.SetupResponse: "SetupResponse"
+      model.CostsResponse: "CostsResponse"
+
+    exclude_files:
+      - "message.go"

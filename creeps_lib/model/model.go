@@ -27,7 +27,7 @@ type StatisticsResponse struct {
 }
 
 type CostResponse struct {
-	Resources
+	Resources `json:",inline" tstype:",extends"`
 	Cast int `json:"cast"`
 }
 

@@ -1,2 +1,4 @@
 .env
 *_templ.go
+/creeps_manager/front/src/models/epita.ts
+/creeps_manager/front/src/models/viewer.ts

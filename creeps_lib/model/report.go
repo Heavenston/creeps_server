@@ -25,6 +25,7 @@ type Message struct {
 	Message string `json:"message"`
 }
 
+//tygo:ignore
 type IReport interface {
 	GetReport() *Report
 }
@@ -43,84 +44,84 @@ func (r *Report) GetReport() *Report {
 }
 
 type ErrorReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	ErrorCode string `json:"errorCode"`
 	Error     string `json:"-"`
 }
 
 type NoOpReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 }
 
 type ObserveReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	Tiles []uint16 `json:"tiles"`
 	Units []Unit   `json:"units"`
 }
 
 type MoveReport struct {
-	ObserveReport
+	ObserveReport `json:",inline" tstype:",extends"`
 	NewPosition geom.Point `json:"newPosition"`
 }
 
 type GatherReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	Resource      ResourceKind `json:"resource"`
 	Gathered      int          `json:"gathered"`
 	ResourcesLeft int          `json:"resourcesLeft"`
 }
 
 type UnloadReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	CreditedResources Resources `json:"creditedResources"`
 }
 
 type FarmReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	FoodQuantity int `json:"foodQuantity"`
 }
 
 type BuildReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	Building Building `json:"building"`
 }
 
 type BuildHouseHoldReport struct {
-	BuildReport
+	BuildReport `json:",inline" tstype:",extends"`
 	SpawnedCitizen1Id uid.Uid `json:"spawnedCitizen1Id"`
 	SpawnedCitizen2Id uid.Uid `json:"spawnedCitizen2Id"`
 }
 
 type SpawnReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	SpawnedUnitId uid.Uid `json:"spawnedUnitId"`
 	SpawnedUnit   Unit    `json:"spawnedUnit"`
 }
 
 type DismantleReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 }
 
 type UpgradeReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 }
 
 type RefineReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 }
 
 type MessageSendReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	Recipient string `json:"recipient"`
 }
 
 type MessageFetchReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	FetchedMessages []Message `json:"fetchedMessages"`
 }
 
 type FireReport struct {
-	Report
+	Report `json:",inline" tstype:",extends"`
 	Target      geom.Point `json:"target"`
 	KilledUnits []Unit     `json:"killedUnits"`
 }

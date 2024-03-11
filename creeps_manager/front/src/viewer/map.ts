@@ -79,7 +79,7 @@ export class Tilemap {
   }
 
   public get chunkSize(): number {
-    return this.api.initMessage?.content.chunkSize ?? 8;
+    return this.api.initMessage?.chunkSize ?? 8;
   }
 
   global2ContainingChunkCoords(global: Vector2): Vector2 {
