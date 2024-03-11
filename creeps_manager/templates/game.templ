@@ -5,5 +5,10 @@ templ GameHeader() {
 }
 
 templ Game(url string) {
-  <creeps-canvas url={ url } />
+	<div class="flex-grow relative flex">
+	  <creeps-canvas url={ url } />
+		<side-panel>
+			Bonojur
+		</side-panel>
+	</div>
 }

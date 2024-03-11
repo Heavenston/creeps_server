@@ -2,6 +2,12 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+:root {
+  --dark-one: theme("colors.dark.one");
+  --dark-two: theme("colors.dark.two");
+  --dark-three: theme("colors.dark.three");
+}
+
 html, body {
   height: 100%;
 }
