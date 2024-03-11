@@ -37,13 +37,13 @@ func (self *WebServer) getGame(w http.ResponseWriter, r *http.Request) {
 
     var game model.Game
     rs := self.Db.Where("id = ?", gameId).Take(&game)
+    if rs.RowsAffected == 0 {
+        w.WriteHeader(http.StatusNotFound)
+        return
+    }
     if rs.Error != nil {
         log.Error().Err(rs.Error).Msg("DB Error")
         w.WriteHeader(http.StatusInternalServerError)
-        return
-    }
-    if rs.RowsAffected == 0 {
-        w.WriteHeader(http.StatusNotFound)
         return
     }
 

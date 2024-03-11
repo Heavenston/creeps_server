@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	stdlog "log"
 	"net/url"
 	"os"
+	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	gormlog "gorm.io/gorm/logger"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
 	gamemanager "github.com/Heavenston/creeps_server/creeps_manager/game_manager"
@@ -35,13 +39,48 @@ var CLI struct {
 	Quiet   bool `short:"q" help:"If present overrides verbose and disables info logs and under"`
 }
 
+type ZerologGormLogger struct {
+	
+}
+// don't care about this we let zerolog filter logs
+func (self *ZerologGormLogger) LogMode(gormlog.LogLevel) gormlog.Interface {
+	return self
+}
+func (self *ZerologGormLogger) Info(ctx context.Context, msg string, other ...interface{}) {
+	log.Info().Any("other", other).Msg(msg)
+}
+func (self *ZerologGormLogger) Warn(ctx context.Context, msg string, other ...interface{}) {
+	log.Warn().Any("other", other).Msg(msg)
+}
+func (self *ZerologGormLogger) Error(ctx context.Context, msg string, other ...interface{}) {
+	log.Error().Any("other", other).Msg(msg)
+}
+func (self *ZerologGormLogger) Trace(
+	ctx context.Context,
+	begin time.Time,
+	fc func() (sql string, rowsAffected int64),
+	err error,
+) {
+	sql, sa := fc()
+	var e *zerolog.Event
+	if err != nil {
+		e = log.Warn()
+	} else {
+		e = log.Trace()
+	}
+	e.Str("sql", sql).Int64("ra", sa).Err(err).TimeDiff("duration", time.Now(), begin).Send()
+}
+
 func main() {
 	cw := zerolog.ConsoleWriter{
 		Out: os.Stdout,
 	}
 	log.Logger = zerolog.New(cw).With().
+		Caller().
 		Timestamp().
 		Logger()
+	stdlog.SetFlags(0)
+	stdlog.SetOutput(log.Logger)
 
 	ctx := kong.Parse(&CLI)
 	if ctx.Error != nil {
@@ -61,7 +100,9 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	}
 
-	db, err := gorm.Open(sqlite.Open(CLI.Db), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(CLI.Db), &gorm.Config{
+		Logger: &ZerologGormLogger{},
+	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("DB Error")
 	}

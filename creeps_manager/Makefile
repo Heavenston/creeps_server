@@ -20,7 +20,7 @@ clean:
 	rm -rf $(templ_out_files)
 
 dev: front_build ${templ_out_files}
-	go run -race . ${CREEPS_MANAGER_ARGS}
+	go run -race . -v ${CREEPS_MANAGER_ARGS}
 
 serve: front_build creeps_manager
 	./creeps_manager ${CREEPS_MANAGER_ARGS}
