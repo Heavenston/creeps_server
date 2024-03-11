@@ -2,8 +2,9 @@ package viewer_api
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
-	"sync"
+	"slices"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -14,268 +15,15 @@ import (
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	. "github.com/heavenston/creeps_server/creeps_lib/viewer_api_model"
 	"github.com/heavenston/creeps_server/creeps_server/server"
-	"github.com/heavenston/creeps_server/creeps_server/server/entities"
 	"github.com/rs/zerolog/log"
 )
 
 type ViewerServer struct {
 	Server *server.Server
 	Addr   string
-}
 
-type connection struct {
-	socketLock sync.Mutex
-	socket     *websocket.Conn
-
-	chunksLock       sync.RWMutex
-	subscribedChunks map[Point]bool
-
-	unitsLock  sync.RWMutex
-	knownUnits map[uid.Uid]bool
-
-	playersLock  sync.RWMutex
-	knownPlayers map[uid.Uid]bool
-}
-
-func (conn *connection) setIsUnitKnown(id uid.Uid, known bool) {
-	conn.unitsLock.Lock()
-	defer conn.unitsLock.Unlock()
-	if known {
-		conn.knownUnits[id] = true
-	} else {
-		delete(conn.knownUnits, id)
-	}
-}
-
-func (conn *connection) subedToChunk(chunk Point) bool {
-	conn.chunksLock.RLock()
-	defer conn.chunksLock.RUnlock()
-	return conn.subscribedChunks[chunk]
-}
-
-func (viewer *ViewerServer) handleClientSubscription(
-	chunkPos Point,
-	conn *connection,
-) {
-	chunk := viewer.Server.Tilemap().CreateChunk(chunkPos)
-
-	terrainChangeChannel := make(chan any, 2048)
-	terrainCancelHandle := chunk.UpdatedEventProvider.Subscribe(terrainChangeChannel)
-	defer terrainCancelHandle.Cancel()
-
-	serverEventsChannel := make(chan server.IServerEvent, 2048)
-	aabb := AABB{
-		From: chunkPos.Times(terrain.ChunkSize),
-		Size: Point{
-			// +1 seems to fix some missed events
-			X: terrain.ChunkSize + 1,
-			Y: terrain.ChunkSize + 1,
-		},
-	}
-	serverEventsHandle := viewer.Server.Events().Subscribe(serverEventsChannel, aabb)
-	defer serverEventsHandle.Cancel()
-
-	sendMessage := func(kind string, content any) {
-		contentbytes, err := json.Marshal(content)
-		if err != nil {
-			log.Warn().Err(err).Msg("full chunk ser error")
-			return
-		}
-		conn.socketLock.Lock()
-		conn.socket.WriteJSON(Message{
-			Kind:    kind,
-			Content: contentbytes,
-		})
-		conn.socketLock.Unlock()
-	}
-
-	// send full chunk
-	sendTerrain := func() {
-		if !chunk.IsGenerated() {
-			return
-		}
-
-		tiles := make([]byte, 2*terrain.ChunkSize*terrain.ChunkSize)
-		for y := 0; y < terrain.ChunkSize; y++ {
-			for x := 0; x < terrain.ChunkSize; x++ {
-				i := 2 * (x + y*terrain.ChunkSize)
-				tile := chunk.GetTile(Point{X: x, Y: y})
-				tiles[i] = byte(tile.Kind)
-				tiles[i+1] = byte(tile.Value)
-			}
-		}
-		sendMessage("fullchunk", S2CFullChunk{
-			ChunkPos: chunkPos,
-			Tiles:    tiles,
-		})
-	}
-
-	sendUnit := func(unit server.IUnit) bool {
-		conn.unitsLock.Lock()
-		// get the lock for the entire duration to make sure we don't double send
-		defer conn.unitsLock.Unlock()
-
-		if conn.knownUnits[unit.GetId()] {
-			return false
-		}
-		sendMessage("unit", S2CUnit{
-			OpCode:   unit.GetOpCode(),
-			UnitId:   unit.GetId(),
-			Owner:    unit.GetOwner(),
-			Position: unit.GetPosition(),
-			Upgraded: unit.IsUpgraded(),
-		})
-		conn.knownUnits[unit.GetId()] = true
-		return false
-	}
-
-	sendPlayer := func(player *entities.Player) bool {
-		conn.playersLock.Lock()
-		// get the lock for the entire duration to make sure we don't double send
-		defer conn.playersLock.Unlock()
-
-		if conn.knownPlayers[player.GetId()] {
-			return false
-		}
-		sendMessage("playerSpawn", S2CPlayerSpawn{
-			Id:            player.GetId(),
-			SpawnPosition: player.GetSpawnPoint(),
-			Username:      player.GetUsername(),
-			Resources:     player.GetResources(),
-		})
-		conn.knownPlayers[player.GetId()] = true
-		return false
-	}
-
-	getActionData := func(action *server.Action) ActionData {
-		data := ActionData{
-			ActionOpCode: action.OpCode,
-			ReportId:     action.ReportId,
-			Parameter:    action.Parameter,
-		}
-		return data
-	}
-
-	sendTerrain()
-
-	for _, entity := range viewer.Server.Entities().GetAllIntersects(aabb) {
-		if unit, ok := entity.(server.IUnit); ok {
-			sendUnit(unit)
-		}
-		if player, ok := entity.(*entities.Player); ok {
-			sendPlayer(player)
-		}
-	}
-
-	for {
-		stillSubed := conn.subedToChunk(chunkPos)
-		if !stillSubed {
-			conn.unitsLock.Lock()
-
-			for _, entity := range viewer.Server.Entities().GetAllIntersects(aabb) {
-				id := entity.GetId()
-				if !conn.knownUnits[id] {
-					continue
-				}
-				sendMessage("unitDespawned", S2CUnitDespawn{
-					UnitId: id,
-				})
-				delete(conn.knownUnits, id)
-			}
-
-			conn.unitsLock.Unlock()
-			break
-		}
-
-		select {
-		case event, ok := (<-terrainChangeChannel):
-			if !ok {
-				log.Trace().Msg("terrain channel closed")
-				break
-			}
-
-			if change, ok := event.(terrain.TileUpdateChunkEvent); ok {
-				sendMessage("tileChange", S2CTileChange{
-					TilePos: change.UpdatedPosition.Add(chunkPos.Times(terrain.ChunkSize)),
-					Kind:    byte(change.NewValue.Kind),
-					Value:   change.NewValue.Value,
-				})
-			}
-			if _, ok := event.(terrain.GeneratedChunkEvent); ok {
-				sendTerrain()
-			}
-		case event, ok := (<-serverEventsChannel):
-			if !ok {
-				log.Trace().Msg("server events channel closed")
-				break
-			}
-
-			if e, ok := event.(*server.UnitSpawnEvent); ok {
-				sendUnit(e.Unit)
-			}
-			if e, ok := event.(*server.UnitDespawnEvent); ok {
-				sendMessage("unitDespawned", S2CUnitDespawn{
-					UnitId: e.Unit.GetId(),
-				})
-				conn.setIsUnitKnown(e.Unit.GetId(), false)
-			}
-			if e, ok := event.(*server.UnitMovedEvent); ok {
-				newChunk := terrain.Global2ContainingChunkCoords(e.To)
-				if newChunk != chunkPos && !conn.subedToChunk(newChunk) {
-					sendMessage("unitDespawned", S2CUnitDespawn{
-						UnitId: e.Unit.GetId(),
-					})
-					conn.setIsUnitKnown(e.Unit.GetId(), false)
-					break
-				}
-			}
-			if e, ok := event.(*server.UnitStartedActionEvent); ok {
-				// note: we do skip the action...
-				if sendUnit(e.Unit) {
-					break
-				}
-
-				sendMessage("unitStartedAction", S2CUnitStartedAction{
-					UnitId: e.Unit.GetId(),
-					Action: getActionData(e.Action),
-				})
-			}
-			if e, ok := event.(*server.UnitFinishedActionEvent); ok {
-				// note: if it didn't know about the unit it won't know about
-				//       the action
-				if sendUnit(e.Unit) {
-					break
-				}
-
-				content := S2CUnitFinishedAction{
-					UnitId: e.Unit.GetId(),
-					Action: getActionData(e.Action),
-					Report: e.Report,
-				}
-
-				sendMessage("unitFinishedAction", content)
-			}
-			if e, ok := event.(*entities.PlayerSpawnEvent); ok {
-				sendPlayer(e.Player)
-			}
-			if e, ok := event.(*entities.PlayerDespawnEvent); ok {
-				conn.playersLock.Lock()
-				// don't double send
-				if !conn.knownPlayers[e.Player.GetId()] {
-					conn.playersLock.Unlock()
-					break
-				}
-				sendMessage("playerDespawn", PlayerDespawnContent{
-					Id: e.Player.GetId(),
-				})
-				delete(conn.knownPlayers, e.Player.GetId())
-				conn.playersLock.Unlock()
-			}
-		// makes sure at lease once every 30s we check if we are still subed to
-		// the chunk
-		case <-time.After(time.Second * 30):
-		}
-	}
+	AdminPassword string
+	AdminAddrs []string
 }
 
 func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
@@ -292,9 +40,50 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 		knownUnits:       make(map[uid.Uid]bool),
 		knownPlayers:     make(map[uid.Uid]bool),
 	}
+	connection.isConnected.Store(true)
+	defer connection.isConnected.Store(false)
 
 	// recv init message
 	{
+		var initMessage Message
+		err = conn.ReadJSON(&initMessage)
+		if err != nil {
+			goto error
+		}
+
+		if initMessage.Kind != "init" {
+			log.Warn().Any("addr", conn.RemoteAddr()).Msg("Invalid hanshake")
+			return
+		}
+
+		var initContent C2SInit
+		err := json.Unmarshal(initMessage.Content, &initContent)
+		if err != nil {
+			goto error
+		}
+
+		connection.isAdmin.Store(false)
+		if initContent.AuthPassword != "" {
+			remoteAddr, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+			if len(viewer.AdminAddrs) != 0 &&
+				!slices.Contains(viewer.AdminAddrs, remoteAddr) {
+				log.Warn().
+					Any("addr", conn.RemoteAddr()).
+					Any("given_auth", initContent.AuthPassword).
+					Msg("Client with the wrong addr tried to give an admin password")
+				return
+			}
+
+			if initContent.AuthPassword == viewer.AdminPassword {
+				connection.isAdmin.Store(true)
+			} else {
+				log.Warn().
+					Any("addr", conn.RemoteAddr()).
+					Any("given_auth", initContent.AuthPassword).
+					Msg("Wrong admin password used")
+				return
+			}
+		}
 	}
 
 	// send init message
@@ -322,6 +111,8 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 			goto error
 		}
 	}
+
+	go viewer.handleClientGlobalEvents(&connection)
 
 	for {
 		var mess Message

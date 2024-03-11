@@ -11,7 +11,7 @@ build: tygo manager_build server_build
 tygo:
 	tygo generate
 
-manage: tygo
+manage: server_build tygo
 	if [ -f .env ]; then export $$(cat .env | xargs); fi; \
 	make -C creeps_manager dev
 

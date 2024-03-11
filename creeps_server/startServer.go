@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -13,9 +15,27 @@ import (
 	. "github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/heavenston/creeps_server/creeps_server/viewer_api"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func startServ(*kong.Context) {
+	var cw io.Writer
+	if CLI.LogFile == nil {
+		cw = zerolog.ConsoleWriter{
+			Out: os.Stdout,
+		}
+	} else {
+		var err error
+		cw, err = os.Create(*CLI.LogFile)
+		if err != nil {
+			panic(err)
+		}
+	}
+	log.Logger = zerolog.New(cw).With().
+		Caller().
+		Timestamp().
+		Logger()
+
 	switch CLI.Verbose {
 	case 0:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)

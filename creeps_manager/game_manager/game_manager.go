@@ -2,6 +2,7 @@ package gamemanager
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"sync"
 	"time"
@@ -72,11 +73,17 @@ func (self *GameManager) StartGame(game model.Game) (*RunningGame, error) {
 	viewerPort := self.port + 1
 	self.port += 2
 
+	logFile := fmt.Sprintf("/tmp/game%d.logs", game.ID)
+
 	cmd := exec.Command(
 		self.binaryPath,
 		"--api-port", fmt.Sprintf("%d", apiPort),
 		"--viewer-port", fmt.Sprintf("%d", viewerPort),
+		"-vv",
+		"--log-file", logFile,
 	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err := cmd.Start()
 	if err != nil {
 		return nil, err
@@ -96,6 +103,13 @@ func (self *GameManager) StartGame(game model.Game) (*RunningGame, error) {
 
 	now := time.Now()
 	self.db.Model(&game).Where("id = ?", game.ID).Update("started_at", &now)
+
+    log.Info().
+		Str("binary_path", self.binaryPath).
+		Str("logs", logFile).
+		Str("name", game.Name).
+		Uint("id", game.ID).
+		Msg("Started game")
 
 	return rgame, nil
 }

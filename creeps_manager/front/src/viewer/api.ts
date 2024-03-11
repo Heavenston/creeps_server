@@ -88,8 +88,11 @@ export class Api {
     }
 
     this.#ws.addEventListener("open", (e) => {
-      this.#isConnected = true;
-      this.#events.dispatchEvent(new ConnectionEvent(true, "connected!"));
+      this.sendMessage({
+        kind: "init",
+        content: { },
+      });
+
       console.info("connected to websocket", e);
     });
 
@@ -103,9 +106,19 @@ export class Api {
         if (!("content" in c)) {
           throw new Error("invalid input, missing content");
         }
+
         if (c.kind == "init")
+        {
+          if (this.#isConnected) {
+            console.warn("Received the init message twice ?");
+          }
           this.#initMessage = c.content;
-        this.#events.dispatchEvent(new MessageEvent(c));
+          this.#isConnected = true;
+          this.#events.dispatchEvent(new ConnectionEvent(true, "connected!"));
+        }
+        else {
+          this.#events.dispatchEvent(new MessageEvent(c));
+        }
       }
       catch (e) {
         console.warn("invalid json received", e);

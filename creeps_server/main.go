@@ -2,13 +2,10 @@ package main
 
 import (
 	"math"
-	"os"
 
 	"github.com/alecthomas/kong"
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 var CLI struct {
@@ -20,6 +17,8 @@ var CLI struct {
 	Tps     float64 `help:"Overrides the ticks per seconds"`
 	Enemies *bool   `negatable:"" help:"Overrides wether enemies are enables"`
 	Hector  *bool   `negatable:"" help:"Overrides wether the garbage collector is enabled"`
+
+	LogFile *string `short:"l" help:"File in which to print logs instead of stdout"`
 
 	Verbose int  `short:"v" type:"counter" help:"Once for debug prints, twice for trace"`
 	Quiet   bool `short:"q" help:"Overrites verbose, disables info logs and under"`
@@ -185,13 +184,6 @@ var defaultPlayerResources model.Resources = model.Resources{
 }
 
 func main() {
-	cw := zerolog.ConsoleWriter{
-		Out: os.Stdout,
-	}
-	log.Logger = zerolog.New(cw).With().
-		Timestamp().
-		Logger()
-
 	ctx := kong.Parse(&CLI)
 	startServ(ctx)
 }

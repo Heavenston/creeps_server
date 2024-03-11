@@ -78,15 +78,29 @@ func (provider *SpatialEventProvider[T]) Emit(event T) {
 		return t.handle.IsCancelled()
 	})
 
-	for _, sub := range provider.subs.GetAllIntersects(aabb) {
-		select {
-		case sub.sendChan <- event:
-		default:
-			log.Warn().
-				Type("event_type", event).
-				Str("sub_file", sub.file).
-				Int("sub_line", sub.line).
-				Msg("Could not send event")
+	if aabb.IsZero() {
+		provider.subs.ForEach(func(sub sub[T]) {
+			select {
+			case sub.sendChan <- event:
+			default:
+				log.Warn().
+					Type("event_type", event).
+					Str("sub_file", sub.file).
+					Int("sub_line", sub.line).
+					Msg("Could not send event")
+			}
+		})
+	} else {
+		for _, sub := range provider.subs.GetAllIntersects(aabb) {
+			select {
+			case sub.sendChan <- event:
+			default:
+				log.Warn().
+					Type("event_type", event).
+					Str("sub_file", sub.file).
+					Int("sub_line", sub.line).
+					Msg("Could not send event")
+			}
 		}
 	}
 }
