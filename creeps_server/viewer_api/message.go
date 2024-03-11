@@ -1,4 +1,7 @@
-package viewer
+package viewer_api
+
+// c2s is client to server
+// s2c is server to client
 
 import (
 	"encoding/json"
@@ -13,15 +16,18 @@ type message struct {
 	Content json.RawMessage `json:"content"`
 }
 
-// first packet sent by the server to the client as soon as the connection is
-// established with various informations
-type initContent struct {
+type c2sInit struct {
+	
+}
+
+// Sent as a response to c2sInit
+type s2cInit struct {
 	ChunkSize int                  `json:"chunkSize"`
 	Setup     *model.SetupResponse `json:"setup"`
 	Costs     *model.CostsResponse `json:"costs"`
 }
 
-type fullChunkContent struct {
+type s2cFullChunk struct {
 	ChunkPos Point `json:"chunkPos"`
 	// will be base64 encoded
 	// each tile has two bytes, one for the kind and one for its value
@@ -31,21 +37,19 @@ type fullChunkContent struct {
 	Tiles []byte `json:"tiles"`
 }
 
-type tileChangeContent struct {
+type s2cTileChange struct {
 	TilePos Point `json:"tilePos"`
 	Kind    byte  `json:"kind"`
 	Value   byte  `json:"value"`
 }
 
-// not a messag but used inside messages
 type actionData struct {
 	ActionOpCode model.ActionOpCode `json:"actionOpCode"`
 	ReportId     uid.Uid            `json:"reportId"`
 	Parameter    any                `json:"parameter,omitempty"`
 }
 
-// sent by the server when a unit spawned
-type unitContent struct {
+type s2cUnit struct {
 	OpCode   string  `json:"opCode"`
 	UnitId   uid.Uid `json:"unitId"`
 	Owner    uid.Uid `json:"owner"`
@@ -54,22 +58,22 @@ type unitContent struct {
 }
 
 // sent by the server when a unit dies or gets out of the subscribed chunks
-type unitDespawnContent struct {
+type s2cUnitDespawn struct {
 	UnitId uid.Uid `json:"unitId"`
 }
 
-type unitStartedActionContent struct {
+type s2cUnitStartedAction struct {
 	UnitId uid.Uid    `json:"unitId"`
 	Action actionData `json:"action"`
 }
 
-type unitFinishedActionContent struct {
+type s2cUnitFinishedAction struct {
 	UnitId uid.Uid       `json:"unitId"`
 	Action actionData    `json:"action"`
 	Report model.IReport `json:"report"`
 }
 
-type playerSpawnContent struct {
+type s2cPlayerSpawn struct {
 	Id            uid.Uid         `json:"id"`
 	SpawnPosition Point           `json:"spawnPosition"`
 	Username      string          `json:"username"`
@@ -80,12 +84,13 @@ type playerDespawnContent struct {
 	Id uid.Uid `json:"id"`
 }
 
-// sent by the front end to subscribe to a chunk content
-type subscribeRequestContent struct {
+// Subscribs to all entities and tile changes from the given chunk
+// after receiving, if available, the server sends the full chunk tiles
+type c2sSubscribeRequest struct {
 	ChunkPos Point `json:"chunkPos"`
 }
 
-// sent by the front end to unsubscribe from a chunk content
-type unsubscribeRequestContent struct {
+// cancels a previous subscribe request
+type c2sUnsubscribeRequest struct {
 	ChunkPos Point `json:"chunkPos"`
 }

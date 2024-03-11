@@ -11,7 +11,7 @@ import (
 	"github.com/heavenston/creeps_server/creeps_server/epita_api"
 	"github.com/heavenston/creeps_server/creeps_server/generator"
 	. "github.com/heavenston/creeps_server/creeps_server/server"
-	"github.com/heavenston/creeps_server/creeps_server/viewer"
+	"github.com/heavenston/creeps_server/creeps_server/viewer_api"
 	"github.com/rs/zerolog"
 )
 
@@ -60,7 +60,7 @@ func startServ(*kong.Context) {
 	}
 	go api_server.Start()
 
-	viewer_server := &viewer.ViewerServer{
+	viewer_server := &viewer_api.ViewerServer{
 		Addr:   fmt.Sprintf("%s:%d", CLI.ViewerHost, CLI.ViewerPort),
 		Server: srv,
 	}

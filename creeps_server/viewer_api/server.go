@@ -1,4 +1,4 @@
-package viewer
+package viewer_api
 
 import (
 	"encoding/json"
@@ -103,7 +103,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 				tiles[i+1] = byte(tile.Value)
 			}
 		}
-		sendMessage("fullchunk", fullChunkContent{
+		sendMessage("fullchunk", s2cFullChunk{
 			ChunkPos: chunkPos,
 			Tiles:    tiles,
 		})
@@ -117,7 +117,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 		if conn.knownUnits[unit.GetId()] {
 			return false
 		}
-		sendMessage("unit", unitContent{
+		sendMessage("unit", s2cUnit{
 			OpCode:   unit.GetOpCode(),
 			UnitId:   unit.GetId(),
 			Owner:    unit.GetOwner(),
@@ -136,7 +136,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 		if conn.knownPlayers[player.GetId()] {
 			return false
 		}
-		sendMessage("playerSpawn", playerSpawnContent{
+		sendMessage("playerSpawn", s2cPlayerSpawn{
 			Id:            player.GetId(),
 			SpawnPosition: player.GetSpawnPoint(),
 			Username:      player.GetUsername(),
@@ -176,7 +176,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 				if !conn.knownUnits[id] {
 					continue
 				}
-				sendMessage("unitDespawned", unitDespawnContent{
+				sendMessage("unitDespawned", s2cUnitDespawn{
 					UnitId: id,
 				})
 				delete(conn.knownUnits, id)
@@ -194,7 +194,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 			}
 
 			if change, ok := event.(terrain.TileUpdateChunkEvent); ok {
-				sendMessage("tileChange", tileChangeContent{
+				sendMessage("tileChange", s2cTileChange{
 					TilePos: change.UpdatedPosition.Add(chunkPos.Times(terrain.ChunkSize)),
 					Kind:    byte(change.NewValue.Kind),
 					Value:   change.NewValue.Value,
@@ -213,7 +213,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 				sendUnit(e.Unit)
 			}
 			if e, ok := event.(*server.UnitDespawnEvent); ok {
-				sendMessage("unitDespawned", unitDespawnContent{
+				sendMessage("unitDespawned", s2cUnitDespawn{
 					UnitId: e.Unit.GetId(),
 				})
 				conn.setIsUnitKnown(e.Unit.GetId(), false)
@@ -221,7 +221,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 			if e, ok := event.(*server.UnitMovedEvent); ok {
 				newChunk := terrain.Global2ContainingChunkCoords(e.To)
 				if newChunk != chunkPos && !conn.subedToChunk(newChunk) {
-					sendMessage("unitDespawned", unitDespawnContent{
+					sendMessage("unitDespawned", s2cUnitDespawn{
 						UnitId: e.Unit.GetId(),
 					})
 					conn.setIsUnitKnown(e.Unit.GetId(), false)
@@ -234,7 +234,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 					break
 				}
 
-				sendMessage("unitStartedAction", unitStartedActionContent{
+				sendMessage("unitStartedAction", s2cUnitStartedAction{
 					UnitId: e.Unit.GetId(),
 					Action: getActionData(e.Action),
 				})
@@ -246,7 +246,7 @@ func (viewer *ViewerServer) handleClientSubscription(
 					break
 				}
 
-				content := unitFinishedActionContent{
+				content := s2cUnitFinishedAction{
 					UnitId: e.Unit.GetId(),
 					Action: getActionData(e.Action),
 					Report: e.Report,
@@ -295,7 +295,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 	{
 		var initMessage message
 		initMessage.Kind = "init"
-		var messContent initContent
+		var messContent s2cInit
 		messContent.ChunkSize = terrain.ChunkSize
 		messContent.Costs = viewer.Server.GetCosts()
 		messContent.Setup = viewer.Server.GetSetup()
@@ -332,7 +332,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 
 		switch mess.Kind {
 		case "subscribe":
-			var content subscribeRequestContent
+			var content c2sSubscribeRequest
 			err = json.Unmarshal(mess.Content, &content)
 			if err != nil {
 				goto softerror
@@ -350,7 +350,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 			connection.chunksLock.Unlock()
 			go viewer.handleClientSubscription(content.ChunkPos, &connection)
 		case "unsubscribe":
-			var content unsubscribeRequestContent
+			var content c2sUnsubscribeRequest
 			err = json.Unmarshal(mess.Content, &content)
 			if err != nil {
 				goto softerror

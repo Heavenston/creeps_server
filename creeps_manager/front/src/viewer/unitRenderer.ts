@@ -1,5 +1,5 @@
 import { vec } from "~/src/utils/geom"
-import { Api, Action, UnitMessage, isMoveReport } from "~/src/viewer/api"
+import { Api, Action, S2cUnitMessage, isMoveReport } from "~/src/viewer/api"
 import { IRenderer, Renderer } from "./worldRenderer";
 
 type RunningAction = {
@@ -17,7 +17,7 @@ export class UnitRenderer implements IRenderer {
 
   private eventAbort = new AbortController();
 
-  private lastUnitMessage: Map<string, UnitMessage> = new Map();
+  private lastUnitMessage: Map<string, S2cUnitMessage> = new Map();
   private unitsActions: Map<string, RunningAction> = new Map();
 
   public cleanup() {
@@ -88,7 +88,7 @@ export class UnitRenderer implements IRenderer {
     }
   }
 
-  private renderUnit(unit: UnitMessage) {
+  private renderUnit(unit: S2cUnitMessage) {
     let pos = vec(unit.content.position);
     const action = this.unitsActions.get(unit.content.unitId);
     const cost = action == null ? null : this.api.getActionCost(action.action.actionOpCode);

@@ -1,12 +1,12 @@
 import { vec } from "~/src/utils/geom"
 import { IRenderer, Renderer } from "./worldRenderer";
-import { Api, PlayerSpawnMessage } from "./api";
+import { Api, S2cPlayerSpawnMessage } from "./api";
 
 export class OverlayRenderer implements IRenderer {
   private readonly renderer: Renderer;
 
   private eventAbort = new AbortController();
-  private players = new Map<string, PlayerSpawnMessage>();
+  private players = new Map<string, S2cPlayerSpawnMessage>();
 
   private renderPlayerUsernames = true;
 

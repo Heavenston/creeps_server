@@ -50,7 +50,7 @@ export type Costs = {
   [action: string]: undefined | Cost,
 }
 
-export type InitMessage = {
+export type S2cInitMessage = {
   kind: "init",
   content: {
     chunkSize: number,
@@ -62,21 +62,21 @@ export type InitMessage = {
   }
 }
 
-export type SubscribeMessage = {
+export type C2sSubscribeMessage = {
   kind: "subscribe",
   content: {
     chunkPos: Point
   }
 }
 
-export type UnsubscribeMessage = {
+export type C2sUnsubscribeMessage = {
   kind: "unsubscribe",
   content: {
     chunkPos: Point
   }
 }
 
-export type FullchunkMessage = {
+export type S2cFullchunkMessage = {
   kind: "fullchunk",
   content: {
     chunkPos: Point,
@@ -84,7 +84,7 @@ export type FullchunkMessage = {
   }
 }
 
-export type TileChangeMessage = {
+export type S2cTileChangeMessage = {
   kind: "tileChange",
   content: {
   	tilePos: Point,
@@ -93,7 +93,7 @@ export type TileChangeMessage = {
   },
 }
 
-export type UnitMessage = {
+export type S2cUnitMessage = {
   kind: "unit",
   content: {
     opCode: string,
@@ -104,14 +104,14 @@ export type UnitMessage = {
   }
 }
 
-export type UnitDespawnedMessage = {
+export type S2cUnitDespawnedMessage = {
   kind: "unitDespawned",
   content: {
     unitId: string,
   }
 }
 
-export type UnitStartedActionMessage = {
+export type S2cUnitStartedActionMessage = {
   kind: "unitStartedAction",
   content: {
     unitId: string,
@@ -119,7 +119,7 @@ export type UnitStartedActionMessage = {
   }
 }
 
-export type UnitFinishedActionMessage = {
+export type S2cUnitFinishedActionMessage = {
   kind: "unitFinishedAction",
   content: {
     unitId: string,
@@ -128,7 +128,7 @@ export type UnitFinishedActionMessage = {
   }
 }
 
-export type PlayerSpawnMessage = {
+export type S2cPlayerSpawnMessage = {
   kind: "playerSpawn",
   content: {
   	id: string,
@@ -139,7 +139,7 @@ export type PlayerSpawnMessage = {
   }
 }
 
-export type PlayerDespawnMessage = {
+export type S2cPlayerDespawnMessage = {
   kind: "playerDespawn",
   content: {
   	id: string,
@@ -147,16 +147,16 @@ export type PlayerDespawnMessage = {
 }
 
 export type RecvMessage =
-  | InitMessage
-  | FullchunkMessage
-  | TileChangeMessage
-  | UnitMessage
-  | UnitDespawnedMessage
-  | UnitStartedActionMessage
-  | UnitFinishedActionMessage
-  | PlayerSpawnMessage
-  | PlayerDespawnMessage;
-export type SendMessage = SubscribeMessage | UnsubscribeMessage;
+  | S2cInitMessage
+  | S2cFullchunkMessage
+  | S2cTileChangeMessage
+  | S2cUnitMessage
+  | S2cUnitDespawnedMessage
+  | S2cUnitStartedActionMessage
+  | S2cUnitFinishedActionMessage
+  | S2cPlayerSpawnMessage
+  | S2cPlayerDespawnMessage;
+export type SendMessage = C2sSubscribeMessage | C2sUnsubscribeMessage;
 
 export class MessageEvent extends Event {
   public readonly message: RecvMessage;
@@ -192,8 +192,8 @@ export class Api {
   get isConnected(): boolean {
     return this.#isConnected;
   }
-  #initMessage: InitMessage | null = null;
-  get initMessage(): InitMessage | null {
+  #initMessage: S2cInitMessage | null = null;
+  get initMessage(): S2cInitMessage | null {
     return this.#initMessage;
   }
   #tilemap: Tilemap;
