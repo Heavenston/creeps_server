@@ -5,9 +5,7 @@ import (
 	"net/http"
 
 	creepsjwt "github.com/Heavenston/creeps_server/creeps_manager/creeps_jwt"
-	"github.com/Heavenston/creeps_server/creeps_manager/discordapi"
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
-	"gorm.io/gorm"
 )
 
 func (self *WebServer) fillCtxMiddleware(next http.Handler) http.Handler {
@@ -55,16 +53,18 @@ func (self *WebServer) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		discordUser, err := discordapi.GetCurrentUser(&discordapi.DiscordBearerAuth{
-			AccessToken: user.DiscordAuth.AccessToken,
-			DiscordId:   &user.DiscordId,
-		})
-		user.DiscordUser = discordUser
-		self.Db.Model(&user).
-			Updates(model.User{
-				Model: gorm.Model{ID: user.ID},
-				DiscordUser: discordUser,
-			})
+		// discordUser, err := discordapi.GetCurrentUser(&discordapi.DiscordBearerAuth{
+		// 	AccessToken: user.DiscordAuth.AccessToken,
+		// 	DiscordId:   &user.DiscordId,
+		// })
+		// if !reflect.DeepEqual(user.DiscordUser, discordUser) {
+		// 	user.DiscordUser = discordUser
+		// 	self.Db.Model(&user).
+		// 		Updates(model.User{
+		// 			Model: gorm.Model{ID: user.ID},
+		// 			DiscordUser: discordUser,
+		// 		})
+		// }
 
 		if err != nil {
 			http.SetCookie(w, &http.Cookie{
@@ -78,7 +78,7 @@ func (self *WebServer) authMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), "user", user)
-		ctx = context.WithValue(ctx, "discordUser", discordUser)
+		ctx = context.WithValue(ctx, "discordUser", user.DiscordUser)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -54,7 +54,7 @@ templ Layout(head templ.Component) {
 			<link rel="icon" type="image/png" href={ chooseFavicon() }/>
 			@head
 		</head>
-		<body hx-ext="head-support" class="bg-dark-one flex flex-col">
+		<body hx-ext="head-support morph" class="bg-dark-one flex flex-col">
 			@Header()
 			{ children... }
 		</body>

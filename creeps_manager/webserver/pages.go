@@ -14,7 +14,7 @@ import (
 
 func (self *WebServer) getIndex(w http.ResponseWriter, r *http.Request) {
 	var games []model.Game
-	self.Db.Preload("Creator").Find(&games)
+	self.Db.Preload("Creator").Preload("Players").Find(&games)
 
 	ctx := templ.WithChildren(r.Context(), templates.Index(games))
 	templates.Layout(templates.IndexHeader()).
@@ -36,7 +36,10 @@ func (self *WebServer) getGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var game model.Game
-	rs := self.Db.Where("id = ?", gameId).Preload("Creator").Take(&game)
+	rs := self.Db.Where("id = ?", gameId).
+		Preload("Creator").
+		Preload("Players").
+		Take(&game)
 	if rs.RowsAffected == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -54,7 +57,7 @@ func (self *WebServer) getGame(w http.ResponseWriter, r *http.Request) {
 		url = fmt.Sprintf("ws://localhost:%d/websocket", rg.ViewerPort)
 	}
 
-	ctx := templ.WithChildren(r.Context(), templates.Game(url, game))
+	ctx := templ.WithChildren(r.Context(), templates.Game(url, rg, game))
 	templates.Layout(templates.GameHeader()).
 		Render(ctx, w)
 }

@@ -1,30 +1,84 @@
 package templates
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
+	"github.com/Heavenston/creeps_server/creeps_manager/game_manager"
 )
 
 templ GameHeader() {
 	<script type="module" src="/game.js" defer></script>
 }
 
-templ Game(url string, game model.Game) {
-	<div class="flex-grow relative flex">
-	  <creeps-canvas url={ url } />
-		<side-panel>
-			<div class="p-3 pl-0 w-[500px]">
-				<div class="inline-block">
+templ GamePlayerList(rg *gamemanager.RunningGame, game model.Game) {
+	<div class="grid grid-cols-2" id="gamePlayersList">
+		for _, player := range game.Players {
+			<div>
+				{player.DiscordUser.Username}
+			</div>
+		}
+	</div>
+}
+
+templ GameSidePanel(rg *gamemanager.RunningGame, game model.Game) {
+	<side-panel>
+		<div class="p-3 pl-0 w-[500px]" id="sidePanelInner">
+			<div class="flex flex-col gap-3">
+				<section class="inline-block">
 					<h2 class="text-lg">
 						Game Infos
 					</h2>
-					<div class="grid grid-cols-2">
+					<div class="inline-grid grid-cols-2">
 						<span class="bl-3 text-dark-text">Name</span>
 						<span class="">{ game.Name }</span>
+
 						<span class="bl-3 text-dark-text">Creator</span>
 						<span class="">{"@"}{ *game.Creator.DiscordUser.GlobalName }</span>
+
+						if rg != nil {
+							<span class="bl-3 text-dark-text">Port</span>
+							<span class="">{ strconv.Itoa(rg.ViewerPort) }</span>
+						}
 					</div>
-				</div>
+				</section>
+
+				<section>
+					<h2 class="text-lg">
+						Players
+					</h2>
+					@GamePlayerList(rg, game)
+				</section>
+
+				<section>
+					<h2 class="text-lg">
+						Actions
+					</h2>
+					if isLoggedIn(ctx) && !isInGame(ctx, game) {
+						<button
+							hx-post={ fmt.Sprintf("/htmx/joinGame?gameId=%d", game.ID) }
+							hx-swap="outerHTML"
+							hx-target="#sidePanelInner"
+							hx-select="#sidePanelInner"
+							hx-disabled-elt="this"
+							class="rounded bg-primary-one hover:bg-primary-two transition p-0.5 px-2"
+						>
+							Join
+						</button>
+					}
+				</section>
 			</div>
-		</side-panel>
+		</div>
+	</side-panel>
+}
+
+templ Game(url string, rg *gamemanager.RunningGame, game model.Game) {
+	<div class="flex-grow relative flex">
+		if url != "" {
+		  <creeps-canvas url={ url } />
+		}
+
+		@GameSidePanel(rg, game)
 	</div>
 }

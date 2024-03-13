@@ -1,28 +1,38 @@
 package webserver
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
+	"github.com/Heavenston/creeps_server/creeps_manager/templates"
 	"github.com/rs/zerolog/log"
 )
+
+func writePopup(w http.ResponseWriter, content string) {
+	w.Header().Add("HX-Retarget", "body")
+	w.Header().Add("HX-Reswap", "beforeend")
+
+	w.Write([]byte(fmt.Sprintf(`<popup-spawn kind="error">%s</popup-spawn>`, content)))
+}
 
 func (self *WebServer) postHtmxCreateGame(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		w.Write([]byte(`<popup-spawn kind="error">Bad request</popup-spawn>`))
+		writePopup(w, "Bad request")
 		return
 	}
 
 	user, ok := r.Context().Value("user").(model.User)
 	if !ok {
-		w.Write([]byte(`<popup-spawn kind="error">You are not logged in</popup-spawn>`))
+		writePopup(w, "You are not logged in")
 		return
 	}
 
 	gameName := r.FormValue("game_name")
 	if gameName == "" {
-		w.Write([]byte(`<popup-spawn kind="error">Invalid game name</popup-spawn>`))
+		writePopup(w, "Invalid game name")
 		return
 	}
 
@@ -32,12 +42,12 @@ func (self *WebServer) postHtmxCreateGame(w http.ResponseWriter, r *http.Request
 		Count(&count)
 	if rs.Error != nil {
 		log.Error().Err(rs.Error).Msg("DB Error")
-		w.Write([]byte(`<popup-spawn kind="error">Internal Server Error</popup-spawn>`))
+		writePopup(w, "Internal Server Error")
 		return
 	}
 
 	if count >= 5 {
-		w.Write([]byte(`<popup-spawn kind="error">You cannot create more than 5 games</popup-spawn>`))
+		writePopup(w, "You cannot create more than 5 games")
 		return
 	}
 
@@ -54,7 +64,7 @@ func (self *WebServer) postHtmxCreateGame(w http.ResponseWriter, r *http.Request
 	rs = self.Db.Create(&game)
 	if rs.Error != nil {
 		log.Error().Err(rs.Error).Msg("DB Error")
-		w.Write([]byte(`<popup-spawn kind="error">Internal Server Error</popup-spawn>`))
+		writePopup(w, "Internal Server Error")
 		return
 	}
 
@@ -63,11 +73,75 @@ func (self *WebServer) postHtmxCreateGame(w http.ResponseWriter, r *http.Request
 	_, err = self.GameManager.StartGame(game)
 	if err != nil {
 		log.Error().Err(rs.Error).Msg("Start game error")
-		w.Write([]byte(`<popup-spawn kind="error">
-            Internal server error while starting the game
-        </popup-spawn>`))
+		writePopup(w, `Internal server error while starting the game`)
 		return
 	}
 
 	w.Header().Add("HX-Location", "/")
+}
+
+func (self *WebServer) postHtmxJoinGame(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		writePopup(w, `Bad request`)
+		return
+	}
+
+	user, ok := r.Context().Value("user").(model.User)
+	if !ok {
+		writePopup(w, `You are not logged in`)
+		return
+	}
+
+	gameIdStr := r.URL.Query().Get("gameId")
+	gameId, err := strconv.ParseInt(gameIdStr, 10, 32)
+	if err != nil {
+		writePopup(w, "Invalid game id")
+		return
+	}
+
+	var game model.Game
+	rs := self.Db.Where("id = ?", gameId).
+		Preload("Players").
+		Preload("Creator").
+	Take(&game)
+	if rs.RowsAffected == 0 {
+		writePopup(w, "Could not find game")
+		return
+	}
+
+	self.Db.Model(&game).
+		Where("id = ?", gameId).
+		Association("Players").
+		Append(&user)
+
+	templates.GameSidePanel(self.GameManager.GetRunningGame(game.ID), game).
+		Render(r.Context(), w)
+}
+
+func (self *WebServer) getGamePlayers(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		writePopup(w, `Bad request`)
+		return
+	}
+
+	gameIdStr := r.URL.Query().Get("gameId")
+	gameId, err := strconv.ParseInt(gameIdStr, 10, 32)
+	if err != nil {
+		writePopup(w, "Invalid game id")
+		return
+	}
+
+	var game model.Game
+	rs := self.Db.Where("id = ?", gameId).Preload("Players").Take(&game)
+	if rs.RowsAffected == 0 {
+		writePopup(w, "Could not find game")
+		return
+	}
+
+	templates.Layout(templates.GamePlayerList(
+		self.GameManager.GetRunningGame(game.ID),
+		game,
+	)).Render(r.Context(), w)
 }
