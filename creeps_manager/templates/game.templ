@@ -30,7 +30,7 @@ templ GameSidePanel(rg *gamemanager.RunningGame, game model.Game) {
 					<h2 class="text-lg">
 						Game Infos
 					</h2>
-					<div class="inline-grid grid-cols-2">
+					<div class="inline-grid gap-x-3" style="grid-template-columns: auto auto;">
 						<span class="bl-3 text-dark-text">Name</span>
 						<span class="">{ game.Name }</span>
 
@@ -40,6 +40,16 @@ templ GameSidePanel(rg *gamemanager.RunningGame, game model.Game) {
 						if rg != nil {
 							<span class="bl-3 text-dark-text">Port</span>
 							<span class="">{ strconv.Itoa(rg.ViewerPort) }</span>
+						}
+
+						if game.StartedAt != nil {
+							<span class="bl-3 text-dark-text">Started</span>
+							<span class="">{ game.StartedAt.Format("Mon Jan 02 15:04:05 2006") }</span>
+						}
+
+						if game.EndedAt != nil {
+							<span class="bl-3 text-dark-text">Ended</span>
+							<span class="">{ game.EndedAt.Format("Mon Jan 02 15:04:05 2006") }</span>
 						}
 					</div>
 				</section>
@@ -55,16 +65,26 @@ templ GameSidePanel(rg *gamemanager.RunningGame, game model.Game) {
 					<h2 class="text-lg">
 						Actions
 					</h2>
-					if isLoggedIn(ctx) && !isInGame(ctx, game) {
+					if game.EndedAt == nil && isLoggedIn(ctx) && !isInGame(ctx, game) {
 						<button
 							hx-post={ fmt.Sprintf("/htmx/joinGame?gameId=%d", game.ID) }
-							hx-swap="outerHTML"
-							hx-target="#sidePanelInner"
-							hx-select="#sidePanelInner"
+							hx-swap="outerHTML" hx-target="#sidePanelInner" hx-select="#sidePanelInner"
 							hx-disabled-elt="this"
+							hx-confirm="Are you sure?"
 							class="rounded bg-primary-one hover:bg-primary-two transition p-0.5 px-2"
 						>
 							Join
+						</button>
+					}
+					if game.EndedAt == nil && isCreator(ctx, game) {
+						<button
+							hx-post={ fmt.Sprintf("/htmx/stopGame?gameId=%d", game.ID) }
+							hx-swap="outerHTML" hx-target="#sidePanelInner" hx-select="#sidePanelInner"
+							hx-disabled-elt="this"
+							hx-confirm="Are you sure?"
+							class="rounded bg-red-500 hover:bg-red-400 transition p-0.5 px-2"
+						>
+							Stop
 						</button>
 					}
 				</section>

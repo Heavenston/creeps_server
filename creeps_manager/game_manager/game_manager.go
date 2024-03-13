@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
@@ -13,13 +14,37 @@ import (
 )
 
 type RunningGame struct {
+	Gm *GameManager
+
 	Id        int
 	CreatorId int
 
 	ApiPort    int
 	ViewerPort int
 
-	Cmd *exec.Cmd
+	Cmd      *exec.Cmd
+}
+
+func (self *RunningGame) Stop() error {
+	if !self.Gm.forgetGame(self) {
+		return fmt.Errorf("Running game already forgotten by game manager")
+	}
+	
+	if self.Cmd.Process == nil {
+		return fmt.Errorf("Process not started")
+	}
+
+	err := syscall.Kill(self.Cmd.Process.Pid, syscall.SIGTERM)
+	if err != nil {
+		return err
+	}
+
+	self.Gm.db.
+		Model(&model.Game{}).
+		Where("id = ?", self.Id).
+		Update("ended_at", time.Now())
+
+	return nil
 }
 
 type GameManager struct {
@@ -65,6 +90,16 @@ func (self *GameManager) GetRunningGame(id uint) *RunningGame {
 	return self.games[int(id)]
 }
 
+func (self *GameManager) forgetGame(rg *RunningGame) bool {
+	self.gamesLock.Lock()
+	defer self.gamesLock.Unlock()
+	if self.games[rg.Id] != rg {
+		return false
+	}
+	delete(self.games, rg.Id)
+	return true
+}
+
 func (self *GameManager) StartGame(game model.Game) (*RunningGame, error) {
 	self.gamesLock.Lock()
 	defer self.gamesLock.Unlock()
@@ -90,6 +125,8 @@ func (self *GameManager) StartGame(game model.Game) (*RunningGame, error) {
 	}
 
 	rgame := &RunningGame{
+		Gm: self,
+
 		Id:        int(game.ID),
 		CreatorId: game.CreatorID,
 

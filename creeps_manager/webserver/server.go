@@ -37,7 +37,7 @@ func (self *WebServer) Start(addr string) error {
 
 		r.Post("/createGame", self.postHtmxCreateGame)
 		r.Post("/joinGame", self.postHtmxJoinGame)
-		r.Get("/gamePlayers", self.getGamePlayers)
+		r.Post("/stopGame", self.postHtmxStopGame)
 	})
 
 	router.Handle("/*", http.FileServer(http.Dir(DIST_FOLDER)))

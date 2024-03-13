@@ -143,9 +143,6 @@ export class Renderer {
       this.update(dt);
 
     this.ctx.resetTransform();
-
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
     this.ctx.translate(
       this.canvas.width/2,
       this.canvas.height/2,
@@ -160,5 +157,7 @@ export class Renderer {
 
     for (const renderer of this.renderers)
       renderer.render(dt);
+
+    this.ctx.resetTransform();
   }
 }

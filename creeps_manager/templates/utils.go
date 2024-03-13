@@ -25,3 +25,12 @@ func isInGame(ctx context.Context, game model.Game) bool {
 
 	return false
 }
+
+func isCreator(ctx context.Context, game model.Game) bool {
+	user, ok := ctx.Value("user").(model.User)
+	if !ok {
+		return false
+	}
+
+	return game.CreatorID == int(user.ID)
+}

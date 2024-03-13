@@ -10,7 +10,9 @@ templ CreateGameHeader() {
 templ CreateGame() {
   <div class="flex justify-center items-center flex-grow p-4">
     <form
-      hx-post="/htmx/createGame" hx-target="body" hx-swap="afterend"
+      hx-post="/htmx/createGame"
+      hx-swap="none"
+      hx-disabled-elt="#createGameButton"
       class="flex flex-col gap-6 w-80 max-w-full"
     >
       <h1 class="text-center text-lg">
@@ -29,6 +31,7 @@ templ CreateGame() {
         </label>
       </div>
       <button
+        id="createGameButton"
         type="submit"
         class="rounded bg-primary-one hover:bg-primary-two transition p-1 px-2"
       >

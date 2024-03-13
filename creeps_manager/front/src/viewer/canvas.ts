@@ -29,6 +29,7 @@ export class CreepsCanvasComp extends MinzeElement {
   `
 
   private canvas: HTMLCanvasElement | null = null;
+  private ctx: CanvasRenderingContext2D | null = null;
   private worldRenderer: Renderer | null = null;
   private animationFrameId: number = -1;
   private api: Api | null = null;
@@ -42,15 +43,15 @@ export class CreepsCanvasComp extends MinzeElement {
       return;
     this.canvas.width = this.clientWidth;
     this.canvas.height = this.clientHeight;
+    this.ctx = this.canvas?.getContext("2d");
 
     this.renderCanvas(this.lastTime);
   }
 
   private renderCanvas(time: number) {
-    if (this.worldRenderer == null)
-      return;
     this.animationFrameId = -1;
 
+    this.ctx?.clearRect(0, 0, this.canvas?.width??0, this.canvas?.height??0);
     this.worldRenderer?.render((time - this.lastTime) / 1000);
     this.lastTime = time;
 
