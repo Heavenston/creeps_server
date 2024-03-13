@@ -13,10 +13,24 @@ templ GameHeader() {
 }
 
 templ GamePlayerList(rg *gamemanager.RunningGame, game model.Game) {
-	<div class="grid grid-cols-2" id="gamePlayersList">
+	<div class="inline-grid gap-2" style="grid-template-columns: auto;" id="gamePlayersList">
 		for _, player := range game.Players {
-			<div>
-				{player.DiscordUser.Username}
+			<div class="
+				rounded flex items-center gap-2 p-0.5 px-2 hover:bg-dark-three
+				inline-block cursor-pointer select-none
+			">
+				<span
+					class={
+	          avatar(game.Creator.DiscordUser.AvatarUrl()),
+	          "rounded", "inline-block", "bg-cover", "h-5", "w-5"
+	        }
+				/>
+				<span class="">
+					{player.DiscordUser.Username}
+				</span>
+				<span class="text-dark-text">
+					{"@"}{*player.DiscordUser.GlobalName}
+				</span>
 			</div>
 		}
 	</div>
