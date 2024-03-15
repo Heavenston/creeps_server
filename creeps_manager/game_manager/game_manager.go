@@ -2,8 +2,6 @@ package gamemanager
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"sync"
 	"time"
 
@@ -69,49 +67,24 @@ func (self *GameManager) StartGame(game model.Game) (*RunningGame, error) {
 	self.gamesLock.Lock()
 	defer self.gamesLock.Unlock()
 
-	apiPort := self.port
-	viewerPort := self.port + 1
-	self.port += 2
+	if self.games[int(game.ID)] != nil {
+		return nil, fmt.Errorf("Game already started")
+	}
 
-	logFile := fmt.Sprintf("/tmp/game%d.logs", game.ID)
+	rg, err := newRunningGame(self, game, gameStartCfg{
+		game: game,
 
-	cmd := exec.Command(
-		self.binaryPath,
-		"--api-port", fmt.Sprintf("%d", apiPort),
-		"--viewer-port", fmt.Sprintf("%d", viewerPort),
-		"-vv",
-		"--log-file", logFile,
-	)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Start()
+		binaryPath: self.binaryPath,
+
+		apiPort: self.port,
+		viewerPort: self.port+1,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	rgame := &RunningGame{
-		Gm: self,
+	self.games[int(game.ID)] = rg
+	self.port++
 
-		Id:        int(game.ID),
-		CreatorId: game.CreatorID,
-
-		ApiPort:    apiPort,
-		ViewerPort: viewerPort,
-
-		Cmd: cmd,
-	}
-
-	self.games[int(game.ID)] = rgame
-
-	now := time.Now()
-	self.db.Model(&game).Where("id = ?", game.ID).Update("started_at", &now)
-
-	log.Info().
-		Str("binary_path", self.binaryPath).
-		Str("logs", logFile).
-		Str("name", game.Name).
-		Uint("id", game.ID).
-		Msg("Started game")
-
-	return rgame, nil
+	return rg, nil
 }
