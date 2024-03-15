@@ -53,7 +53,7 @@ templ GameSidePanel(rg *gamemanager.RunningGame, game model.Game) {
 
 						if rg != nil {
 							<span class="bl-3 text-dark-text">Port</span>
-							<span class="">{ strconv.Itoa(rg.ViewerPort) }</span>
+							<span class="">{ strconv.Itoa(rg.ApiPort) }</span>
 						}
 
 						if game.StartedAt != nil {

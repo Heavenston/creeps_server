@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
+	"github.com/fsnotify/fsnotify"
+	"github.com/heavenston/creeps_server/creeps_lib/uid"
+	viewerapimodel "github.com/heavenston/creeps_server/creeps_lib/viewer_api_model"
 	"github.com/rs/zerolog/log"
 )
 
@@ -20,6 +23,8 @@ type RunningGame struct {
 	ApiPort    int
 	ViewerPort int
 
+	Packets chan viewerapimodel.Message
+
 	Cmd      *exec.Cmd
 }
 
@@ -27,18 +32,87 @@ type gameStartCfg struct {
 	game model.Game
 
 	binaryPath string
+}
 
-	apiPort int
-	viewerPort int
+func waitAndReadPortFile(filePath string) (uint16, error) {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return 0, err
+	}
+	file.Close()
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return 0, err
+	}
+	defer watcher.Close()
+
+	err = watcher.Add(filePath)
+	if err != nil {
+		return 0, err
+	}
+
+	for {
+        select {
+        case event, ok := <-watcher.Events:
+            if !ok {
+                break
+            }
+			if event.Has(fsnotify.Write) {
+				break
+			}
+			continue
+        case err, ok := <-watcher.Errors:
+            if !ok {
+                break
+            }
+			return 0, err
+        }
+		break
+    }
+
+	var port uint16
+	file, err = os.Open(filePath)
+	defer file.Close()
+	if err != nil {
+		return 0, err
+	}
+	_, err = fmt.Fscanf(file, "%d", &port)
+	if err != nil {
+		return 0, err
+	}
+
+	return port, nil
 }
 
 func newRunningGame(gm *GameManager, game model.Game, cfg gameStartCfg) (*RunningGame, error) {
 	logFile := fmt.Sprintf("/tmp/game%d.logs", game.ID)
 
+	viewerPortFile := fmt.Sprintf("/tmp/game%d_viewer_port_%s", game.ID, uid.GenUid())
+	apiPortFile := fmt.Sprintf("/tmp/game%d_api_port_%s", game.ID, uid.GenUid())
+
+	viewerPort := make(chan uint16)
+	go func() {
+		port, err := waitAndReadPortFile(viewerPortFile)
+		if err != nil {
+			log.Error().Err(err).Send()
+		}
+		viewerPort <- port
+	}()
+
+	apiPort := make(chan uint16)
+	go func() {
+		port, err := waitAndReadPortFile(apiPortFile)
+		if err != nil {
+			log.Error().Err(err).Send()
+		}
+		apiPort <- port
+	}()
+
 	cmd := exec.Command(
 		cfg.binaryPath,
-		"--api-port", fmt.Sprintf("%d", cfg.apiPort),
-		"--viewer-port", fmt.Sprintf("%d", cfg.viewerPort),
+		"--viewer-port-file", viewerPortFile,
+		"--api-port-file", apiPortFile,
 		"-vv",
 		"--log-file", logFile,
 	)
@@ -55,8 +129,8 @@ func newRunningGame(gm *GameManager, game model.Game, cfg gameStartCfg) (*Runnin
 		Id:        int(game.ID),
 		CreatorId: game.CreatorID,
 
-		ApiPort:    cfg.apiPort,
-		ViewerPort: cfg.viewerPort,
+		ViewerPort: int(<-viewerPort),
+		ApiPort: int(<-apiPort),
 
 		Cmd: cmd,
 	}

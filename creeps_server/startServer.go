@@ -74,17 +74,27 @@ func startServ(*kong.Context) {
 		WoodPlank: 0,
 	})
 
-	api_server := &epita_api.ApiServer{
-		Addr:   fmt.Sprintf("%s:%d", CLI.ApiHost, CLI.ApiPort),
-		Server: srv,
-	}
-	go api_server.Start()
+	api_server := &epita_api.ApiServer{ Server: srv }
+	go func() {
+		err := api_server.Start(
+			fmt.Sprintf("%s:%d", CLI.ApiHost, CLI.ApiPort),
+			CLI.ApiPortFile,
+		)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not start api server")
+		}
+	}()
 
-	viewer_server := &viewer_api.ViewerServer{
-		Addr:   fmt.Sprintf("%s:%d", CLI.ViewerHost, CLI.ViewerPort),
-		Server: srv,
-	}
-	go viewer_server.Start()
+	viewer_server := &viewer_api.ViewerServer{ Server: srv }
+	go func() {
+		err := viewer_server.Start(
+			fmt.Sprintf("%s:%d", CLI.ViewerHost, CLI.ViewerPort),
+			CLI.ViewerPortFile,
+		)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not start viewer server")
+		}
+	}()
 
 	tilemap.GenerateChunk(Point{X: 0, Y: 0})
 	tilemap.GenerateChunk(Point{X: 0, Y: -1})

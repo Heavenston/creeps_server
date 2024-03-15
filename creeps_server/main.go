@@ -9,10 +9,12 @@ import (
 )
 
 var CLI struct {
-	ApiPort    int16  `help:"Port for the epita-compatible api" default:"1664"`
-	ApiHost    string `help:"Host for the epita-compatible api" default:"localhost"`
-	ViewerPort int16  `help:"Port for the viewer's api" default:"1665"`
-	ViewerHost string `help:"Host for the viewer's api" default:"localhost"`
+	ApiPort        int16   `help:"Port for the epita-compatible api" default:"0"`
+	ApiHost        string  `help:"Host for the epita-compatible api" default:"localhost"`
+	ApiPortFile    *string `help:"If given, the resolved port of the epita-compatible api will be written in it"`
+	ViewerPort     int16   `help:"Port for the viewer's api" default:"0"`
+	ViewerHost     string  `help:"Host for the viewer's api" default:"localhost"`
+	ViewerPortFile *string `help:"If given, the revolved port of the viewer api will be written in it"`
 
 	Tps     float64 `help:"Overrides the ticks per seconds"`
 	Enemies *bool   `negatable:"" help:"Overrides wether enemies are enables"`

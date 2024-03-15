@@ -3,7 +3,9 @@ package epita_api
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -14,7 +16,8 @@ import (
 
 type ApiServer struct {
 	Server *Server
-	Addr   string
+
+	Listener net.Listener
 }
 
 type ApiErrorResponse struct {
@@ -22,7 +25,7 @@ type ApiErrorResponse struct {
 	Error     string `json:"error"`
 }
 
-func (api *ApiServer) Start() {
+func (api *ApiServer) Start(addr string, portFile *string) error {
 	router := chi.NewRouter()
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Recoverer)
@@ -63,7 +66,28 @@ func (api *ApiServer) Start() {
 		fmt.Fprintf(w, "%s", marshalled)
 	})
 
-	log.Info().Str("addr", api.Addr).Msg("Api server starting")
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	defer listener.Close()
+	api.Listener = listener
 
-	http.ListenAndServe(api.Addr, router)
+	log.Info().Str("addr", listener.Addr().String()).Msg("Api server listening")
+
+	if portFile != nil {
+		fs, err := os.Create(*portFile)
+		if err != nil {
+			return err
+		}
+		_, port, _ := net.SplitHostPort(listener.Addr().String())
+		fmt.Fprintf(fs, "%s", port)
+		err = fs.Close()
+		if err != nil {
+			return err
+		}
+		log.Info().Str("file", *portFile).Str("port", port).Msg("Written api server port")
+	}
+
+	return http.Serve(listener, router)
 }

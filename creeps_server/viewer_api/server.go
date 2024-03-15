@@ -2,8 +2,10 @@ package viewer_api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"slices"
 	"time"
 
@@ -20,10 +22,11 @@ import (
 
 type ViewerServer struct {
 	Server *server.Server
-	Addr   string
 
 	AdminPassword string
 	AdminAddrs    []string
+
+	Listener net.Listener
 }
 
 func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
@@ -194,7 +197,7 @@ error:
 	conn.Close()
 }
 
-func (viewer *ViewerServer) Start() {
+func (viewer *ViewerServer) Start(addr string, portFile *string) error {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -215,6 +218,28 @@ func (viewer *ViewerServer) Start() {
 		go viewer.handleClient(conn)
 	})
 
-	log.Info().Str("addr", viewer.Addr).Msg("Viewer server starting")
-	http.ListenAndServe(viewer.Addr, router)
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	defer listener.Close()
+	viewer.Listener = listener
+
+	log.Info().Str("addr", listener.Addr().String()).Msg("Viewer server listening")
+
+	if portFile != nil {
+		fs, err := os.Create(*portFile)
+		if err != nil {
+			return err
+		}
+		_, port, _ := net.SplitHostPort(listener.Addr().String())
+		fmt.Fprintf(fs, "%s", port)
+		err = fs.Close()
+		if err != nil {
+			return err
+		}
+		log.Info().Str("file", *portFile).Str("port", port).Msg("Written api server port")
+	}
+
+	return http.Serve(listener, router)
 }

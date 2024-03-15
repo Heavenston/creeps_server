@@ -75,9 +75,6 @@ func (self *GameManager) StartGame(game model.Game) (*RunningGame, error) {
 		game: game,
 
 		binaryPath: self.binaryPath,
-
-		apiPort: self.port,
-		viewerPort: self.port+1,
 	})
 	if err != nil {
 		return nil, err

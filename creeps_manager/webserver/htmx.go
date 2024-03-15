@@ -80,7 +80,7 @@ func (self *WebServer) postHtmxCreateGame(w http.ResponseWriter, r *http.Request
 
 	_, err = self.GameManager.StartGame(game)
 	if err != nil {
-		log.Error().Err(rs.Error).Msg("Start game error")
+		log.Error().Err(err).Msg("Start game error")
 		writePopup(w, `Internal server error while starting the game`)
 		return
 	}
