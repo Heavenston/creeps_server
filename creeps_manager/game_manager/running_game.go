@@ -1,14 +1,19 @@
 package gamemanager
 
 import (
+	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/Heavenston/creeps_server/creeps_manager/model"
 	"github.com/fsnotify/fsnotify"
+	"github.com/gorilla/websocket"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	viewerapimodel "github.com/heavenston/creeps_server/creeps_lib/viewer_api_model"
 	"github.com/rs/zerolog/log"
@@ -20,6 +25,7 @@ type RunningGame struct {
 	Id        int
 	CreatorId int
 
+	Host string
 	ApiPort    int
 	ViewerPort int
 
@@ -109,16 +115,30 @@ func newRunningGame(gm *GameManager, game model.Game, cfg gameStartCfg) (*Runnin
 		apiPort <- port
 	}()
 
+	passwordAlphabet := "abcdefghijklmnopqstuvwxyzABCDEFGHIJKLMNOPQSTUVWXYZ0123456789"
+	passwordBytes := make([]byte, 100)
+	_, err := rand.Read(passwordBytes)
+	if err != nil {
+		return nil, err
+	}
+	passBuilder := strings.Builder{}
+	for _, b := range passwordBytes {
+		passBuilder.WriteByte(passwordAlphabet[int(b) % len(passwordAlphabet)])
+	}
+	password := passBuilder.String()
+
 	cmd := exec.Command(
 		cfg.binaryPath,
 		"--viewer-port-file", viewerPortFile,
 		"--api-port-file", apiPortFile,
+		"--viewer-admin-password", password,
+		"--viewer-admin-host", "127.0.0.1",
 		"-vv",
 		"--log-file", logFile,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		return nil, err
 	}
@@ -129,10 +149,19 @@ func newRunningGame(gm *GameManager, game model.Game, cfg gameStartCfg) (*Runnin
 		Id:        int(game.ID),
 		CreatorId: game.CreatorID,
 
+		Host: "localhost",
 		ViewerPort: int(<-viewerPort),
 		ApiPort: int(<-apiPort),
 
+		Packets: make(chan viewerapimodel.Message),
+
 		Cmd: cmd,
+	}
+
+	err = rgame.connect(password)
+	if err != nil {
+		cmd.Process.Kill()
+		return nil, err
 	}
 
 	now := time.Now()
@@ -146,6 +175,65 @@ func newRunningGame(gm *GameManager, game model.Game, cfg gameStartCfg) (*Runnin
 		Msg("Started game")
 
 	return rgame, nil
+}
+
+// called by newRunningGame
+func (self *RunningGame) connect(password string) error {
+	addr := fmt.Sprintf(
+		"ws://%s/websocket",
+		net.JoinHostPort(self.Host, fmt.Sprint(self.ViewerPort)),
+	)
+
+	log.Debug().Str("ws", addr).Msg("Connecting to game server ws")
+	
+	conn, _, err := websocket.DefaultDialer.Dial(addr, nil)
+	if err != nil {
+		return fmt.Errorf("%s: %w", addr, err)
+	}
+
+	err = conn.WriteJSON(viewerapimodel.CreateMessage(viewerapimodel.C2SInit {
+		AuthPassword: password,
+	}))
+	if err != nil {
+		return fmt.Errorf("Init write error: %w", err)
+	}
+
+	var msg viewerapimodel.Message
+	err = conn.ReadJSON(&msg)
+	if err != nil {
+		return fmt.Errorf("Init read error: %w", err)
+	}
+
+	if msg.Kind != (viewerapimodel.S2CInit{}.MsgKind()) {
+		return fmt.Errorf("Received invalid handshake")
+	}
+
+	var init viewerapimodel.S2CInit
+	err = json.Unmarshal(msg.Content, &init)
+	if err != nil {
+		return fmt.Errorf("Invalid init content: %w", err)
+	}
+
+	log.Debug().
+		Int("game_id", self.Id).
+		Str("addr", addr).
+		Msg("Fully connected to running game")
+
+	go func() {
+		defer conn.Close()
+		for {
+			var msg viewerapimodel.Message
+			err := conn.ReadJSON(&msg)
+			if err != nil {
+				log.Warn().Err(err).Msg("Game connection error")
+				return
+			}
+
+			log.Info().Any("msg", msg).Send()
+		}
+	}()
+
+	return nil
 }
 
 func (self *RunningGame) Stop() error {
