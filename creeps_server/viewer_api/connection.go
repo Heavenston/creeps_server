@@ -1,7 +1,6 @@
 package viewer_api
 
 import (
-	"encoding/json"
 	"sync"
 	"sync/atomic"
 
@@ -12,7 +11,6 @@ import (
 	. "github.com/heavenston/creeps_server/creeps_lib/viewer_api_model"
 	"github.com/heavenston/creeps_server/creeps_server/server"
 	"github.com/heavenston/creeps_server/creeps_server/server/entities"
-	"github.com/rs/zerolog/log"
 )
 
 type connection struct {
@@ -50,17 +48,9 @@ func (conn *connection) subedToChunk(chunk Point) bool {
 	return conn.subscribedChunks[chunk]
 }
 
-func (conn *connection) sendMessage(kind string, content any) {
-	contentbytes, err := json.Marshal(content)
-	if err != nil {
-		log.Warn().Err(err).Msg("full chunk ser error")
-		return
-	}
+func (conn *connection) sendMessage(content IMsgContent) {
 	conn.socketLock.Lock()
-	conn.socket.WriteJSON(Message{
-		Kind:    kind,
-		Content: contentbytes,
-	})
+	conn.socket.WriteJSON(CreateMessage(content))
 	conn.socketLock.Unlock()
 }
 
@@ -78,7 +68,7 @@ func (conn *connection) sendChunk(chunk *terrain.Chunk) {
 			tiles[i+1] = byte(tile.Value)
 		}
 	}
-	conn.sendMessage("fullchunk", S2CFullChunk{
+	conn.sendMessage(S2CFullChunk{
 		ChunkPos: chunk.GetChunkPos(),
 		Tiles:    tiles,
 	})
@@ -92,7 +82,7 @@ func (conn *connection) sendUnit(unit server.IUnit) bool {
 	if conn.knownUnits[unit.GetId()] {
 		return false
 	}
-	conn.sendMessage("unit", S2CUnit{
+	conn.sendMessage(S2CUnit{
 		OpCode:   unit.GetOpCode(),
 		UnitId:   unit.GetId(),
 		Owner:    unit.GetOwner(),
@@ -111,7 +101,7 @@ func (conn *connection) sendPlayer(player *entities.Player) bool {
 	if conn.knownPlayers[player.GetId()] {
 		return false
 	}
-	conn.sendMessage("playerSpawn", S2CPlayerSpawn{
+	conn.sendMessage(S2CPlayerSpawn{
 		Id:            player.GetId(),
 		SpawnPosition: player.GetSpawnPoint(),
 		Username:      player.GetUsername(),
@@ -135,7 +125,7 @@ func (conn *connection) handleServerEvent(event server.IServerEvent) {
 	case *server.UnitSpawnEvent:
 		conn.sendUnit(e.Unit)
 	case *server.UnitDespawnEvent:
-		conn.sendMessage("unitDespawned", S2CUnitDespawn{
+		conn.sendMessage(S2CUnitDespawn{
 			UnitId: e.Unit.GetId(),
 		})
 		conn.setIsUnitKnown(e.Unit.GetId(), false)
@@ -145,7 +135,7 @@ func (conn *connection) handleServerEvent(event server.IServerEvent) {
 		// unit is now out of bounds so we need to make the client forget
 		// about it
 		if !conn.subedToChunk(newChunk) {
-			conn.sendMessage("unitDespawned", S2CUnitDespawn{
+			conn.sendMessage(S2CUnitDespawn{
 				UnitId: e.Unit.GetId(),
 			})
 			conn.setIsUnitKnown(e.Unit.GetId(), false)
@@ -158,7 +148,7 @@ func (conn *connection) handleServerEvent(event server.IServerEvent) {
 			break
 		}
 
-		conn.sendMessage("unitStartedAction", S2CUnitStartedAction{
+		conn.sendMessage(S2CUnitStartedAction{
 			UnitId: e.Unit.GetId(),
 			Action: getActionData(e.Action),
 		})
@@ -175,7 +165,7 @@ func (conn *connection) handleServerEvent(event server.IServerEvent) {
 			Report: e.Report,
 		}
 
-		conn.sendMessage("unitFinishedAction", content)
+		conn.sendMessage(content)
 	case *entities.PlayerSpawnEvent:
 		conn.sendPlayer(e.Player)
 	case *entities.PlayerDespawnEvent:
@@ -185,7 +175,7 @@ func (conn *connection) handleServerEvent(event server.IServerEvent) {
 			conn.playersLock.Unlock()
 			break
 		}
-		conn.sendMessage("playerDespawn", S2CPlayerDespawn{
+		conn.sendMessage(S2CPlayerDespawn{
 			Id: e.Player.GetId(),
 		})
 		delete(conn.knownPlayers, e.Player.GetId())

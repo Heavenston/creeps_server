@@ -52,7 +52,7 @@ func (conn *connection) handleClientSubscription(chunkPos Point) {
 				if !conn.knownUnits[id] {
 					continue
 				}
-				conn.sendMessage("unitDespawned", S2CUnitDespawn{
+				conn.sendMessage(S2CUnitDespawn{
 					UnitId: id,
 				})
 				delete(conn.knownUnits, id)
@@ -70,7 +70,7 @@ func (conn *connection) handleClientSubscription(chunkPos Point) {
 			}
 
 			if change, ok := event.(terrain.TileUpdateChunkEvent); ok {
-				conn.sendMessage("tileChange", S2CTileChange{
+				conn.sendMessage(S2CTileChange{
 					TilePos: change.UpdatedPosition.Add(chunkPos.Times(terrain.ChunkSize)),
 					Kind:    byte(change.NewValue.Kind),
 					Value:   change.NewValue.Value,

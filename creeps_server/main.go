@@ -16,6 +16,9 @@ var CLI struct {
 	ViewerHost     string  `help:"Host for the viewer's api" default:"localhost"`
 	ViewerPortFile *string `help:"If given, the revolved port of the viewer api will be written in it"`
 
+	ViewerAdminPassword string `help:"Admin password used for the manager to connect"`
+	ViewerAdminHost []string `help:"List of acceptable hosts for the manager to connect from"`
+
 	Tps     float64 `help:"Overrides the ticks per seconds"`
 	Enemies *bool   `negatable:"" help:"Overrides wether enemies are enables"`
 	Hector  *bool   `negatable:"" help:"Overrides wether the garbage collector is enabled"`

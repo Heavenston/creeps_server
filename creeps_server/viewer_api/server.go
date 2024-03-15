@@ -24,7 +24,7 @@ type ViewerServer struct {
 	Server *server.Server
 
 	AdminPassword string
-	AdminAddrs    []string
+	AdminHosts    []string
 
 	Listener net.Listener
 }
@@ -69,8 +69,8 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 		connection.isAdmin.Store(false)
 		if initContent.AuthPassword != "" {
 			remoteAddr, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
-			if len(viewer.AdminAddrs) != 0 &&
-				!slices.Contains(viewer.AdminAddrs, remoteAddr) {
+			if len(viewer.AdminHosts) != 0 &&
+				!slices.Contains(viewer.AdminHosts, remoteAddr) {
 				log.Warn().
 					Any("addr", conn.RemoteAddr()).
 					Any("given_auth", initContent.AuthPassword).
@@ -132,7 +132,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 			Msg("Websocket received message")
 
 		switch mess.Kind {
-		case "subscribe":
+		case C2SSubscribeRequest{}.MsgKind():
 			var content C2SSubscribeRequest
 			err = json.Unmarshal(mess.Content, &content)
 			if err != nil {
@@ -150,7 +150,7 @@ func (viewer *ViewerServer) handleClient(conn *websocket.Conn) {
 
 			connection.chunksLock.Unlock()
 			go connection.handleClientSubscription(content.ChunkPos)
-		case "unsubscribe":
+		case C2SUnsubscribeRequest{}.MsgKind():
 			var content C2SUnsubscribeRequest
 			err = json.Unmarshal(mess.Content, &content)
 			if err != nil {

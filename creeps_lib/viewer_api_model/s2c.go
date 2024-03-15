@@ -27,6 +27,10 @@ type S2CInit struct {
 	Costs     *model.CostsResponse `json:"costs" tstype:",required"`
 }
 
+func (S2CInit) MsgKind() string {
+	return "init"
+}
+
 type S2CFullChunk struct {
 	ChunkPos geom.Point `json:"chunkPos"`
 	// will be base64 encoded
@@ -37,10 +41,18 @@ type S2CFullChunk struct {
 	Tiles []byte `json:"tiles"`
 }
 
+func (S2CFullChunk) MsgKind() string {
+	return "fullchunk"
+}
+
 type S2CTileChange struct {
 	TilePos geom.Point `json:"tilePos"`
 	Kind    byte       `json:"kind" tstype:"number"`
 	Value   byte       `json:"value" tstype:"number"`
+}
+
+func (S2CTileChange) MsgKind() string {
+	return "tileChange"
 }
 
 type S2CUnit struct {
@@ -51,8 +63,16 @@ type S2CUnit struct {
 	Upgraded bool       `json:"upgraded"`
 }
 
+func (S2CUnit) MsgKind() string {
+	return "unit"
+}
+
 type S2CUnitDespawn struct {
 	UnitId uid.Uid `json:"unitId"`
+}
+
+func (S2CUnitDespawn) MsgKind() string {
+	return "unitDespawn"
 }
 
 type S2CUnitStartedAction struct {
@@ -60,10 +80,18 @@ type S2CUnitStartedAction struct {
 	Action ActionData `json:"action"`
 }
 
+func (S2CUnitStartedAction) MsgKind() string {
+	return "unitStartedAction"
+}
+
 type S2CUnitFinishedAction struct {
 	UnitId uid.Uid       `json:"unitId"`
 	Action ActionData    `json:"action"`
 	Report model.IReport `json:"report"`
+}
+
+func (S2CUnitFinishedAction) MsgKind() string {
+	return "unitFinishedAction"
 }
 
 type S2CPlayerSpawn struct {
@@ -73,6 +101,14 @@ type S2CPlayerSpawn struct {
 	Resources     model.Resources `json:"resources"`
 }
 
+func (S2CPlayerSpawn) MsgKind() string {
+	return "playerSpawn"
+}
+
 type S2CPlayerDespawn struct {
 	Id uid.Uid `json:"id"`
 }
+func (S2CPlayerDespawn) MsgKind() string {
+	return "playerDespawn"
+}
+

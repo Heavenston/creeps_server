@@ -85,7 +85,11 @@ func startServ(*kong.Context) {
 		}
 	}()
 
-	viewer_server := &viewer_api.ViewerServer{ Server: srv }
+	viewer_server := &viewer_api.ViewerServer{
+		Server: srv,
+		AdminPassword: CLI.ViewerAdminPassword,
+		AdminHosts: CLI.ViewerAdminHost,
+	}
 	go func() {
 		err := viewer_server.Start(
 			fmt.Sprintf("%s:%d", CLI.ViewerHost, CLI.ViewerPort),
