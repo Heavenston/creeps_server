@@ -16,8 +16,7 @@ type Spatialized interface {
 	comparable
 	// can return nil if the object's aabb is guarenteed to never change
 	MovementEvents() *events.EventProvider[ObjectMovedEvent]
-	// if the returned AABB has size 0 this the object will match all queries
-	GetAABB() AABB
+	GetExtent() Extent
 }
 
 type el[T Spatialized] struct {
@@ -190,19 +189,18 @@ func (m *SpatialMap[T]) GetAt(point Point) *T {
 	defer m.lock.RUnlock()
 
 	return m.Find(func(t T) bool {
-		return t.GetAABB().Contains(point)
+		return t.GetExtent().Contains(point)
 	})
 }
 
-func (m *SpatialMap[T]) GetAllIntersects(aabb AABB) []T {
+func (m *SpatialMap[T]) GetAllCollides(extent Extent) []T {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
 	result := make([]T, 0)
 
 	for _, obj := range m.objects {
-		oaabb := obj.val.GetAABB()
-		if oaabb.IsZero() || aabb.Intersects(oaabb) {
+		if obj.val.GetExtent().Collides(extent) {
 			result = append(result, obj.val)
 		}
 	}
