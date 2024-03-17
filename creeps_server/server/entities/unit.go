@@ -74,11 +74,11 @@ func (unit *unit) SetPosition(new_pos Point) {
 	}
 }
 
-func (unit *unit) GetAABB() AABB {
-	return AABB{
+func (unit *unit) GetExtent() spatialmap.Extent {
+	return spatialmap.Extent{Aabb: AABB{
 		From: unit.GetPosition(),
 		Size: Point{X: 1, Y: 1},
-	}
+	}}
 }
 
 func (unit *unit) MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent] {
@@ -246,7 +246,7 @@ func (unit *unit) Register() {
 
 	unit.server.Events().Emit(&server.UnitSpawnEvent{
 		Unit: unit.this,
-		AABB: unit.GetAABB(),
+		Extent: unit.GetExtent(),
 	})
 }
 
@@ -274,6 +274,6 @@ func (unit *unit) Unregister() {
 
 	unit.server.Events().Emit(&server.UnitDespawnEvent{
 		Unit: unit.this,
-		AABB: unit.GetAABB(),
+		Extent: unit.GetExtent(),
 	})
 }

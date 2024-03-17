@@ -102,7 +102,8 @@ func (raider *RaiderUnit) Tick() {
 		return t
 	})
 
-	for _, entity := range raider.server.Entities().GetAllIntersects(raider.GetAABB()) {
+	entitiesInRange := raider.server.Entities().GetAllCollides(raider.GetExtent())
+	for _, entity := range entitiesInRange {
 		_, isC := entity.(*CitizenUnit)
 		_, isT := entity.(*TurretUnit)
 		_, isB := entity.(*BomberBotUnit)

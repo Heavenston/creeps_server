@@ -1,7 +1,7 @@
 package entities
 
 import (
-	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
 	. "github.com/heavenston/creeps_server/creeps_server/server"
 )
 
@@ -10,9 +10,8 @@ type PlayerSpawnEvent struct {
 	Player *Player
 }
 
-func (event *PlayerSpawnEvent) GetAABB() AABB {
-	// empty aabb = covers all map
-	return AABB{}
+func (event *PlayerSpawnEvent) GetExtent() spatialmap.Extent {
+	return event.Player.GetExtent()
 }
 
 type PlayerDespawnEvent struct {
@@ -20,7 +19,6 @@ type PlayerDespawnEvent struct {
 	Player *Player
 }
 
-func (event *PlayerDespawnEvent) GetAABB() AABB {
-	// empty aabb = covers all map
-	return AABB{}
+func (event *PlayerDespawnEvent) GetExtent() spatialmap.Extent {
+	return event.Player.GetExtent()
 }

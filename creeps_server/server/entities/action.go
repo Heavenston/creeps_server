@@ -4,6 +4,7 @@ import (
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	mathutils "github.com/heavenston/creeps_server/creeps_lib/math_utils"
 	"github.com/heavenston/creeps_server/creeps_lib/model"
+	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	. "github.com/heavenston/creeps_server/creeps_server/server"
@@ -23,7 +24,7 @@ func observe(unit IUnit, into *model.ObserveReport) {
 		},
 	}
 
-	ents := server.Entities().GetAllIntersects(aabb)
+	ents := server.Entities().GetAllCollides(spatialmap.Extent{Aabb: aabb})
 	into.Units = make([]model.Unit, 0, len(ents))
 	for _, oentity := range ents {
 		ounit, ok := oentity.(IUnit)
@@ -480,10 +481,10 @@ func ApplyAction(action *Action, unit IUnit) model.IReport {
 
 		killed := make([]model.Unit, 0)
 
-		entities := server.Entities().GetAllIntersects(AABB{
+		entities := server.Entities().GetAllCollides(spatialmap.Extent{Aabb: AABB{
 			From: parameter.Destination,
 			Size: Point{X: 1, Y: 1},
-		})
+		}})
 		for _, entity := range entities {
 			unit, ok := entity.(IUnit)
 			if !ok {

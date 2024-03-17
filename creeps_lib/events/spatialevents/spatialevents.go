@@ -45,14 +45,16 @@ func (provider *SpatialEventProvider[T]) SubscribeWithHandle(
 	}
 
 	provider.subs.Add(sub[T]{
+		extent: extent,
 		sendChan: channel,
 		handle:   handle,
+
 		file:     file,
 		line:     line,
 	})
 }
 
-func (provider *SpatialEventProvider[T]) Emit(event T) {
+func (provider *SpatialEventProvider[T]) Emit(event T) int {
 	provider.subs.RemoveAll(func(t sub[T]) bool {
 		if t.handle.IsCancelled() {
 			close(t.sendChan)
@@ -61,9 +63,16 @@ func (provider *SpatialEventProvider[T]) Emit(event T) {
 		return false
 	})
 
+	count := 0
 	for _, sub := range provider.subs.GetAllCollides(event.GetExtent()) {
+		// race condition between remove all and get all collides
+		if sub.handle.IsCancelled() {
+			continue
+		}
+
 		select {
 		case sub.sendChan <- event:
+			count += 1
 		default:
 			log.Warn().
 				Type("event_type", event).
@@ -72,4 +81,5 @@ func (provider *SpatialEventProvider[T]) Emit(event T) {
 				Msg("Could not send event")
 		}
 	}
+	return count
 }

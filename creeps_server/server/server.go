@@ -61,7 +61,7 @@ func NewServer(tilemap *terrain.Tilemap, setup *model.SetupResponse, costs *mode
 
 	go (func() {
 		channel := make(chan IServerEvent, 2048)
-		srv.events.Subscribe(channel, AABB{})
+		srv.events.Subscribe(channel, spatialmap.Extent{IsGlobal: true})
 		for {
 			event, ok := (<-channel)
 			if !ok {

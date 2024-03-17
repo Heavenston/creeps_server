@@ -19,27 +19,27 @@ func (event *ServerEventBase) MovementEvents() *events.EventProvider[spatialmap.
 // see spatialmap.Spatialized
 type IServerEvent interface {
 	MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent]
-	GetAABB() AABB
+	GetExtent() spatialmap.Extent
 }
 
 type UnitSpawnEvent struct {
 	ServerEventBase
 	Unit IUnit
-	AABB AABB
+	Extent spatialmap.Extent
 }
 
-func (event *UnitSpawnEvent) GetAABB() AABB {
-	return event.AABB
+func (event *UnitSpawnEvent) GetExtent() spatialmap.Extent {
+	return event.Extent
 }
 
 type UnitDespawnEvent struct {
 	ServerEventBase
 	Unit IUnit
-	AABB AABB
+	Extent spatialmap.Extent
 }
 
-func (event *UnitDespawnEvent) GetAABB() AABB {
-	return event.AABB
+func (event *UnitDespawnEvent) GetExtent() spatialmap.Extent {
+	return event.Extent
 }
 
 type UnitMovedEvent struct {
@@ -49,7 +49,7 @@ type UnitMovedEvent struct {
 	To   Point
 }
 
-func (event *UnitMovedEvent) GetAABB() AABB {
+func (event *UnitMovedEvent) GetExtent() spatialmap.Extent {
 	// FIXME: This could take much more space than what's really required
 	//        (aabb for From and one for To) but as the current design doesn't
 	//        support finer control I'll stick with this as most movements
@@ -64,10 +64,11 @@ func (event *UnitMovedEvent) GetAABB() AABB {
 		Y: mathutils.Max(event.From.Y, event.To.Y),
 	}
 
-	return AABB{
+	aabb := AABB{
 		From: min,
 		Size: max.Sub(min),
 	}
+	return spatialmap.Extent{Aabb: aabb}
 }
 
 type UnitStartedActionEvent struct {
@@ -77,11 +78,11 @@ type UnitStartedActionEvent struct {
 	Action *Action
 }
 
-func (event *UnitStartedActionEvent) GetAABB() AABB {
-	return AABB{
+func (event *UnitStartedActionEvent) GetExtent() spatialmap.Extent {
+	return spatialmap.Extent{Aabb: AABB{
 		From: event.Pos,
 		Size: Point{X: 1, Y: 1},
-	}
+	}}
 }
 
 type UnitFinishedActionEvent struct {
@@ -92,9 +93,9 @@ type UnitFinishedActionEvent struct {
 	Report model.IReport
 }
 
-func (event *UnitFinishedActionEvent) GetAABB() AABB {
-	return AABB{
+func (event *UnitFinishedActionEvent) GetExtent() spatialmap.Extent {
+	return spatialmap.Extent{Aabb: AABB{
 		From: event.Pos,
 		Size: Point{X: 1, Y: 1},
-	}
+	}}
 }

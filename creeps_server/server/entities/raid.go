@@ -56,12 +56,11 @@ func (raid *Raid) GetId() uid.Uid {
 	return raid.id
 }
 
-// for IEntity
-func (raid *Raid) GetAABB() AABB {
-	return AABB{
+func (raid *Raid) GetExtent() spatialmap.Extent {
+	return spatialmap.Extent{Aabb:AABB{
 		From: raid.campPosition,
 		Size: Point{X: 1, Y: 1},
-	}
+	}}
 }
 
 // for IEntity

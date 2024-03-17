@@ -159,13 +159,30 @@ func TestSpatialMapGetCollides(t *testing.T) {
 	)
 }
 
+func TestSpatialMapGetCollides2(t *testing.T) {
+	sm := spatialmap.NewSpatialMap[Obj]()
+	defer sm.Close()
+
+    obj1 := *obj(5, -15, 10, 10, false)
+	sm.Add(obj1)
+    obj2 := *obj(5, -15, 5, 5, false)
+	sm.Add(obj2)
+    obj3 := *obj(5, -15, 15, 10, false)
+	sm.Add(obj3)
+
+	checkSlicesEquiv(t,
+	    sm.GetAllCollides(extent(10, -10, 20, 5, false)),
+		[]Obj{obj1, obj3},
+	)
+}
+
 func TestSpatialMapGlobalObjects(t *testing.T) {
 	sm := spatialmap.NewSpatialMap[Obj]()
 	defer sm.Close()
 
-	obj1 := *obj(0, 0, 0, 0, false)
+	obj1 := *obj(0, 0, 0, 0, true)
 	sm.Add(obj1)
-	obj2 := *obj(-2, 5, 0, 0, false)
+	obj2 := *obj(-2, 5, 0, 0, true)
 	sm.Add(obj2)
 	obj3 := *obj(-5, 5, 1, 2, false)
 	sm.Add(obj3)
@@ -194,13 +211,13 @@ func TestSpatialMapGetGlobal(t *testing.T) {
 	sm := spatialmap.NewSpatialMap[Obj]()
 	defer sm.Close()
 
-	obj1 := *obj(0, 0, 0, 0, true)
+	obj1 := *obj(0, 0, 0, 0, false)
 	sm.Add(obj1)
-	obj2 := *obj(-2, 5, 0, 0, true)
+	obj2 := *obj(-2, 5, 0, 0, false)
 	sm.Add(obj2)
-	obj3 := *obj(-5, 5, 1, 2, true)
+	obj3 := *obj(-5, 5, 1, 2, false)
 	sm.Add(obj3)
-	obj4 := *obj(1, 5, 3, 2, true)
+	obj4 := *obj(1, 5, 3, 2, false)
 	sm.Add(obj4)
 
 	checkSlicesEquiv(t,

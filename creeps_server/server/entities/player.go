@@ -76,10 +76,10 @@ func (player *Player) GetSpawnPoint() Point {
 	return player.spawnPoint
 }
 
-// for IEntity
-func (player *Player) GetAABB() AABB {
-	return AABB{
-		From: player.spawnPoint,
+func (player *Player) GetExtent() spatialmap.Extent {
+	return spatialmap.Extent{
+		Aabb: AABB{ From: player.spawnPoint },
+		IsGlobal: true,
 	}
 }
 

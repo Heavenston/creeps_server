@@ -4,6 +4,7 @@ import (
 	"time"
 
 	. "github.com/heavenston/creeps_server/creeps_lib/geom"
+	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
 	"github.com/heavenston/creeps_server/creeps_lib/terrain"
 	. "github.com/heavenston/creeps_server/creeps_lib/viewer_api_model"
 	"github.com/heavenston/creeps_server/creeps_server/server"
@@ -20,20 +21,20 @@ func (conn *connection) handleClientSubscription(chunkPos Point) {
 	defer terrainCancelHandle.Cancel()
 
 	serverEventsChannel := make(chan server.IServerEvent, 2048)
-	aabb := AABB{
+	extent := spatialmap.Extent{Aabb:AABB{
 		From: chunkPos.Times(terrain.ChunkSize),
 		Size: Point{
 			// +1 seems to fix some missed events
 			X: terrain.ChunkSize + 1,
 			Y: terrain.ChunkSize + 1,
 		},
-	}
-	serverEventsHandle := viewer.Server.Events().Subscribe(serverEventsChannel, aabb)
+	}}
+	serverEventsHandle := viewer.Server.Events().Subscribe(serverEventsChannel, extent)
 	defer serverEventsHandle.Cancel()
 
 	conn.sendChunk(chunk)
 
-	for _, entity := range viewer.Server.Entities().GetAllIntersects(aabb) {
+	for _, entity := range viewer.Server.Entities().GetAllCollides(extent) {
 		if unit, ok := entity.(server.IUnit); ok {
 			conn.sendUnit(unit)
 		}
@@ -47,7 +48,7 @@ func (conn *connection) handleClientSubscription(chunkPos Point) {
 		if !stillSubed {
 			conn.unitsLock.Lock()
 
-			for _, entity := range viewer.Server.Entities().GetAllIntersects(aabb) {
+			for _, entity := range viewer.Server.Entities().GetAllCollides(extent) {
 				id := entity.GetId()
 				if !conn.knownUnits[id] {
 					continue

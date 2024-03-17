@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/heavenston/creeps_server/creeps_lib/events"
-	. "github.com/heavenston/creeps_server/creeps_lib/geom"
 	"github.com/heavenston/creeps_server/creeps_lib/spatialmap"
 	"github.com/heavenston/creeps_server/creeps_lib/uid"
 	"github.com/rs/zerolog/log"
@@ -16,7 +15,7 @@ import (
 type IEntity interface {
 	GetServer() *Server
 	GetId() uid.Uid
-	GetAABB() AABB
+	GetExtent() spatialmap.Extent
 	// can return nil if the entity cannot move
 	MovementEvents() *events.EventProvider[spatialmap.ObjectMovedEvent]
 	// if there is no real owner use uid.ServerId
